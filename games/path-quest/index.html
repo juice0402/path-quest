@@ -3,149 +3,708 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101827">
-<title>PATH QUEST — Prototype</title>
+<title>PATH QUEST</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="パネルで道をつないで地下へ潜るダンジョンゲーム。敵・金貨・装備のパネルをどう通るかで、どこまで深く行けるかが変わる。">
+<meta name="theme-color" content="#14161a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
 <style>
-:root{color-scheme:dark;--bg:#101827;--panel:#1b2940;--tile:#263750;--line:#67e8c1;--muted:#9fb0c7;--accent:#ffd166;--danger:#ff8c8c}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#1c3150,var(--bg) 65%);color:#f4f7fb;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;justify-content:center}
-main{width:min(760px,100%);padding:22px 16px 34px;display:flex;flex-direction:column;gap:16px}
-header{text-align:center}h1{margin:0;font-size:clamp(28px,7vw,42px);letter-spacing:.12em}header p{margin:6px 0 0;color:var(--muted);font-size:14px}
-.status{background:var(--panel);border:1px solid #344761;border-radius:14px;padding:12px 15px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:14px}.status strong{color:var(--accent)}
-.board-wrap{display:flex;justify-content:center}.board{width:min( min(88vw,520px), 100%);aspect-ratio:1;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px;background:#0b1422;border:1px solid #344761;border-radius:18px;box-shadow:0 16px 40px #0005}
-.cell{position:relative;border:1px solid #344761;background:var(--tile);border-radius:9px;display:grid;place-items:center;min-width:0;min-height:0;overflow:hidden}.cell.empty{background:#1b2a40}.cell.target{background:#35445a}.cell.start{border:2px solid #67e8c1}.cell.goal{border:2px solid var(--accent)}.cell.selected-target{outline:3px solid var(--accent);outline-offset:-3px}
-.cell svg,.option svg{width:100%;height:100%;position:absolute;inset:0}.endpoint{position:relative;z-index:1;font-weight:800;font-size:clamp(10px,2.5vw,15px);letter-spacing:.04em}
-.tile-path{stroke:var(--line);stroke-width:10;stroke-linecap:round;fill:none}.cell .tile-path{stroke-width:9}.option .tile-path{stroke-width:10}
-.section-title{display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px;font-size:15px}.section-title span{color:var(--muted);font-size:12px;font-weight:400}
-.options{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.option{aspect-ratio:1;background:var(--panel);border:2px solid #344761;border-radius:14px;position:relative;overflow:hidden;cursor:pointer;touch-action:manipulation;transition:transform .12s,border-color .12s}.option:active{transform:scale(.96)}.option.active{border-color:var(--accent);box-shadow:0 0 0 2px #ffd16633}.option:disabled{opacity:.38;cursor:not-allowed}
-.cell.drop-target{outline:3px solid var(--accent);outline-offset:-3px;box-shadow:0 0 16px #ffd16688}.drag-ghost{position:fixed;z-index:9999;width:68px;height:68px;pointer-events:none;opacity:.92;transform:translate(-50%,-50%);filter:drop-shadow(0 8px 12px #0009);border:2px solid var(--accent);border-radius:14px;background:var(--panel);overflow:hidden}
-.option small{position:absolute;left:0;right:0;bottom:5px;text-align:center;color:var(--muted);font-size:10px;z-index:2}
-.actions{display:flex;gap:10px}.actions button{flex:1;border:1px solid #49617e;background:#263750;color:#fff;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer}.actions button.primary{background:#d9a83e;border-color:#f6c65d;color:#182033}
-.help{color:var(--muted);font-size:12px;line-height:1.6;text-align:center;margin:0}.message{min-height:24px;text-align:center;font-weight:700;color:var(--line);font-size:14px}
-@media(max-width:420px){main{padding:16px 12px 24px;gap:13px}.board{gap:4px;padding:6px}.options{gap:7px}.status{font-size:12px;padding:10px 12px}}
+/* layout: a dungeon table seen from above. stone plate (status) on top, stone floor (board) in the middle, wooden tray of panels below. side by side on wide screens */
+:root{
+  color-scheme:dark;
+  --abyss:#14161a;
+  --stone:#2b2f35;
+  --stone-hi:#3a3f47;
+  --mortar:#191b20;
+  --road:#a98a57;
+  --road-lit:#ebc782;
+  --road-edge:#5f4a2c;
+  --torch:#f2a541;
+  --hp:#e0524a;
+  --heal:#86cf7c;
+  --gear:#b9cff2;
+  --ink:#efe8da;
+  --dim:#9b968b;
+  --wood:#3a2b21;
+  --wood-hi:#54402f;
+  --pixel:"DotGothic16","Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;
+  --sans:"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;
+}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:var(--abyss);color:var(--ink)}
+body{font-family:var(--sans);-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscroll-behavior:none}
+button{font:inherit;color:inherit}
+
+.app{box-sizing:border-box;min-height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:10px;padding-block:10px 14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* status plate */
+.plate{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:7px 12px;background:var(--mortar);border:2px solid var(--stone-hi);border-radius:3px}
+.floor{font:400 26px/1 var(--pixel);color:var(--torch)}
+.hpwrap{display:flex;flex-direction:column;gap:4px;min-width:0}
+.hptext{font:400 13px/1 var(--pixel)}
+.hpbar{position:relative;height:9px;background:#3b1816;overflow:hidden}
+.hpbar i{position:absolute;inset:0 auto 0 0;width:100%;background:var(--hp);transition:width .25s}
+.hpbar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 9px,var(--mortar) 9px 11px)}
+.stats{display:flex;gap:10px;font:400 15px/1 var(--pixel);color:var(--dim);white-space:nowrap}
+.stats b{font-weight:400;color:var(--ink);margin-left:2px}
+.stats .gold b{color:var(--torch)}
+
+/* board */
+.boardbox{display:flex;justify-content:center}
+.board{--n:5;position:relative;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:3px;padding:3px;background:var(--mortar);border-radius:3px;width:min(100%,460px);width:min(100%,calc(100svh - 312px),460px);aspect-ratio:1;max-width:100%;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.cell{position:relative;min-width:0;min-height:0;background:var(--stone);border-radius:2px;box-shadow:inset 0 2px 0 var(--stone-hi),inset 0 -2px 0 #212429}
+.cell svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.cell.laid{background:#33373d}
+.cell.rock{background:#202328;box-shadow:none}
+.cell.goal,.cell.start{background:#202227}
+.board.picking .cell.empty{box-shadow:inset 0 0 0 2px #6e5a3a,inset 0 2px 0 var(--stone-hi)}
+.cell.over{background:#4a4033;box-shadow:inset 0 0 0 3px var(--torch)}
+.cell.new svg{animation:thunk .18s ease-out}
+.cell.way{background:#3b3a33}
+@keyframes thunk{from{transform:scale(1.2)}to{transform:scale(1)}}
+.rd-edge{stroke:var(--road-edge)}
+.rd{stroke:var(--road)}
+.lit .rd{stroke:var(--road-lit)}
+.badge{position:absolute;right:1px;bottom:1px;padding:1px 3px;border-radius:2px;background:rgba(12,12,14,.78);font:700 clamp(9px,2.7vw,12px)/1.1 var(--sans);font-variant-numeric:tabular-nums;pointer-events:none}
+.b-foe{color:#ff8a80}.b-zero{color:var(--dim)}.b-coin{color:var(--torch)}.b-heal{color:var(--heal)}.b-gear{color:var(--gear)}
+.hero{position:absolute;left:0;top:0;z-index:3;pointer-events:none;transition:transform .16s linear}
+.hero svg{width:100%;height:100%;display:block}
+.pop{position:absolute;z-index:4;pointer-events:none;transform:translate(-50%,0);font:400 17px/1 var(--pixel);text-shadow:0 2px 0 #000,0 0 3px #000;white-space:nowrap;animation:rise .9s ease-out forwards}
+.p-hp{color:#ff8a80}.p-gold{color:var(--torch)}.p-heal{color:var(--heal)}.p-gear{color:var(--gear)}
+@keyframes rise{from{transform:translate(-50%,0)}to{transform:translate(-50%,-28px);opacity:0}}
+
+/* message + tray */
+.side{display:flex;flex-direction:column;gap:10px}
+.msg{box-sizing:border-box;margin:0;height:calc(2 * 1.45em + 12px);padding:6px 10px;font:400 15px/1.45 var(--pixel);background:var(--mortar);border:2px solid var(--stone-hi);border-radius:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tray{display:flex;gap:10px;align-items:center;padding:9px 9px 11px;background:var(--wood);border-top:3px solid var(--wood-hi);border-radius:3px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.hand{--hs:4;flex:1;display:grid;grid-template-columns:repeat(var(--hs),minmax(0,1fr));gap:8px;min-width:0}
+.slot{position:relative;aspect-ratio:1;max-width:100%;background:#33373d;border-radius:3px;box-shadow:0 4px 0 #1d1611;cursor:grab;transition:transform .1s}
+.slot svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.slot .badge{font-size:12px;right:2px;bottom:2px}
+.slot.sel{transform:translateY(-7px);box-shadow:0 0 0 3px var(--torch),0 9px 0 #1d1611}
+.slot.none{background:transparent;box-shadow:inset 0 0 0 2px var(--wood-hi);cursor:default}
+.deck{flex:none;width:44px;display:flex;flex-direction:column;align-items:center;gap:5px;font:400 11px/1 var(--pixel);color:#c9b8a2}
+.deck i{display:block;width:30px;height:30px;background:#33373d;box-shadow:2px 2px 0 #292c31,4px 4px 0 #1f2125}
+.deck b{font:400 20px/1 var(--pixel);color:var(--ink)}
+.ctrl{display:flex;gap:10px;align-items:center}
+.ctrl .grow{flex:1}
+
+.btn{border:0;border-bottom:3px solid #1d2025;border-radius:3px;background:var(--stone-hi);padding:10px 14px;font:400 15px/1.2 var(--pixel);color:var(--ink);cursor:pointer}
+.btn:active{transform:translateY(2px);border-bottom-width:1px}
+.btn.main{background:var(--torch);color:#2a1a08;border-bottom-color:#9a6420}
+.btn.ghost{background:transparent;border:0;color:var(--dim);padding:10px 4px;text-decoration:underline;text-underline-offset:3px}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:focus-visible,.slot:focus-visible,.cell:focus-visible,.choice:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.ghost-tile{position:fixed;left:0;top:0;z-index:30;width:66px;height:66px;margin:-86px 0 0 -33px;pointer-events:none;background:#33373d;border-radius:3px;box-shadow:0 0 0 3px var(--torch),0 10px 18px rgba(0,0,0,.6)}
+.ghost-tile svg{width:100%;height:100%;display:block}
+
+/* sheets */
+.sheet{position:fixed;inset:0;z-index:20;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:rgba(8,9,11,.84);padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet.solid{background:var(--abyss)}
+.tablet{box-sizing:border-box;width:min(100%,380px);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:20px 18px;background:var(--stone);border:3px solid var(--stone-hi);box-shadow:0 0 0 3px var(--mortar);border-radius:3px}
+.tablet h2{margin:0;font:400 24px/1.3 var(--pixel);color:var(--torch);text-wrap:balance}
+.tablet p{margin:0;font-size:14px;line-height:1.6}
+.tablet .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tablet .row .btn{flex:1}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:7px 10px;text-align:left;background:var(--mortar);border:2px solid var(--stone-hi);border-radius:3px;cursor:pointer}
+.choice svg{width:42px;height:42px;display:block}
+.choice b{display:block;font:400 16px/1.3 var(--pixel)}
+.choice small{display:block;margin-top:2px;font-size:12px;color:var(--dim)}
+.choice .cost{font:400 15px/1 var(--pixel);color:var(--torch);white-space:nowrap}
+.choice:active{background:#24262b}
+.choice:disabled{opacity:.45;cursor:default}
+.pips{display:inline-flex;gap:3px;margin-left:6px;vertical-align:2px}
+.pips i{width:6px;height:6px;background:#4a4f57}
+.pips i.on{background:var(--torch)}
+.bank{font:400 16px/1 var(--pixel);color:var(--torch)}
+
+.title{display:flex;flex-direction:column;align-items:center;gap:16px;width:min(100%,360px)}
+.logo{margin:0;font:400 clamp(44px,13vw,64px)/1 var(--pixel);letter-spacing:.03em;text-align:center}
+.logo span{color:var(--torch)}
+.lead{margin:0;font:400 15px/1.5 var(--pixel);color:var(--dim);text-align:center}
+.strip{box-sizing:border-box;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;padding:3px;width:100%;background:var(--mortar);border-radius:3px}
+.strip .cell{aspect-ratio:1}
+.title .btn{width:100%}
+.record{font:400 14px/1 var(--pixel);color:var(--dim);min-height:14px}
+
+@media (min-width:880px) and (min-height:560px){
+  .app{max-width:1080px;display:grid;grid-template-columns:auto 380px;grid-template-rows:auto 1fr;grid-template-areas:"board plate" "board side";align-content:center;column-gap:36px;row-gap:12px}
+  .plate{grid-area:plate}
+  .boardbox{grid-area:board;align-items:center}
+  .side{grid-area:side}
+  .board{width:min(calc(100vh - 60px),640px)}
+}
+@media (prefers-reduced-motion:reduce){
+  .hero{transition:none}
+  .cell.new svg,.pop{animation-duration:.01s}
+  .slot{transition:none}
+}
 </style>
 </head>
 <body>
-<main>
-<header><h1>PATH QUEST</h1><p>つなげて、ゴールを目指そう。</p></header>
-<div class="status"><div>ステージ <strong>01</strong></div><div>配置パネル <strong id="placed">0</strong></div><div id="state">START → GOAL</div></div>
-<div class="board-wrap"><div class="board" id="board" aria-label="ゲーム盤面"></div></div>
-<section>
-  <div class="section-title">パネルを選ぼう <span>4つから1つ選択</span></div>
-  <div class="options" id="options"></div>
-</section>
-<div class="message" id="message" aria-live="polite">下のパネルを選んで、盤面の空きマスをタップ！</div>
-<div class="actions"><button id="undo">ひとつ戻す</button><button class="primary" id="reset">最初から</button></div>
-<p class="help">パネルをタップして選択 → 空きマスをタップ。またはパネルをそのままドラッグ！向きは最初から決まっているよ。<br>STARTからGOALまで道をつなげよう！</p>
-</main>
-<script>
-const SIZE=5, START={r:2,c:0}, GOAL={r:2,c:4};
-const DIRS={N:[-1,0],E:[0,1],S:[1,0],W:[0,-1]};
-const SHAPES=[
-  {name:"直線",dirs:["N","S"]},{name:"直線",dirs:["E","W"]},
-  {name:"カーブ",dirs:["N","E"]},{name:"カーブ",dirs:["E","S"]},
-  {name:"カーブ",dirs:["S","W"]},{name:"カーブ",dirs:["W","N"]},
-  {name:"T字",dirs:["N","E","W"]},{name:"T字",dirs:["N","E","S"]},
-  {name:"T字",dirs:["E","S","W"]},{name:"T字",dirs:["N","S","W"]}
-];
-let cells=[],hand=[],selected=0,history=[],won=false;
-const board=document.getElementById("board"), options=document.getElementById("options");
-function randTile(){const s=SHAPES[Math.floor(Math.random()*SHAPES.length)];return {name:s.name,dirs:[...s.dirs]};}
-function pathSvg(dirs){let paths="";const center=50;for(const d of dirs){const [dr,dc]=DIRS[d];const x2=center+dc*50,y2=center+dr*50;paths+=`<path class="tile-path" d="M 50 50 L ${x2} ${y2}"/>`;}return `<svg viewBox="0 0 100 100" aria-hidden="true">${paths}<circle cx="50" cy="50" r="7" fill="#67e8c1"/></svg>`;}
-function isEndpoint(r,c){return (r===START.r&&c===START.c)||(r===GOAL.r&&c===GOAL.c);}
-function render(){
- board.innerHTML="";
- for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
-  const el=document.createElement("button");el.className="cell";el.type="button";
-  el.dataset.row=r;el.dataset.col=c;
-  const tile=cells[r][c];
-  if(r===START.r&&c===START.c){el.classList.add("start");el.innerHTML='<span class="endpoint">START</span>';}
-  else if(r===GOAL.r&&c===GOAL.c){el.classList.add("goal");el.innerHTML='<span class="endpoint">GOAL</span>';}
-  else if(tile){el.innerHTML=pathSvg(tile.dirs);}
-  else{el.classList.add("empty");el.setAttribute("aria-label",`空きマス ${r+1},${c+1}`);}
-  if(!tile&&!isEndpoint(r,c)&&selected!==null&&!won)el.addEventListener("click",()=>place(r,c));
-  board.appendChild(el);
- }
- options.innerHTML="";
- hand.forEach((tile,i)=>{const b=document.createElement("button");b.type="button";b.className="option"+(i===selected?" active":"");b.dataset.index=i;b.disabled=won;b.setAttribute("aria-label",`${i+1}番 ${tile.name}`);b.innerHTML=pathSvg(tile.dirs)+`<small>${i+1} · ${tile.name}</small>`;b.addEventListener("click",()=>{selected=i;render();document.getElementById("message").textContent=`${tile.name}を選択中。置きたいマスをタップ！`;});options.appendChild(b);});
- document.getElementById("placed").textContent=history.length;
- document.getElementById("state").textContent=won?"CLEAR!":"START → GOAL";
-}
-function connected(){
- const seen=new Set(["2,0"]),q=[[2,0]];
- while(q.length){const [r,c]=q.shift();if(r===GOAL.r&&c===GOAL.c)return true;
-  let exits;if(r===START.r&&c===START.c)exits=["E"];else exits=cells[r][c]?.dirs||[];
-  for(const d of exits){const [dr,dc]=DIRS[d],nr=r+dr,nc=c+dc;if(nr<0||nr>=SIZE||nc<0||nc>=SIZE)continue;
-   const key=nr+","+nc;if(seen.has(key))continue;
-   let enters;if(nr===GOAL.r&&nc===GOAL.c)enters=["W"];else enters=cells[nr][nc]?.dirs||[];
-   const opposite={N:"S",E:"W",S:"N",W:"E"}[d];if(enters.includes(opposite)){seen.add(key);q.push([nr,nc]);}
-  }
- }
- return false;
-}
-function place(r,c){
- if(won||!hand[selected])return;
- history.push({r,c,tile:cells[r][c],hand:hand.map(t=>({...t})),selected});
- cells[r][c]=hand[selected];hand[selected]=randTile();
- if(connected()){won=true;document.getElementById("message").textContent="🎉 ゴールにつながった！ステージクリア！";}
- else document.getElementById("message").textContent="いい感じ！道をつないでいこう。";
- selected=0;render();
-}
-function undo(){if(!history.length||won)return;const prev=history.pop();cells[prev.r][prev.c]=prev.tile;hand=prev.hand;selected=prev.selected;document.getElementById("message").textContent="ひとつ前に戻したよ。";render();}
-function reset(){cells=Array.from({length:SIZE},()=>Array(SIZE).fill(null));hand=Array.from({length:4},randTile);selected=0;history=[];won=false;document.getElementById("message").textContent="下のパネルを選んで、盤面の空きマスをタップ！";render();}
-document.getElementById("undo").addEventListener("click",undo);
-document.getElementById("reset").addEventListener("click",reset);
+<div class="app" id="app">
+  <header class="plate">
+    <div class="floor" id="floor">B1F</div>
+    <div class="hpwrap"><span class="hptext" id="hptext">HP 10/10</span><div class="hpbar"><i id="hpfill"></i></div></div>
+    <div class="stats"><span>攻<b id="atk">2</b></span><span>守<b id="def">0</b></span><span class="gold">金<b id="gold">0</b></span></div>
+  </header>
+  <div class="boardbox"><div class="board" id="board" aria-label="ダンジョンの床"></div></div>
+  <div class="side">
+    <p class="msg" id="msg" aria-live="polite"></p>
+    <div class="tray"><div class="hand" id="hand"></div><div class="deck" aria-label="のこりのパネル"><i></i><b id="deckn">0</b>のこり</div></div>
+    <div class="ctrl"><button class="btn" id="undo" type="button">ひとつ戻す</button><span class="grow"></span><button class="btn ghost" id="quit" type="button">冒険をおえる</button></div>
+  </div>
+</div>
 
-// iPad / touch-friendly drag placement. Tapping a panel still selects it.
-let dragState=null;
-function clearDrag(){
- if(dragState?.ghost)dragState.ghost.remove();
- document.querySelectorAll(".cell.drop-target").forEach(el=>el.classList.remove("drop-target"));
- dragState=null;
+<div class="sheet solid" id="s-title">
+  <div class="title">
+    <h1 class="logo">PATH <span>QUEST</span></h1>
+    <p class="lead">パネルで道をつなぎ、地下へ潜る</p>
+    <div class="strip" id="strip"></div>
+    <button class="btn main" id="t-new" type="button">冒険に出る</button>
+    <button class="btn" id="t-cont" type="button" hidden>つづきから</button>
+    <button class="btn" id="t-shop" type="button">強化する</button>
+    <div class="record" id="t-best"></div>
+  </div>
+</div>
+
+<div class="sheet" id="s-reward" hidden>
+  <div class="tablet">
+    <h2 id="r-head">B1F 突破</h2>
+    <p>ごほうびをひとつえらぶ</p>
+    <div class="choices" id="r-list"></div>
+  </div>
+</div>
+
+<div class="sheet" id="s-stuck" hidden>
+  <div class="tablet">
+    <h2>パネルがなくなった</h2>
+    <p>道が階段までつながっていない。</p>
+    <div class="row"><button class="btn main" id="k-undo" type="button">ひとつ戻す</button><button class="btn" id="k-end" type="button">冒険をおえる</button></div>
+  </div>
+</div>
+
+<div class="sheet" id="s-quit" hidden>
+  <div class="tablet">
+    <h2>冒険をおえる？</h2>
+    <p id="q-text"></p>
+    <div class="row"><button class="btn main" id="q-no" type="button">つづける</button><button class="btn" id="q-yes" type="button">おえる</button></div>
+  </div>
+</div>
+
+<div class="sheet" id="s-over" hidden>
+  <div class="tablet">
+    <h2 id="o-head"></h2>
+    <p id="o-text"></p>
+    <div class="row"><button class="btn main" id="o-shop" type="button">強化する</button><button class="btn" id="o-again" type="button">もう一度潜る</button></div>
+    <button class="btn ghost" id="o-title" type="button">タイトルへ</button>
+  </div>
+</div>
+
+<div class="sheet" id="s-shop" hidden>
+  <div class="tablet">
+    <h2>強化</h2>
+    <p>持ち帰った金貨 <span class="bank" id="sh-bank">0</span></p>
+    <div class="choices" id="sh-list"></div>
+    <div class="row"><button class="btn main" id="sh-go" type="button">冒険に出る</button><button class="btn" id="sh-back" type="button">もどる</button></div>
+  </div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const SAVE='pathquest.run.v1', META='pathquest.meta.v1';
+const store={
+  get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+
+/* ---------- board geometry ---------- */
+const DIRS=[[-1,0,1],[0,1,2],[1,0,4],[0,-1,8]]; // N E S W as bits 1 2 4 8
+const OPP={1:4,2:8,4:1,8:2};
+const SHAPES=[[5,16],[10,16],[3,11],[6,11],[12,11],[9,11],[11,4.5],[7,4.5],[14,4.5],[13,4.5],[15,6]];
+const SHAPE_NAME=m=>({5:'直線',10:'直線',15:'十字'})[m]||([3,6,12,9].includes(m)?'カーブ':'T字');
+const rnd=n=>Math.floor(Math.random()*n);
+const pickW=a=>{let t=0;for(const x of a)t+=x[1];let r=Math.random()*t;for(const x of a){if((r-=x[1])<0)return x[0]}return a[a.length-1][0]};
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const STEP=REDUCED?70:190;
+
+/* ---------- sprites (100x100) ---------- */
+const svg=s=>`<svg viewBox="0 0 100 100" aria-hidden="true">${s}</svg>`;
+const SPR={
+  door:'<path d="M28 84V48a22 22 0 0 1 44 0v36z" fill="#120f0c" stroke="#8b7d68" stroke-width="5"/><path d="M22 86h56" stroke="#8b7d68" stroke-width="5"/>',
+  stairs:'<rect x="20" y="20" width="60" height="60" fill="#0b0c0e"/><path d="M20 32h60v9H20zM20 49h46v9H20zM20 66h32v9H20z" fill="#8b7d68"/><path d="M20 20h60v60H20z" fill="none" stroke="#5c5346" stroke-width="4"/>',
+  rock:'<path d="M18 72 28 42 50 28 74 36 84 66 68 82H32z" fill="#565a61"/><path d="M28 42 50 28 58 46 38 54z" fill="#71767e"/><path d="M58 46 74 36 84 66 66 64z" fill="#4a4e54"/>',
+  gem:'<path d="M50 30 68 47 50 72 32 47z" fill="#3fb6c2"/><path d="M50 30 58 47 50 72 42 47z" fill="#a7eef3"/>',
+  gemSmall:'<g transform="translate(4 4) scale(.34)"><path d="M50 18 80 47 50 88 20 47z" fill="#3fb6c2"/><path d="M50 18 62 47 50 88 38 47z" fill="#a7eef3"/></g>',
+  slime:'<path d="M28 68C28 46 39 35 50 35S72 46 72 68z" fill="#6cc25a"/><path d="M34 52q4-9 12-11" stroke="#b6ec9f" stroke-width="3" fill="none"/><circle cx="43" cy="56" r="3.6" fill="#1b2a14"/><circle cx="57" cy="56" r="3.6" fill="#1b2a14"/>',
+  bat:'<path d="M50 42 58 49 73 38 69 55 82 58 62 65 50 61 38 65 18 58 31 55 27 38 42 49z" fill="#7d61aa"/><circle cx="46" cy="52" r="2.6" fill="#ffd36e"/><circle cx="54" cy="52" r="2.6" fill="#ffd36e"/>',
+  bone:'<path d="M35 52a15 15 0 0 1 30 0v8h-4v8H39v-8h-4z" fill="#e7e1d1"/><circle cx="44" cy="53" r="4.2" fill="#2a2620"/><circle cx="56" cy="53" r="4.2" fill="#2a2620"/><path d="M45 62v6M50 62v6M55 62v6" stroke="#2a2620" stroke-width="2"/>',
+  golem:'<path d="M26 54h8v14h-8zM66 54h8v14h-8z" fill="#5f6268"/><rect x="33" y="36" width="34" height="34" rx="3" fill="#7d8087"/><rect x="38" y="47" width="8" height="5" fill="#ff9a3c"/><rect x="54" y="47" width="8" height="5" fill="#ff9a3c"/><path d="M40 62h20" stroke="#55585e" stroke-width="3"/>',
+  boss:'<path d="M28 44 34 22 42 38q8-4 16 0l8-16 6 22q5 10 0 22-8 14-22 14T28 66q-5-12 0-22z" fill="#c8453b"/><path d="M37 52l9 4M63 52l-9 4" stroke="#ffd36e" stroke-width="4"/><path d="M41 66h18" stroke="#3a0e0b" stroke-width="3"/>',
+  coin:'<circle cx="46" cy="58" r="13" fill="#b97a22"/><circle cx="52" cy="50" r="14" fill="#f2b33d"/><circle cx="52" cy="50" r="8.5" fill="none" stroke="#b97a22" stroke-width="3"/>',
+  potion:'<rect x="43" y="25" width="14" height="6" fill="#8a6a45"/><rect x="45" y="30" width="10" height="12" fill="#c9d6da"/><circle cx="50" cy="56" r="16" fill="#c9d6da"/><path d="M36 58a14 14 0 0 0 28 0z" fill="#e0524a"/>',
+  sword:'<path d="M66 26 72 32 46 58 40 52z" fill="#d3d9de"/><path d="M66 26 72 32 70 28z" fill="#fff"/><path d="M34 50 50 66" stroke="#8a6a45" stroke-width="6"/><path d="M40 60 30 70" stroke="#6b4f30" stroke-width="7" stroke-linecap="round"/>',
+  shield:'<path d="M50 28 69 35V51q0 15-19 23-19-8-19-23V35z" fill="#5b7fb5"/><path d="M50 34v36M37 49h26" stroke="#dfe7f2" stroke-width="4"/>',
+  heart:'<path d="M50 74 28 52a12 12 0 0 1 22-14 12 12 0 0 1 22 14z" fill="#e0524a"/>',
+  bag:'<path d="M37 40q13-8 26 0l5 28q-18 9-36 0z" fill="#8a6a45"/><path d="M41 37h18" stroke="#5b4630" stroke-width="5"/>',
+  glass:'<path d="M34 26h32M34 74h32" stroke="#8a6a45" stroke-width="5"/><path d="M38 28h24l-10 22 10 22H38l10-22z" fill="#c9d6da"/><path d="M42 70h16l-8-12z" fill="#f2b33d"/>',
+  hand:'<rect x="26" y="40" width="14" height="14" fill="#a98a57"/><rect x="43" y="40" width="14" height="14" fill="#a98a57"/><rect x="60" y="40" width="14" height="14" fill="#a98a57"/><rect x="34" y="58" width="14" height="14" fill="#a98a57"/><rect x="52" y="58" width="14" height="14" fill="#ebc782"/>',
+  hero:'<ellipse cx="50" cy="80" rx="20" ry="5" fill="rgba(0,0,0,.45)"/><path d="M50 30q10-15 22-11-10 5-14 14z" fill="#e0524a"/><path d="M28 62q0-30 22-32 22 2 22 32v14H28z" fill="#cdd1d7"/><path d="M28 62q0-30 22-32v46H28z" fill="#e6e9ed"/><rect x="34" y="52" width="32" height="7" fill="#17191d"/><path d="M50 59v17" stroke="#9aa0a8" stroke-width="3"/>'
+};
+const FOE_SPR={slime:'slime',bat:'bat',bone:'bone',golem:'golem',boss:'boss'};
+
+function roadSVG(m){
+  const seg={1:'M50 50V0',2:'M50 50H100',4:'M50 50V100',8:'M50 50H0'};
+  let d='';for(const b of [1,2,4,8])if(m&b)d+=seg[b];
+  return `<path d="${d}" class="rd-edge" stroke-width="42" stroke-linecap="square" fill="none"/><path d="${d}" class="rd" stroke-width="30" stroke-linecap="square" fill="none"/>`;
 }
-options.addEventListener("pointerdown",e=>{
- const button=e.target.closest(".option");
- if(!button||won)return;
- e.preventDefault();
- const index=Number(button.dataset.index);
- selected=index;
- options.querySelectorAll(".option").forEach((el,i)=>el.classList.toggle("active",i===selected));
- document.getElementById("message").textContent=hand[index].name+"を選択中。盤面をタップするか、ここからドラッグ！";
- dragState={index,startX:e.clientX,startY:e.clientY,moved:false,ghost:null};
-});
-document.addEventListener("pointermove",e=>{
- if(!dragState)return;
- const dx=e.clientX-dragState.startX,dy=e.clientY-dragState.startY;
- if(!dragState.moved&&Math.hypot(dx,dy)>7){
-  dragState.moved=true;
-  const ghost=document.createElement("div");
-  ghost.className="drag-ghost";
-  ghost.innerHTML=pathSvg(hand[dragState.index].dirs);
-  document.body.appendChild(ghost);
-  dragState.ghost=ghost;
- }
- if(!dragState.moved)return;
- e.preventDefault();
- dragState.ghost.style.left=e.clientX+"px";
- dragState.ghost.style.top=e.clientY+"px";
- document.querySelectorAll(".cell.drop-target").forEach(el=>el.classList.remove("drop-target"));
- const target=document.elementFromPoint(e.clientX,e.clientY)?.closest(".cell");
- if(target?.classList.contains("empty"))target.classList.add("drop-target");
+function evSVG(e){
+  if(!e)return '';
+  if(e.k==='foe')return SPR[FOE_SPR[e.t]];
+  return SPR[{coin:'coin',potion:'potion',sword:'sword',shield:'shield'}[e.k]]||'';
+}
+
+/* ---------- enemies, events ---------- */
+const FOES=[
+  {t:'slime',name:'スライム',from:1,hp:0,atk:0},
+  {t:'bat',name:'コウモリ',from:3,hp:-1,atk:1},
+  {t:'bone',name:'ガイコツ',from:6,hp:1,atk:0},
+  {t:'golem',name:'ゴーレム',from:10,hp:4,atk:0}
+];
+function makeFoe(f){
+  const pool=FOES.filter(x=>x.from<=f);
+  const t=pool.length>1&&Math.random()<.55?pool[pool.length-1]:pool[rnd(pool.length)];
+  return {k:'foe',t:t.t,name:t.name,hp:Math.max(2,2+f+t.hp),atk:Math.max(1,1+Math.floor((f-1)/2)+t.atk),gold:3+Math.floor(f*.8)};
+}
+function makeBoss(f){return {k:'foe',t:'boss',name:'階のぬし',hp:4+Math.round(f*1.6),atk:1+Math.ceil(f/2),gold:10+2*f,boss:true}}
+function makeEvent(f){
+  const x=Math.random(),fp=Math.min(.3,.16+.012*f);
+  if(x<fp)return makeFoe(f);
+  if(x<fp+.13)return {k:'coin',v:2+Math.floor(f/2)};
+  if(x<fp+.2)return {k:'potion',v:3+Math.floor(f/3)};
+  if(x<fp+.245)return {k:'sword'};
+  if(x<fp+.29)return {k:'shield'};
+  return null;
+}
+const makeTile=(f,m)=>({m:m||pickW(SHAPES),e:makeEvent(f)});
+const dmgFor=e=>Math.max(0,e.atk-run.def)*(Math.ceil(e.hp/run.atk)-1);
+
+/* ---------- meta (persists between runs) ---------- */
+const UPS=[
+  {k:'hp',name:'体力',desc:'はじめの最大HP+2',icon:'heart',max:10,cost:l=>12+8*l},
+  {k:'atk',name:'剣のうで',desc:'はじめの攻撃+1',icon:'sword',max:5,cost:l=>25+20*l},
+  {k:'def',name:'守りのうで',desc:'はじめの守り+1',icon:'shield',max:5,cost:l=>25+20*l},
+  {k:'bag',name:'道具ぶくろ',desc:'どの階もパネル+2',icon:'bag',max:5,cost:l=>18+12*l},
+  {k:'undo',name:'砂時計',desc:'ひとつ戻すが1階ごとに+1',icon:'glass',max:3,cost:l=>30+25*l},
+  {k:'hand',name:'広い手',desc:'パネルの候補が5枚',icon:'hand',max:1,cost:()=>90}
+];
+let meta=store.get(META)||{};
+meta={bank:meta.bank|0,best:meta.best|0,up:Object.assign({hp:0,atk:0,def:0,bag:0,undo:0,hand:0},meta.up||{})};
+const saveMeta=()=>store.set(META,meta);
+
+/* ---------- run state ---------- */
+let run=store.get(SAVE);
+if(run&&!(run.cells&&run.hand))run=null;
+let sel=-1,busy=false,heroAt=-1,justPlaced=-1;
+const save=()=>{if(run)store.set(SAVE,run)};
+
+function newRun(){
+  const u=meta.up;
+  run={floor:0,maxHp:10+2*u.hp,hp:10+2*u.hp,atk:2+u.atk,def:u.def,gold:0,handSize:4+u.hand,extra:0,phase:'build'};
+  nextFloor();
+}
+function nextFloor(){
+  run.floor++;
+  genFloor();
+  if(run.floor>meta.best){meta.best=run.floor;saveMeta()}
+  run.phase='build';save();
+  hideSheets();render();
+  say(run.floor===1?'パネルを空きマスへ置いて、入口から階段まで道をつなぐ。':run.boss?`B${run.floor}F　階段の前に、階のぬしがいる。`:`B${run.floor}F　階段まで道をつなぐ。`);
+}
+const sizeFor=f=>f<=3?5:f<=7?6:7;
+function dirBit(a,b,n){return b===a-n?1:b===a+1?2:b===a+n?4:8}
+function findPath(cells,n,s,g){
+  const N=n*n,w=Array.from({length:N},()=>1+Math.random()*1.6),dist=new Array(N).fill(Infinity),prev=new Array(N).fill(-1),done=new Array(N).fill(false);
+  dist[s]=0;
+  for(;;){
+    let u=-1,b=Infinity;
+    for(let i=0;i<N;i++)if(!done[i]&&dist[i]<b){b=dist[i];u=i}
+    if(u<0||u===g)break;
+    done[u]=true;
+    const r=u/n|0,c=u%n;
+    for(const [dr,dc] of DIRS){
+      const rr=r+dr,cc=c+dc;if(rr<0||rr>=n||cc<0||cc>=n)continue;
+      const v=rr*n+cc;if(done[v]||cells[v].rock)continue;
+      const nd=dist[u]+w[v];if(nd<dist[v]){dist[v]=nd;prev[v]=u}
+    }
+  }
+  if(dist[g]===Infinity)return null;
+  const p=[];for(let v=g;v!==-1;v=prev[v])p.push(v);return p.reverse();
+}
+function genFloor(){
+  const f=run.floor,n=sizeFor(f);
+  let cells,s,g,path;
+  for(let tries=0;tries<60;tries++){
+    cells=Array.from({length:n*n},()=>({rock:0,gem:0,tile:null}));
+    s=rnd(n)*n;g=rnd(n)*n+n-1;
+    const rocks=Math.floor(n*n*.07)+Math.floor(f/4);
+    for(let k=0,guard=0;k<rocks&&guard<300;guard++){const i=rnd(n*n);if(i===s||i===g||cells[i].rock)continue;cells[i].rock=1;k++}
+    path=findPath(cells,n,s,g);
+    if(path)break;
+  }
+  if(!path){cells.forEach(c=>{c.rock=0});path=findPath(cells,n,s,g)}
+  const free=[];cells.forEach((c,i)=>{if(!c.rock&&i!==s&&i!==g)free.push(i)});
+  const gems=f>=6?2:1;
+  shuffle(free.slice()).slice(0,gems).forEach(i=>{cells[i].gem=5+2*f});
+  const need=[];
+  for(let k=1;k<path.length-1;k++)need.push(makeTile(f,dirBit(path[k],path[k-1],n)|dirBit(path[k],path[k+1],n)));
+  const base={5:18,6:24,7:30}[n];
+  const total=Math.max(need.length+4,Math.min(base+2*meta.up.bag+run.extra,free.length-1));
+  const deck=need.slice();while(deck.length<total)deck.push(makeTile(f));
+  shuffle(deck);
+  Object.assign(run,{n,cells,s,g,boss:f%5===0?makeBoss(f):null,hand:deck.splice(0,run.handSize),deck,hist:[],undo:3+meta.up.undo});
+  run.start0=JSON.stringify({cells:run.cells,hand:run.hand,deck:run.deck});
+  heroAt=s;sel=-1;
+}
+
+/* ---------- connection ---------- */
+function reach(){
+  const {n,cells,s,g}=run,prev=new Array(n*n).fill(-1),seen=new Set([s]),q=[s];let found=false;
+  while(q.length){
+    const i=q.shift();
+    if(i===g){found=true;continue}
+    const r=i/n|0,c=i%n,m=i===s?15:cells[i].tile.m;
+    for(const [dr,dc,b] of DIRS){
+      if(!(m&b))continue;
+      const rr=r+dr,cc=c+dc;if(rr<0||rr>=n||cc<0||cc>=n)continue;
+      const j=rr*n+cc;if(seen.has(j))continue;
+      if(j!==g){const t=cells[j].tile;if(!t||!(t.m&OPP[b]))continue}
+      seen.add(j);prev[j]=i;q.push(j);
+    }
+  }
+  return {seen,prev,found};
+}
+const isEmpty=i=>i>=0&&i!==run.s&&i!==run.g&&!run.cells[i].rock&&!run.cells[i].tile;
+
+/* ---------- rendering ---------- */
+const board=$('board'),handEl=$('hand'),msgEl=$('msg');
+const hero=document.createElement('div');hero.className='hero';hero.innerHTML=svg(SPR.hero);
+function say(t){msgEl.textContent=t}
+function badge(e){
+  if(!e)return '';
+  if(e.k==='foe'){const d=dmgFor(e);return `<span class="badge ${d?'b-foe':'b-zero'}">-${d}</span>`}
+  if(e.k==='coin')return `<span class="badge b-coin">+${e.v}</span>`;
+  if(e.k==='potion')return `<span class="badge b-heal">+${e.v}</span>`;
+  if(e.k==='sword')return '<span class="badge b-gear">攻+1</span>';
+  if(e.k==='shield')return '<span class="badge b-gear">守+1</span>';
+  return '';
+}
+function cellHTML(i,lit){
+  const c=run.cells[i];let cls='cell',inner='',tab='';
+  if(i===run.s){cls+=' start';inner=svg(SPR.door)}
+  else if(i===run.g){cls+=' goal';inner=svg(SPR.stairs+(run.boss?SPR.boss:''))+(run.boss?badge(run.boss):'')}
+  else if(c.rock){cls+=' rock';inner=svg(SPR.rock)}
+  else if(c.tile){cls+=' laid'+(lit&&lit.has(i)?' lit':'')+(i===justPlaced?' new':'');inner=svg(roadSVG(c.tile.m)+(c.gem?SPR.gemSmall:'')+evSVG(c.tile.e))+badge(c.tile.e)}
+  else{cls+=' empty';tab=' tabindex="0" role="button" aria-label="空きマス"';if(c.gem)inner=svg(SPR.gem)}
+  return `<div class="${cls}" data-i="${i}"${tab}>${inner}</div>`;
+}
+function renderBoard(r){
+  r=r||reach();
+  board.style.setProperty('--n',run.n);
+  let h='';for(let i=0;i<run.n*run.n;i++)h+=cellHTML(i,r.seen);
+  board.innerHTML=h;board.appendChild(hero);justPlaced=-1;
+  board.classList.toggle('picking',sel>=0);
+  placeHero(heroAt,true);
+}
+function updateCell(i){const el=board.children[i];if(el)el.outerHTML=cellHTML(i,reach().seen)}
+function tileSVG(t){return svg(roadSVG(t.m)+evSVG(t.e))}
+function renderHand(){
+  handEl.style.setProperty('--hs',run.hand.length);
+  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot lit${i===sel?' sel':''}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}">${tileSVG(t)}${badge(t.e)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('');
+  $('deckn').textContent=run.deck.length;
+  board.classList.toggle('picking',sel>=0);
+}
+function renderStats(){
+  const hp=Math.max(0,run.hp);
+  $('floor').textContent=`B${run.floor}F`;
+  $('hptext').textContent=`HP ${hp}/${run.maxHp}`;
+  $('hpfill').style.width=(hp/run.maxHp*100)+'%';
+  $('atk').textContent=run.atk;$('def').textContent=run.def;$('gold').textContent=run.gold;
+  const u=$('undo');u.textContent=`ひとつ戻す ${run.undo}`;u.disabled=busy||run.phase!=='build'||!run.hist.length||run.undo<=0;
+  $('quit').disabled=busy;
+}
+function render(r){renderStats();renderBoard(r);renderHand()}
+function placeHero(i,instant){
+  const el=board.children[i];if(!el||el===hero)return;heroAt=i;
+  if(instant)hero.style.transition='none';
+  hero.style.width=el.offsetWidth+'px';hero.style.height=el.offsetHeight+'px';
+  hero.style.transform=`translate(${el.offsetLeft}px,${el.offsetTop}px)`;
+  if(instant){void hero.offsetWidth;hero.style.transition=''}
+}
+function pop(i,text,cls,delay){
+  setTimeout(()=>{
+    const el=board.children[i];if(!el)return;
+    const p=document.createElement('span');p.className='pop '+cls;p.textContent=text;
+    p.style.left=(el.offsetLeft+el.offsetWidth/2)+'px';p.style.top=(el.offsetTop+2)+'px';
+    board.appendChild(p);setTimeout(()=>p.remove(),950);
+  },delay||0);
+}
+function tileName(t){
+  const e=t.e;let s=SHAPE_NAME(t.m);
+  if(!e)return s;
+  if(e.k==='foe')return `${s}・${e.name}`;
+  return `${s}・`+({coin:'金貨',potion:'薬',sword:'剣',shield:'盾'})[e.k];
+}
+function describe(e){
+  if(!e)return '';
+  if(e.k==='foe')return `${e.name}　HP${e.hp} 攻${e.atk}　うけるダメージ${dmgFor(e)}　金+${e.gold}`;
+  if(e.k==='coin')return `金貨　+${e.v}`;
+  if(e.k==='potion')return `薬　HP+${e.v}`;
+  if(e.k==='sword')return '剣　攻撃+1。敵を早くたおせる';
+  if(e.k==='shield')return '盾　守り+1。うけるダメージがへる';
+  return '';
+}
+
+/* ---------- play ---------- */
+function tapSlot(i){
+  if(!run.hand[i])return;
+  sel=sel===i?-1:i;renderHand();
+  if(sel>=0){const t=run.hand[i];say((t.e?describe(t.e)+'。':'')+'置くマスをタップ')}
+}
+function tapCell(i){
+  if(isEmpty(i)){
+    if(sel>=0)return place(i,sel);
+    return say(run.cells[i].gem?`宝石　通ると金+${run.cells[i].gem}。下のパネルを先にえらぶ`:'下のパネルを先にえらぶ');
+  }
+  const c=run.cells[i];
+  if(i===run.s)return say('入口。ここから階段まで道をつなぐ');
+  if(i===run.g)return say(run.boss?describe(run.boss):'階段。ここまでつながると次の階へ');
+  if(c.rock)return say('岩。パネルは置けない');
+  if(c.tile)say(c.tile.e?describe(c.tile.e):SHAPE_NAME(c.tile.m)+'の道');
+}
+function place(i,hi){
+  const t=run.hand[hi];if(!t||!isEmpty(i)||run.phase!=='build'||busy)return;
+  const drew=run.deck.length?run.deck.shift():null;
+  run.hist.push({i,hi,t,drew});
+  run.cells[i].tile=t;run.hand[hi]=drew;sel=-1;justPlaced=i;
+  const r=reach();
+  if(r.found){render(r);save();walk(r);return}
+  render(r);
+  if(run.hand.every(x=>!x)||!run.cells.some((c,j)=>isEmpty(j))){save();return stuck()}
+  say(r.seen.has(i)?'道がのびた':'まだ入口とつながっていない');
+  save();
+}
+function undo(){
+  if(!run||run.phase!=='build'||busy||!run.hist.length||run.undo<=0)return;
+  const h=run.hist.pop();
+  run.cells[h.i].tile=null;if(h.drew)run.deck.unshift(h.drew);run.hand[h.hi]=h.t;
+  run.undo--;sel=-1;hideSheets();render();save();
+  say(`ひとつ戻した（のこり${run.undo}回）`);
+}
+function stuck(){
+  if(run.undo>0&&run.hist.length){$('k-undo').textContent=`ひとつ戻す ${run.undo}`;show('s-stuck')}
+  else gameOver('stuck');
+}
+async function walk(r){
+  busy=true;run.phase='walk';sel=-1;renderStats();renderHand();
+  const path=[];for(let v=run.g;v!==-1;v=r.prev[v])path.push(v);path.reverse();
+  path.forEach(i=>{const el=board.children[i];if(el&&i!==run.s&&i!==run.g)el.classList.add('way')});
+  say('階段までつながった');
+  await sleep(STEP*1.5);
+  for(let k=1;k<path.length;k++){
+    const i=path[k];placeHero(i);await sleep(STEP);
+    const hit=i===run.g?fightBoss(i):resolve(i);
+    renderStats();
+    if(run.hp<=0){await sleep(700);busy=false;return gameOver('hp')}
+    if(hit)await sleep(STEP*2.2);
+  }
+  await sleep(350);busy=false;
+  run.phase='reward';run.rewards=pickRewards();save();showReward();
+}
+function fight(e,i){
+  const d=dmgFor(e);run.hp-=d;run.gold+=e.gold;
+  pop(i,d?`-${d}`:'0',d?'p-hp':'p-gear');pop(i,`金+${e.gold}`,'p-gold',260);
+  say(run.hp<=0?`${e.name}にやられた`:`${e.name}をたおした　HP-${d}　金+${e.gold}`);
+}
+function fightBoss(i){if(!run.boss)return false;fight(run.boss,i);run.boss=null;updateCell(i);return true}
+function resolve(i){
+  const c=run.cells[i];let hit=false;
+  const e=c.tile&&c.tile.e;
+  if(e){
+    c.tile.e=null;hit=true;
+    if(e.k==='foe')fight(e,i);
+    else if(e.k==='coin'){run.gold+=e.v;pop(i,`+${e.v}`,'p-gold');say(`金貨をひろった　+${e.v}`)}
+    else if(e.k==='potion'){const h=Math.min(e.v,run.maxHp-run.hp);run.hp+=h;pop(i,`+${h}`,'p-heal');say(`薬をのんだ　HP+${h}`)}
+    else if(e.k==='sword'){run.atk++;pop(i,'攻+1','p-gear');say('剣を手に入れた　攻撃+1')}
+    else if(e.k==='shield'){run.def++;pop(i,'守+1','p-gear');say('盾を手に入れた　守り+1')}
+  }
+  if(c.gem&&run.hp>0){const v=c.gem;c.gem=0;run.gold+=v;pop(i,`+${v}`,'p-gold',e?420:0);if(!e)say(`宝石を見つけた　金+${v}`);hit=true}
+  if(hit)updateCell(i);
+  return hit;
+}
+
+/* ---------- rewards ---------- */
+function pickRewards(){
+  const f=run.floor,heal=5+Math.floor(f/2),g=6+2*f;
+  let pool=[
+    {k:'heal',icon:'potion',t:`HPを${heal}回復`,s:`いま ${Math.max(0,run.hp)}/${run.maxHp}`,v:heal},
+    {k:'maxhp',icon:'heart',t:'最大HP+3',s:'HPも3ふえる',v:3},
+    {k:'atk',icon:'sword',t:'攻撃+1',s:`いま ${run.atk}`},
+    {k:'def',icon:'shield',t:'守り+1',s:`いま ${run.def}`},
+    {k:'deck',icon:'bag',t:'パネル+3',s:'次の階から'},
+    {k:'gold',icon:'coin',t:`金貨+${g}`,s:'持ち帰って強化に使える',v:g}
+  ];
+  if(run.hp>=run.maxHp)pool=pool.filter(x=>x.k!=='heal');
+  return shuffle(pool).slice(0,3);
+}
+function showReward(){
+  $('r-head').textContent=`B${run.floor}F 突破`;
+  $('r-list').innerHTML=run.rewards.map((x,i)=>`<button class="choice" type="button" data-i="${i}">${svg(SPR[x.icon])}<span><b>${x.t}</b><small>${x.s}</small></span><span></span></button>`).join('');
+  renderStats();show('s-reward');
+}
+function takeReward(i){
+  const x=run.rewards[i];if(!x)return;
+  if(x.k==='heal')run.hp=Math.min(run.maxHp,run.hp+x.v);
+  if(x.k==='maxhp'){run.maxHp+=3;run.hp+=3}
+  if(x.k==='atk')run.atk++;
+  if(x.k==='def')run.def++;
+  if(x.k==='deck')run.extra+=3;
+  if(x.k==='gold')run.gold+=x.v;
+  run.rewards=null;nextFloor();
+}
+
+/* ---------- end of run ---------- */
+function gameOver(why){
+  if(!run)return;
+  meta.bank+=run.gold;meta.best=Math.max(meta.best,run.floor);saveMeta();
+  $('o-head').textContent=why==='hp'?`B${run.floor}Fで力つきた`:why==='stuck'?`B${run.floor}Fで道がとぎれた`:`B${run.floor}Fで引き返した`;
+  $('o-text').textContent=`持ち帰った金貨 ${run.gold}　いちばん深く B${meta.best}F`;
+  store.del(SAVE);run=null;busy=false;
+  hideSheets();show('s-over');
+}
+
+/* ---------- sheets ---------- */
+const SHEETS=['s-title','s-reward','s-stuck','s-quit','s-over','s-shop'];
+function hideSheets(){SHEETS.forEach(id=>$(id).hidden=true)}
+function show(id){hideSheets();$(id).hidden=false;const b=$(id).querySelector('button:not([hidden])');if(b&&matchMedia('(hover:hover)').matches)b.focus({preventScroll:true})}
+function showTitle(){
+  const st=$('strip');
+  const demo=[SPR.door+SPR.hero,roadSVG(10)+SPR.coin,roadSVG(10)+SPR.slime,roadSVG(10)+SPR.sword,roadSVG(10),SPR.stairs];
+  st.innerHTML=demo.map((s,i)=>`<div class="cell${i>0&&i<5?' laid lit':''}">${svg(s)}</div>`).join('');
+  $('t-cont').hidden=!run;
+  if(run)$('t-cont').textContent=`つづきから　B${run.floor}F`;
+  $('t-shop').textContent=`強化する　金${meta.bank}`;
+  $('t-best').textContent=meta.best?`いちばん深く B${meta.best}F`:'';
+  show('s-title');
+}
+function showShop(){
+  $('sh-bank').textContent=meta.bank;
+  $('sh-list').innerHTML=UPS.map(u=>{
+    const l=meta.up[u.k],maxed=l>=u.max,c=u.cost(l);
+    const pips=u.max>1?`<span class="pips">${Array.from({length:u.max},(_,j)=>`<i class="${j<l?'on':''}"></i>`).join('')}</span>`:'';
+    return `<button class="choice" type="button" data-k="${u.k}"${maxed||meta.bank<c?' disabled':''}>${svg(SPR[u.icon])}<span><b>${u.name}${pips}</b><small>${u.desc}</small></span><span class="cost">${maxed?'最大':'金'+c}</span></button>`;
+  }).join('');
+  show('s-shop');
+}
+function buy(k){
+  const u=UPS.find(x=>x.k===k);if(!u)return;
+  const l=meta.up[k],c=u.cost(l);
+  if(l>=u.max||meta.bank<c)return;
+  meta.bank-=c;meta.up[k]++;saveMeta();showShop();
+}
+function startRun(){newRun()}
+function resume(){
+  hideSheets();
+  if(run.phase==='reward'&&run.rewards){render();return showReward()}
+  run.phase='build';heroAt=run.s;render();
+  const r=reach();
+  if(r.found){walk(r);return}
+  say(`B${run.floor}F　つづきから`);
+}
+
+/* ---------- input: one pointer path for tap and drag (works with touch, pen, mouse) ---------- */
+let drag=null,ghost=null,overCell=-1;
+function cellUnder(x,y){const el=document.elementFromPoint(x,y),c=el&&el.closest('.cell');return c&&board.contains(c)?+c.dataset.i:-1}
+function setOver(i){
+  if(overCell===i)return;
+  if(overCell>=0&&board.children[overCell])board.children[overCell].classList.remove('over');
+  overCell=i;
+  if(i>=0&&isEmpty(i))board.children[i].classList.add('over');
+}
+document.addEventListener('pointerdown',e=>{
+  if(!run||run.phase!=='build'||busy||(e.pointerType==='mouse'&&e.button!==0))return;
+  const s=e.target.closest('.slot'),c=e.target.closest('.cell');
+  if(!(s&&handEl.contains(s))&&!(c&&board.contains(c)))return;
+  e.preventDefault();
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY,slot:s?+s.dataset.i:-1,cell:!s?+c.dataset.i:-1,moving:false};
 },{passive:false});
-document.addEventListener("pointerup",e=>{
- if(!dragState)return;
- const moved=dragState.moved;
- const target=moved?document.elementFromPoint(e.clientX,e.clientY)?.closest(".cell"):null;
- const row=target?Number(target.dataset.row):NaN;
- const col=target?Number(target.dataset.col):NaN;
- clearDrag();
- if(moved&&target?.classList.contains("empty")&&Number.isInteger(row)&&Number.isInteger(col)){
-  place(row,col);
- }else if(moved){
-  document.getElementById("message").textContent="空いているマスにドロップしてね。パネルはそのままだよ。";
- }
+document.addEventListener('pointermove',e=>{
+  if(!drag||e.pointerId!==drag.id||drag.slot<0)return;
+  if(!drag.moving){
+    if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<8)return;
+    if(!run.hand[drag.slot]){drag=null;return}
+    drag.moving=true;sel=drag.slot;renderHand();
+    ghost=document.createElement('div');ghost.className='ghost-tile';ghost.innerHTML=tileSVG(run.hand[sel]);
+    ghost.firstChild.classList.add('lit');document.body.appendChild(ghost);
+  }
+  e.preventDefault();
+  ghost.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;
+  setOver(cellUnder(e.clientX,e.clientY));
+},{passive:false});
+function endPointer(e,cancel){
+  if(!drag||e.pointerId!==drag.id)return;
+  const d=drag;drag=null;
+  if(ghost){ghost.remove();ghost=null}
+  setOver(-1);
+  if(cancel){if(d.moving){sel=-1;renderHand()}return}
+  if(d.moving){
+    const t=cellUnder(e.clientX,e.clientY);
+    if(isEmpty(t))place(t,d.slot);else{say('空きマスの上で指をはなす')}
+    return;
+  }
+  if(d.slot>=0)tapSlot(d.slot);else if(d.cell>=0)tapCell(d.cell);
+}
+document.addEventListener('pointerup',e=>endPointer(e,false));
+document.addEventListener('pointercancel',e=>endPointer(e,true));
+document.addEventListener('contextmenu',e=>{if(e.target.closest('.board,.tray'))e.preventDefault()});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  if(!run||run.phase!=='build'||busy)return;
+  const s=e.target.closest&&e.target.closest('.slot'),c=e.target.closest&&e.target.closest('.cell');
+  if(s&&handEl.contains(s)){e.preventDefault();tapSlot(+s.dataset.i)}
+  else if(c&&board.contains(c)){e.preventDefault();tapCell(+c.dataset.i)}
 });
-document.addEventListener("pointercancel",clearDrag);
-reset();
+
+/* ---------- buttons ---------- */
+$('undo').addEventListener('click',undo);
+$('quit').addEventListener('click',()=>{if(!run||busy)return;$('q-text').textContent=`ここまでの金貨 ${run.gold} を持ち帰り、強化に使える。`;show('s-quit')});
+$('q-no').addEventListener('click',hideSheets);
+$('q-yes').addEventListener('click',()=>gameOver('quit'));
+$('k-undo').addEventListener('click',undo);
+$('k-end').addEventListener('click',()=>gameOver('stuck'));
+$('r-list').addEventListener('click',e=>{const b=e.target.closest('.choice');if(b)takeReward(+b.dataset.i)});
+$('t-new').addEventListener('click',()=>{if(run){meta.bank+=run.gold;saveMeta()}store.del(SAVE);startRun()});
+$('t-cont').addEventListener('click',()=>{if(run)resume()});
+$('t-shop').addEventListener('click',showShop);
+$('o-shop').addEventListener('click',showShop);
+$('o-again').addEventListener('click',startRun);
+$('o-title').addEventListener('click',showTitle);
+$('sh-list').addEventListener('click',e=>{const b=e.target.closest('.choice');if(b&&!b.disabled)buy(b.dataset.k)});
+$('sh-go').addEventListener('click',()=>{if(run)resume();else startRun()});
+$('sh-back').addEventListener('click',showTitle);
+window.addEventListener('resize',()=>{if(run&&heroAt>=0)placeHero(heroAt,true)});
+
+showTitle();
+})();
 </script>
 </body>
 </html>
