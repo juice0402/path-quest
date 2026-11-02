@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PATH QUEST</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="パネルで道をつないで地下へ潜るダンジョンゲーム。敵・金貨・装備のパネルをどう通るかで、どこまで深く行けるかが変わる。">
+<meta name="description" content="パネルで道を作りながら、下の入口から上の階段へ進むダンジョンゲーム。敵・金貨・装備のパネルをどう通るかで、どこまで深く行けるかが変わる。">
 <meta name="theme-color" content="#14161a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
 <style>
-/* layout: a dungeon table seen from above. stone plate (status) on top, stone floor (board) in the middle, wooden tray of panels below. side by side on wide screens */
+/* layout: a dungeon floor seen from above, scrolled upward as the hero climbs. stone plate (status) on top, wooden tray of panels below. side by side on wide screens */
 :root{
   color-scheme:dark;
   --abyss:#14161a;
@@ -37,7 +37,7 @@ html,body{height:100%;margin:0;background:var(--abyss);color:var(--ink)}
 body{font-family:var(--sans);-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscroll-behavior:none}
 button{font:inherit;color:inherit}
 
-.app{box-sizing:border-box;min-height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:10px;padding-block:10px 14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{box-sizing:border-box;height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:9px;padding-block:10px 12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
 /* status plate */
 .plate{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:7px 12px;background:var(--mortar);border:2px solid var(--stone-hi);border-radius:3px}
@@ -51,32 +51,36 @@ button{font:inherit;color:inherit}
 .stats b{font-weight:400;color:var(--ink);margin-left:2px}
 .stats .gold b{color:var(--torch)}
 
-/* board */
-.boardbox{display:flex;justify-content:center}
-.board{--n:5;position:relative;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:3px;padding:3px;background:var(--mortar);border-radius:3px;width:min(100%,460px);width:min(100%,calc(100svh - 312px),460px);aspect-ratio:1;max-width:100%;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+/* scrolling floor */
+.viewwrap{position:relative;flex:1;min-height:150px;display:flex}
+.view{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;background:var(--mortar);border-radius:3px;scrollbar-width:none}
+.view::-webkit-scrollbar{display:none}
+.hint{position:absolute;left:8px;top:8px;z-index:6;pointer-events:none;padding:4px 8px;border-radius:2px;background:rgba(16,17,20,.86);font:400 13px/1.2 var(--pixel);color:var(--ink)}
+.hint b{font-weight:400;color:var(--torch)}
+.board{--w:5;--h:9;position:relative;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));gap:3px;padding:3px;margin:0 auto;width:min(100%,420px);aspect-ratio:var(--w)/var(--h);max-width:100%;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .cell{position:relative;min-width:0;min-height:0;background:var(--stone);border-radius:2px;box-shadow:inset 0 2px 0 var(--stone-hi),inset 0 -2px 0 #212429}
 .cell svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cell.laid{background:#33373d}
 .cell.rock{background:#202328;box-shadow:none}
 .cell.goal,.cell.start{background:#202227}
-.board.picking .cell.empty{box-shadow:inset 0 0 0 2px #6e5a3a,inset 0 2px 0 var(--stone-hi)}
-.cell.over{background:#4a4033;box-shadow:inset 0 0 0 3px var(--torch)}
+.cell.front{box-shadow:inset 0 0 0 2px rgba(242,165,65,.32),inset 0 2px 0 var(--stone-hi)}
+.cell.fit{background:#3c3a33;box-shadow:inset 0 0 0 3px var(--torch)}
+.cell.over{background:#57472f;box-shadow:inset 0 0 0 3px var(--torch)}
 .cell.new svg{animation:thunk .18s ease-out}
-.cell.way{background:#3b3a33}
 @keyframes thunk{from{transform:scale(1.2)}to{transform:scale(1)}}
 .rd-edge{stroke:var(--road-edge)}
 .rd{stroke:var(--road)}
 .lit .rd{stroke:var(--road-lit)}
-.badge{position:absolute;right:1px;bottom:1px;padding:1px 3px;border-radius:2px;background:rgba(12,12,14,.78);font:700 clamp(9px,2.7vw,12px)/1.1 var(--sans);font-variant-numeric:tabular-nums;pointer-events:none}
+.badge{position:absolute;right:1px;bottom:1px;padding:1px 3px;border-radius:2px;background:rgba(12,12,14,.78);font:700 clamp(10px,2.9vw,12px)/1.1 var(--sans);font-variant-numeric:tabular-nums;pointer-events:none}
 .b-foe{color:#ff8a80}.b-zero{color:var(--dim)}.b-coin{color:var(--torch)}.b-heal{color:var(--heal)}.b-gear{color:var(--gear)}
-.hero{position:absolute;left:0;top:0;z-index:3;pointer-events:none;transition:transform .16s linear}
+.hero{position:absolute;left:0;top:0;z-index:3;pointer-events:none;transition:transform .15s linear}
 .hero svg{width:100%;height:100%;display:block}
 .pop{position:absolute;z-index:4;pointer-events:none;transform:translate(-50%,0);font:400 17px/1 var(--pixel);text-shadow:0 2px 0 #000,0 0 3px #000;white-space:nowrap;animation:rise .9s ease-out forwards}
 .p-hp{color:#ff8a80}.p-gold{color:var(--torch)}.p-heal{color:var(--heal)}.p-gear{color:var(--gear)}
 @keyframes rise{from{transform:translate(-50%,0)}to{transform:translate(-50%,-28px);opacity:0}}
 
 /* message + tray */
-.side{display:flex;flex-direction:column;gap:10px}
+.side{display:flex;flex-direction:column;gap:9px}
 .msg{box-sizing:border-box;margin:0;height:calc(2 * 1.45em + 12px);padding:6px 10px;font:400 15px/1.45 var(--pixel);background:var(--mortar);border:2px solid var(--stone-hi);border-radius:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .tray{display:flex;gap:10px;align-items:center;padding:9px 9px 11px;background:var(--wood);border-top:3px solid var(--wood-hi);border-radius:3px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .hand{--hs:4;flex:1;display:grid;grid-template-columns:repeat(var(--hs),minmax(0,1fr));gap:8px;min-width:0}
@@ -84,6 +88,7 @@ button{font:inherit;color:inherit}
 .slot svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .slot .badge{font-size:12px;right:2px;bottom:2px}
 .slot.sel{transform:translateY(-7px);box-shadow:0 0 0 3px var(--torch),0 9px 0 #1d1611}
+.slot.dull{opacity:.55}
 .slot.none{background:transparent;box-shadow:inset 0 0 0 2px var(--wood-hi);cursor:default}
 .deck{flex:none;width:44px;display:flex;flex-direction:column;align-items:center;gap:5px;font:400 11px/1 var(--pixel);color:#c9b8a2}
 .deck i{display:block;width:30px;height:30px;background:#33373d;box-shadow:2px 2px 0 #292c31,4px 4px 0 #1f2125}
@@ -94,6 +99,7 @@ button{font:inherit;color:inherit}
 .btn{border:0;border-bottom:3px solid #1d2025;border-radius:3px;background:var(--stone-hi);padding:10px 14px;font:400 15px/1.2 var(--pixel);color:var(--ink);cursor:pointer}
 .btn:active{transform:translateY(2px);border-bottom-width:1px}
 .btn.main{background:var(--torch);color:#2a1a08;border-bottom-color:#9a6420}
+.btn.toss{background:#5a3b2c;border-bottom-color:#2e1d15}
 .btn.ghost{background:transparent;border:0;color:var(--dim);padding:10px 4px;text-decoration:underline;text-underline-offset:3px}
 .btn:disabled{opacity:.4;cursor:default}
 .btn:focus-visible,.slot:focus-visible,.cell:focus-visible,.choice:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -126,17 +132,17 @@ button{font:inherit;color:inherit}
 .logo{margin:0;font:400 clamp(44px,13vw,64px)/1 var(--pixel);letter-spacing:.03em;text-align:center}
 .logo span{color:var(--torch)}
 .lead{margin:0;font:400 15px/1.5 var(--pixel);color:var(--dim);text-align:center}
-.strip{box-sizing:border-box;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;padding:3px;width:100%;background:var(--mortar);border-radius:3px}
-.strip .cell{aspect-ratio:1}
+.demo{box-sizing:border-box;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;width:156px;background:var(--mortar);border-radius:3px}
+.demo .cell{aspect-ratio:1}
 .title .btn{width:100%}
 .record{font:400 14px/1 var(--pixel);color:var(--dim);min-height:14px}
 
 @media (min-width:880px) and (min-height:560px){
-  .app{max-width:1080px;display:grid;grid-template-columns:auto 380px;grid-template-rows:auto 1fr;grid-template-areas:"board plate" "board side";align-content:center;column-gap:36px;row-gap:12px}
+  .app{max-width:1000px;display:grid;grid-template-columns:minmax(0,1fr) 380px;grid-template-rows:auto 1fr;grid-template-areas:"view plate" "view side";column-gap:36px;row-gap:12px}
   .plate{grid-area:plate}
-  .boardbox{grid-area:board;align-items:center}
-  .side{grid-area:side}
-  .board{width:min(calc(100vh - 60px),640px)}
+  .viewwrap{grid-area:view;min-height:0}
+  .side{grid-area:side;align-self:start}
+  .board{width:min(100%,520px)}
 }
 @media (prefers-reduced-motion:reduce){
   .hero{transition:none}
@@ -152,19 +158,22 @@ button{font:inherit;color:inherit}
     <div class="hpwrap"><span class="hptext" id="hptext">HP 10/10</span><div class="hpbar"><i id="hpfill"></i></div></div>
     <div class="stats"><span>攻<b id="atk">2</b></span><span>守<b id="def">0</b></span><span class="gold">金<b id="gold">0</b></span></div>
   </header>
-  <div class="boardbox"><div class="board" id="board" aria-label="ダンジョンの床"></div></div>
+  <div class="viewwrap">
+    <div class="view" id="view"><div class="board" id="board" aria-label="ダンジョンの床"></div></div>
+    <div class="hint" id="hint"></div>
+  </div>
   <div class="side">
     <p class="msg" id="msg" aria-live="polite"></p>
     <div class="tray"><div class="hand" id="hand"></div><div class="deck" aria-label="のこりのパネル"><i></i><b id="deckn">0</b>のこり</div></div>
-    <div class="ctrl"><button class="btn" id="undo" type="button">ひとつ戻す</button><span class="grow"></span><button class="btn ghost" id="quit" type="button">冒険をおえる</button></div>
+    <div class="ctrl"><button class="btn" id="undo" type="button">ひとつ戻す</button><button class="btn toss" id="toss" type="button">捨てる</button><span class="grow"></span><button class="btn ghost" id="quit" type="button">冒険をおえる</button></div>
   </div>
 </div>
 
 <div class="sheet solid" id="s-title">
   <div class="title">
     <h1 class="logo">PATH <span>QUEST</span></h1>
-    <p class="lead">パネルで道をつなぎ、地下へ潜る</p>
-    <div class="strip" id="strip"></div>
+    <p class="lead">道を作りながら、上の階段へ</p>
+    <div class="demo" id="demo"></div>
     <button class="btn main" id="t-new" type="button">冒険に出る</button>
     <button class="btn" id="t-cont" type="button" hidden>つづきから</button>
     <button class="btn" id="t-shop" type="button">強化する</button>
@@ -182,8 +191,8 @@ button{font:inherit;color:inherit}
 
 <div class="sheet" id="s-stuck" hidden>
   <div class="tablet">
-    <h2>パネルがなくなった</h2>
-    <p>道が階段までつながっていない。</p>
+    <h2 id="k-head">行き止まり</h2>
+    <p id="k-text"></p>
     <div class="row"><button class="btn main" id="k-undo" type="button">ひとつ戻す</button><button class="btn" id="k-end" type="button">冒険をおえる</button></div>
   </div>
 </div>
@@ -218,24 +227,26 @@ button{font:inherit;color:inherit}
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const SAVE='pathquest.run.v1', META='pathquest.meta.v1';
+const SAVE='pathquest.run.v2', META='pathquest.meta.v1';
 const store={
   get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
   del(k){try{localStorage.removeItem(k)}catch(e){}}
 };
 
-/* ---------- board geometry ---------- */
+/* ---------- geometry ---------- */
+const W=5;
 const DIRS=[[-1,0,1],[0,1,2],[1,0,4],[0,-1,8]]; // N E S W as bits 1 2 4 8
+const BITS=[1,2,4,8];
 const OPP={1:4,2:8,4:1,8:2};
-const SHAPES=[[5,16],[10,16],[3,11],[6,11],[12,11],[9,11],[11,4.5],[7,4.5],[14,4.5],[13,4.5],[15,6]];
+const SHAPES=[[5,22],[10,8],[3,9],[6,9],[12,9],[9,9],[11,4],[7,6],[14,4],[13,6],[15,6]]; // tilted toward N-S because the hero climbs upward
 const SHAPE_NAME=m=>({5:'直線',10:'直線',15:'十字'})[m]||([3,6,12,9].includes(m)?'カーブ':'T字');
 const rnd=n=>Math.floor(Math.random()*n);
 const pickW=a=>{let t=0;for(const x of a)t+=x[1];let r=Math.random()*t;for(const x of a){if((r-=x[1])<0)return x[0]}return a[a.length-1][0]};
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-const STEP=REDUCED?70:190;
+const STEP=REDUCED?60:170;
 
 /* ---------- sprites (100x100) ---------- */
 const svg=s=>`<svg viewBox="0 0 100 100" aria-hidden="true">${s}</svg>`;
@@ -244,7 +255,6 @@ const SPR={
   stairs:'<rect x="20" y="20" width="60" height="60" fill="#0b0c0e"/><path d="M20 32h60v9H20zM20 49h46v9H20zM20 66h32v9H20z" fill="#8b7d68"/><path d="M20 20h60v60H20z" fill="none" stroke="#5c5346" stroke-width="4"/>',
   rock:'<path d="M18 72 28 42 50 28 74 36 84 66 68 82H32z" fill="#565a61"/><path d="M28 42 50 28 58 46 38 54z" fill="#71767e"/><path d="M58 46 74 36 84 66 66 64z" fill="#4a4e54"/>',
   gem:'<path d="M50 30 68 47 50 72 32 47z" fill="#3fb6c2"/><path d="M50 30 58 47 50 72 42 47z" fill="#a7eef3"/>',
-  gemSmall:'<g transform="translate(4 4) scale(.34)"><path d="M50 18 80 47 50 88 20 47z" fill="#3fb6c2"/><path d="M50 18 62 47 50 88 38 47z" fill="#a7eef3"/></g>',
   slime:'<path d="M28 68C28 46 39 35 50 35S72 46 72 68z" fill="#6cc25a"/><path d="M34 52q4-9 12-11" stroke="#b6ec9f" stroke-width="3" fill="none"/><circle cx="43" cy="56" r="3.6" fill="#1b2a14"/><circle cx="57" cy="56" r="3.6" fill="#1b2a14"/>',
   bat:'<path d="M50 42 58 49 73 38 69 55 82 58 62 65 50 61 38 65 18 58 31 55 27 38 42 49z" fill="#7d61aa"/><circle cx="46" cy="52" r="2.6" fill="#ffd36e"/><circle cx="54" cy="52" r="2.6" fill="#ffd36e"/>',
   bone:'<path d="M35 52a15 15 0 0 1 30 0v8h-4v8H39v-8h-4z" fill="#e7e1d1"/><circle cx="44" cy="53" r="4.2" fill="#2a2620"/><circle cx="56" cy="53" r="4.2" fill="#2a2620"/><path d="M45 62v6M50 62v6M55 62v6" stroke="#2a2620" stroke-width="2"/>',
@@ -260,17 +270,15 @@ const SPR={
   hand:'<rect x="26" y="40" width="14" height="14" fill="#a98a57"/><rect x="43" y="40" width="14" height="14" fill="#a98a57"/><rect x="60" y="40" width="14" height="14" fill="#a98a57"/><rect x="34" y="58" width="14" height="14" fill="#a98a57"/><rect x="52" y="58" width="14" height="14" fill="#ebc782"/>',
   hero:'<ellipse cx="50" cy="80" rx="20" ry="5" fill="rgba(0,0,0,.45)"/><path d="M50 30q10-15 22-11-10 5-14 14z" fill="#e0524a"/><path d="M28 62q0-30 22-32 22 2 22 32v14H28z" fill="#cdd1d7"/><path d="M28 62q0-30 22-32v46H28z" fill="#e6e9ed"/><rect x="34" y="52" width="32" height="7" fill="#17191d"/><path d="M50 59v17" stroke="#9aa0a8" stroke-width="3"/>'
 };
-const FOE_SPR={slime:'slime',bat:'bat',bone:'bone',golem:'golem',boss:'boss'};
-
 function roadSVG(m){
   const seg={1:'M50 50V0',2:'M50 50H100',4:'M50 50V100',8:'M50 50H0'};
-  let d='';for(const b of [1,2,4,8])if(m&b)d+=seg[b];
+  let d='';for(const b of BITS)if(m&b)d+=seg[b];
   return `<path d="${d}" class="rd-edge" stroke-width="42" stroke-linecap="square" fill="none"/><path d="${d}" class="rd" stroke-width="30" stroke-linecap="square" fill="none"/>`;
 }
 function evSVG(e){
   if(!e)return '';
-  if(e.k==='foe')return SPR[FOE_SPR[e.t]];
-  return SPR[{coin:'coin',potion:'potion',sword:'sword',shield:'shield'}[e.k]]||'';
+  if(e.k==='foe')return SPR[e.t]||'';
+  return SPR[e.k]||'';
 }
 
 /* ---------- enemies, events ---------- */
@@ -296,9 +304,9 @@ function makeEvent(f){
   return null;
 }
 const makeTile=(f,m)=>({m:m||pickW(SHAPES),e:makeEvent(f)});
-const dmgFor=e=>Math.max(0,e.atk-run.def)*(Math.ceil(e.hp/run.atk)-1);
+const dmgFor=e=>Math.max(0,e.atk-run.def)*Math.ceil(e.hp/run.atk); // one hit back per round of the fight
 
-/* ---------- meta (persists between runs) ---------- */
+/* ---------- meta (kept between runs) ---------- */
 const UPS=[
   {k:'hp',name:'体力',desc:'はじめの最大HP+2',icon:'heart',max:10,cost:l=>12+8*l},
   {k:'atk',name:'剣のうで',desc:'はじめの攻撃+1',icon:'sword',max:5,cost:l=>25+20*l},
@@ -313,8 +321,8 @@ const saveMeta=()=>store.set(META,meta);
 
 /* ---------- run state ---------- */
 let run=store.get(SAVE);
-if(run&&!(run.cells&&run.hand))run=null;
-let sel=-1,busy=false,heroAt=-1,justPlaced=-1;
+if(run&&!(run.cells&&run.hand&&run.h))run=null;
+let sel=-1,busy=false,justPlaced=-1;
 const save=()=>{if(run)store.set(SAVE,run)};
 
 function newRun(){
@@ -327,76 +335,89 @@ function nextFloor(){
   genFloor();
   if(run.floor>meta.best){meta.best=run.floor;saveMeta()}
   run.phase='build';save();
-  hideSheets();render();
-  say(run.floor===1?'パネルを空きマスへ置いて、入口から階段まで道をつなぐ。':run.boss?`B${run.floor}F　階段の前に、階のぬしがいる。`:`B${run.floor}F　階段まで道をつなぐ。`);
+  hideSheets();render();follow(run.at,false);
+  say(run.floor===1?'光っている道の先にパネルを置くと、勇者が進む。':run.boss?`B${run.floor}F　階段の前に、階のぬしがいる。`:`B${run.floor}F　上の階段をめざす。`);
 }
-const sizeFor=f=>f<=3?5:f<=7?6:7;
-function dirBit(a,b,n){return b===a-n?1:b===a+1?2:b===a+n?4:8}
-function findPath(cells,n,s,g){
-  const N=n*n,w=Array.from({length:N},()=>1+Math.random()*1.6),dist=new Array(N).fill(Infinity),prev=new Array(N).fill(-1),done=new Array(N).fill(false);
+const heightFor=f=>f<=2?7:f<=5?9:f<=9?11:13;
+function nbr(i,b,h){const r=i/W|0,c=i%W,d=DIRS[BITS.indexOf(b)],rr=r+d[0],cc=c+d[1];return rr<0||rr>=h||cc<0||cc>=W?-1:rr*W+cc}
+function dirBit(a,b){return b===a-W?1:b===a+1?2:b===a+W?4:8}
+function findPath(cells,h,s,g){
+  const N=W*h,wt=Array.from({length:N},()=>1+Math.random()*1.6),dist=new Array(N).fill(Infinity),prev=new Array(N).fill(-1),done=new Array(N).fill(false);
   dist[s]=0;
   for(;;){
-    let u=-1,b=Infinity;
-    for(let i=0;i<N;i++)if(!done[i]&&dist[i]<b){b=dist[i];u=i}
+    let u=-1,best=Infinity;
+    for(let i=0;i<N;i++)if(!done[i]&&dist[i]<best){best=dist[i];u=i}
     if(u<0||u===g)break;
     done[u]=true;
-    const r=u/n|0,c=u%n;
-    for(const [dr,dc] of DIRS){
-      const rr=r+dr,cc=c+dc;if(rr<0||rr>=n||cc<0||cc>=n)continue;
-      const v=rr*n+cc;if(done[v]||cells[v].rock)continue;
-      const nd=dist[u]+w[v];if(nd<dist[v]){dist[v]=nd;prev[v]=u}
-    }
+    for(const b of BITS){const v=nbr(u,b,h);if(v<0||done[v]||cells[v].rock)continue;const nd=dist[u]+wt[v];if(nd<dist[v]){dist[v]=nd;prev[v]=u}}
   }
   if(dist[g]===Infinity)return null;
   const p=[];for(let v=g;v!==-1;v=prev[v])p.push(v);return p.reverse();
 }
 function genFloor(){
-  const f=run.floor,n=sizeFor(f);
+  const f=run.floor,h=heightFor(f);
   let cells,s,g,path;
   for(let tries=0;tries<60;tries++){
-    cells=Array.from({length:n*n},()=>({rock:0,gem:0,tile:null}));
-    s=rnd(n)*n;g=rnd(n)*n+n-1;
-    const rocks=Math.floor(n*n*.07)+Math.floor(f/4);
-    for(let k=0,guard=0;k<rocks&&guard<300;guard++){const i=rnd(n*n);if(i===s||i===g||cells[i].rock)continue;cells[i].rock=1;k++}
-    path=findPath(cells,n,s,g);
+    cells=Array.from({length:W*h},()=>({rock:0,gem:0,tile:null}));
+    s=(h-1)*W+2;g=rnd(W);
+    const rocks=Math.floor(W*h*.08)+Math.floor(f/4);
+    for(let k=0,guard=0;k<rocks&&guard<300;guard++){const i=rnd(W*h);if(i===s||i===g||i===s-W||cells[i].rock)continue;cells[i].rock=1;k++}
+    path=findPath(cells,h,s,g);
     if(path)break;
   }
-  if(!path){cells.forEach(c=>{c.rock=0});path=findPath(cells,n,s,g)}
-  const free=[];cells.forEach((c,i)=>{if(!c.rock&&i!==s&&i!==g)free.push(i)});
-  const gems=f>=6?2:1;
-  shuffle(free.slice()).slice(0,gems).forEach(i=>{cells[i].gem=5+2*f});
-  const need=[];
-  for(let k=1;k<path.length-1;k++)need.push(makeTile(f,dirBit(path[k],path[k-1],n)|dirBit(path[k],path[k+1],n)));
-  const base={5:18,6:24,7:30}[n];
-  const total=Math.max(need.length+4,Math.min(base+2*meta.up.bag+run.extra,free.length-1));
-  const deck=need.slice();while(deck.length<total)deck.push(makeTile(f));
+  if(!path){cells.forEach(c=>{c.rock=0});path=findPath(cells,h,s,g)}
+  const free=[];cells.forEach((c,i)=>{if(!c.rock&&i!==s&&i!==g&&i!==s-W)free.push(i)});
+  shuffle(free).slice(0,f>=6?2:1).forEach(i=>{cells[i].gem=5+2*f});
+  const deck=[];
+  for(let k=1;k<path.length-1;k++)deck.push(makeTile(f,dirBit(path[k],path[k-1])|dirBit(path[k],path[k+1])));
+  const total=deck.length+18+2*meta.up.bag+run.extra;
+  while(deck.length<total)deck.push(makeTile(f));
   shuffle(deck);
-  Object.assign(run,{n,cells,s,g,boss:f%5===0?makeBoss(f):null,hand:deck.splice(0,run.handSize),deck,hist:[],undo:3+meta.up.undo});
-  run.start0=JSON.stringify({cells:run.cells,hand:run.hand,deck:run.deck});
-  heroAt=s;sel=-1;
+  Object.assign(run,{h,cells,s,g,at:s,boss:f%5===0?makeBoss(f):null,hand:deck.splice(0,run.handSize),deck,hist:[],undo:3+meta.up.undo});
+  sel=-1;
 }
 
-/* ---------- connection ---------- */
-function reach(){
-  const {n,cells,s,g}=run,prev=new Array(n*n).fill(-1),seen=new Set([s]),q=[s];let found=false;
+/* ---------- connections ---------- */
+const maskOf=i=>i===run.s||i===run.g?15:(run.cells[i].tile?run.cells[i].tile.m:0);
+function bfs(from){
+  const prev=new Map([[from,-1]]),q=[from];
   while(q.length){
     const i=q.shift();
-    if(i===g){found=true;continue}
-    const r=i/n|0,c=i%n,m=i===s?15:cells[i].tile.m;
-    for(const [dr,dc,b] of DIRS){
+    if(i===run.g&&i!==from)continue;
+    const m=maskOf(i);
+    for(const b of BITS){
       if(!(m&b))continue;
-      const rr=r+dr,cc=c+dc;if(rr<0||rr>=n||cc<0||cc>=n)continue;
-      const j=rr*n+cc;if(seen.has(j))continue;
-      if(j!==g){const t=cells[j].tile;if(!t||!(t.m&OPP[b]))continue}
-      seen.add(j);prev[j]=i;q.push(j);
+      const j=nbr(i,b,run.h);if(j<0||prev.has(j))continue;
+      if(!(maskOf(j)&OPP[b]))continue;
+      prev.set(j,i);q.push(j);
     }
   }
-  return {seen,prev,found};
+  return prev;
 }
-const isEmpty=i=>i>=0&&i!==run.s&&i!==run.g&&!run.cells[i].rock&&!run.cells[i].tile;
+function pathTo(a,b){
+  const prev=bfs(a);if(!prev.has(b))return null;
+  const p=[];for(let v=b;v!==-1;v=prev.get(v))p.push(v);return p.reverse();
+}
+function frontier(){
+  const net=bfs(run.s),map=new Map();
+  for(const i of net.keys()){
+    if(i===run.g)continue;
+    const m=maskOf(i);
+    for(const b of BITS){
+      if(!(m&b))continue;
+      const j=nbr(i,b,run.h);
+      if(j<0||j===run.g||j===run.s)continue;
+      const c=run.cells[j];if(c.rock||c.tile)continue;
+      map.set(j,(map.get(j)||0)|OPP[b]);
+    }
+  }
+  return map;
+}
+const fits=(t,j,F)=>!!t&&F.has(j)&&!!(t.m&F.get(j));
+const anyFit=(t,F)=>{if(!t)return false;for(const j of F.keys())if(t.m&F.get(j))return true;return false};
 
 /* ---------- rendering ---------- */
-const board=$('board'),handEl=$('hand'),msgEl=$('msg');
+const view=$('view'),board=$('board'),handEl=$('hand'),msgEl=$('msg');
 const hero=document.createElement('div');hero.className='hero';hero.innerHTML=svg(SPR.hero);
 function say(t){msgEl.textContent=t}
 function badge(e){
@@ -408,47 +429,60 @@ function badge(e){
   if(e.k==='shield')return '<span class="badge b-gear">守+1</span>';
   return '';
 }
-function cellHTML(i,lit){
+function cellHTML(i,F){
   const c=run.cells[i];let cls='cell',inner='',tab='';
   if(i===run.s){cls+=' start';inner=svg(SPR.door)}
   else if(i===run.g){cls+=' goal';inner=svg(SPR.stairs+(run.boss?SPR.boss:''))+(run.boss?badge(run.boss):'')}
   else if(c.rock){cls+=' rock';inner=svg(SPR.rock)}
-  else if(c.tile){cls+=' laid'+(lit&&lit.has(i)?' lit':'')+(i===justPlaced?' new':'');inner=svg(roadSVG(c.tile.m)+(c.gem?SPR.gemSmall:'')+evSVG(c.tile.e))+badge(c.tile.e)}
-  else{cls+=' empty';tab=' tabindex="0" role="button" aria-label="空きマス"';if(c.gem)inner=svg(SPR.gem)}
+  else if(c.tile){cls+=' laid lit'+(i===justPlaced?' new':'');inner=svg(roadSVG(c.tile.m)+evSVG(c.tile.e))+badge(c.tile.e)}
+  else{
+    if(c.gem)inner=svg(SPR.gem);
+    if(F&&F.has(i)){cls+=' front'+(sel>=0&&fits(run.hand[sel],i,F)?' fit':'');tab=' tabindex="0" role="button" aria-label="道の先"'}
+  }
   return `<div class="${cls}" data-i="${i}"${tab}>${inner}</div>`;
 }
-function renderBoard(r){
-  r=r||reach();
-  board.style.setProperty('--n',run.n);
-  let h='';for(let i=0;i<run.n*run.n;i++)h+=cellHTML(i,r.seen);
+function renderBoard(F){
+  F=F||frontier();
+  board.style.setProperty('--h',run.h);
+  let h='';for(let i=0;i<W*run.h;i++)h+=cellHTML(i,F);
   board.innerHTML=h;board.appendChild(hero);justPlaced=-1;
-  board.classList.toggle('picking',sel>=0);
-  placeHero(heroAt,true);
+  placeHero(run.at,true);
 }
-function updateCell(i){const el=board.children[i];if(el)el.outerHTML=cellHTML(i,reach().seen)}
+function refreshMarks(){
+  const F=frontier();
+  for(const [j] of F){const el=board.children[j];if(el)el.classList.toggle('fit',sel>=0&&fits(run.hand[sel],j,F))}
+}
+function updateCell(i){const el=board.children[i];if(el&&el!==hero)el.outerHTML=cellHTML(i,null)}
 function tileSVG(t){return svg(roadSVG(t.m)+evSVG(t.e))}
-function renderHand(){
+function renderHand(F){
+  F=F||frontier();
   handEl.style.setProperty('--hs',run.hand.length);
-  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot lit${i===sel?' sel':''}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}">${tileSVG(t)}${badge(t.e)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('');
+  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot lit${i===sel?' sel':''}${anyFit(t,F)?'':' dull'}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}">${tileSVG(t)}${badge(t.e)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('');
   $('deckn').textContent=run.deck.length;
-  board.classList.toggle('picking',sel>=0);
 }
 function renderStats(){
-  const hp=Math.max(0,run.hp);
+  const hp=Math.max(0,run.hp),row=run.at/W|0;
   $('floor').textContent=`B${run.floor}F`;
   $('hptext').textContent=`HP ${hp}/${run.maxHp}`;
   $('hpfill').style.width=(hp/run.maxHp*100)+'%';
   $('atk').textContent=run.atk;$('def').textContent=run.def;$('gold').textContent=run.gold;
+  $('hint').innerHTML=row>0?`階段まで あと<b>${row}</b>マス`:'階段';
   const u=$('undo');u.textContent=`ひとつ戻す ${run.undo}`;u.disabled=busy||run.phase!=='build'||!run.hist.length||run.undo<=0;
+  $('toss').disabled=busy||run.phase!=='build'||sel<0;
   $('quit').disabled=busy;
 }
-function render(r){renderStats();renderBoard(r);renderHand()}
+function render(){const F=frontier();renderStats();renderBoard(F);renderHand(F)}
 function placeHero(i,instant){
-  const el=board.children[i];if(!el||el===hero)return;heroAt=i;
+  const el=board.children[i];if(!el||el===hero)return;
   if(instant)hero.style.transition='none';
   hero.style.width=el.offsetWidth+'px';hero.style.height=el.offsetHeight+'px';
   hero.style.transform=`translate(${el.offsetLeft}px,${el.offsetTop}px)`;
   if(instant){void hero.offsetWidth;hero.style.transition=''}
+}
+function follow(i,smooth){
+  const el=board.children[i];if(!el)return;
+  const top=board.offsetTop+el.offsetTop+el.offsetHeight/2-view.clientHeight*.62;
+  view.scrollTo({top:Math.max(0,top),behavior:smooth&&!REDUCED?'smooth':'auto'});
 }
 function pop(i,text,cls,delay){
   setTimeout(()=>{
@@ -459,10 +493,9 @@ function pop(i,text,cls,delay){
   },delay||0);
 }
 function tileName(t){
-  const e=t.e;let s=SHAPE_NAME(t.m);
+  const e=t.e,s=SHAPE_NAME(t.m);
   if(!e)return s;
-  if(e.k==='foe')return `${s}・${e.name}`;
-  return `${s}・`+({coin:'金貨',potion:'薬',sword:'剣',shield:'盾'})[e.k];
+  return `${s}・`+(e.k==='foe'?e.name:({coin:'金貨',potion:'薬',sword:'剣',shield:'盾'})[e.k]);
 }
 function describe(e){
   if(!e)return '';
@@ -474,61 +507,88 @@ function describe(e){
   return '';
 }
 
-/* ---------- play ---------- */
+/* ---------- actions ---------- */
+function snapshot(){
+  run.hist.push(JSON.stringify({cells:run.cells,hand:run.hand,deck:run.deck,hp:run.hp,maxHp:run.maxHp,atk:run.atk,def:run.def,gold:run.gold,boss:run.boss,at:run.at}));
+  if(run.hist.length>6)run.hist.shift();
+}
 function tapSlot(i){
   if(!run.hand[i])return;
-  sel=sel===i?-1:i;renderHand();
-  if(sel>=0){const t=run.hand[i];say((t.e?describe(t.e)+'。':'')+'置くマスをタップ')}
+  sel=sel===i?-1:i;
+  renderHand();refreshMarks();renderStats();
+  if(sel>=0){
+    const t=run.hand[i],ok=anyFit(t,frontier());
+    say((t.e?describe(t.e)+'。':'')+(ok?'光るマスに置ける':'つながる所がない。「捨てる」で入れかえ'));
+  }
 }
 function tapCell(i){
-  if(isEmpty(i)){
+  const c=run.cells[i],F=frontier();
+  if(F.has(i)){
     if(sel>=0)return place(i,sel);
-    return say(run.cells[i].gem?`宝石　通ると金+${run.cells[i].gem}。下のパネルを先にえらぶ`:'下のパネルを先にえらぶ');
+    return say(c.gem?`宝石　通ると金+${c.gem}。下のパネルを先にえらぶ`:'下のパネルを先にえらぶ');
   }
-  const c=run.cells[i];
-  if(i===run.s)return say('入口。ここから階段まで道をつなぐ');
-  if(i===run.g)return say(run.boss?describe(run.boss):'階段。ここまでつながると次の階へ');
-  if(c.rock)return say('岩。パネルは置けない');
-  if(c.tile)say(c.tile.e?describe(c.tile.e):SHAPE_NAME(c.tile.m)+'の道');
+  if(i===run.s)return say('入口。ここから上の階段まで道を作る');
+  if(i===run.g)return say(run.boss?describe(run.boss):'階段。道がつながると次の階へ');
+  if(c.rock)return say('岩。通れない');
+  if(c.tile)return say(c.tile.e?describe(c.tile.e):SHAPE_NAME(c.tile.m)+'の道');
+  say(c.gem?`宝石　通ると金+${c.gem}。道の先にだけ置ける`:'道の先（光っているマス）にだけ置ける');
 }
-function place(i,hi){
-  const t=run.hand[hi];if(!t||!isEmpty(i)||run.phase!=='build'||busy)return;
-  const drew=run.deck.length?run.deck.shift():null;
-  run.hist.push({i,hi,t,drew});
-  run.cells[i].tile=t;run.hand[hi]=drew;sel=-1;justPlaced=i;
-  const r=reach();
-  if(r.found){render(r);save();walk(r);return}
-  render(r);
-  if(run.hand.every(x=>!x)||!run.cells.some((c,j)=>isEmpty(j))){save();return stuck()}
-  say(r.seen.has(i)?'道がのびた':'まだ入口とつながっていない');
+async function place(j,hi){
+  if(busy||!run||run.phase!=='build')return;
+  const t=run.hand[hi],F=frontier();
+  if(!t)return;
+  if(!F.has(j))return say('道の先（光っているマス）にだけ置ける');
+  if(!(t.m&F.get(j)))return say('このパネルはここにつながらない');
+  snapshot();
+  run.cells[j].tile=t;run.hand[hi]=run.deck.length?run.deck.shift():null;sel=-1;justPlaced=j;
+  busy=true;run.phase='walk';render();
+  if(!await walkTo(j))return;
+  if(bfs(run.s).has(run.g)){
+    say('階段までつながった');
+    if(!await walkTo(run.g))return;
+    await sleep(350);busy=false;
+    run.phase='reward';run.rewards=pickRewards();save();return showReward();
+  }
+  busy=false;run.phase='build';render();afterAction();
+}
+async function walkTo(target){
+  const path=pathTo(run.at,target)||[run.at,target];
+  for(let k=1;k<path.length;k++){
+    const i=path[k];run.at=i;placeHero(i);follow(i,true);
+    await sleep(STEP);
+    const hit=i===run.g?fightBoss(i):resolve(i);
+    renderStats();
+    if(run.hp<=0){await sleep(700);busy=false;gameOver('hp');return false}
+    if(hit)await sleep(STEP*2);
+  }
+  return true;
+}
+function toss(){
+  if(busy||!run||run.phase!=='build'||sel<0||!run.hand[sel])return;
+  snapshot();
+  run.hand[sel]=run.deck.length?run.deck.shift():null;sel=-1;
+  render();say('パネルを1枚捨てた');afterAction(true);
+}
+function afterAction(tossed){
+  const F=frontier();
+  if(!F.size)return stuck('行き止まり','道の先に置ける所がない。');
+  if(run.hand.every(x=>!x))return stuck('パネルがなくなった','上の階段までとどかなかった。');
+  if(!run.hand.some(t=>anyFit(t,F)))say('つながるパネルがない。パネルをえらんで「捨てる」');
+  else if(!tossed&&run.floor===1&&run.hist.length===1)say('合わないパネルは、えらんで「捨てる」と入れかわる。');
   save();
 }
 function undo(){
   if(!run||run.phase!=='build'||busy||!run.hist.length||run.undo<=0)return;
-  const h=run.hist.pop();
-  run.cells[h.i].tile=null;if(h.drew)run.deck.unshift(h.drew);run.hand[h.hi]=h.t;
-  run.undo--;sel=-1;hideSheets();render();save();
+  Object.assign(run,JSON.parse(run.hist.pop()));
+  run.undo--;sel=-1;hideSheets();render();follow(run.at,false);save();
   say(`ひとつ戻した（のこり${run.undo}回）`);
 }
-function stuck(){
-  if(run.undo>0&&run.hist.length){$('k-undo').textContent=`ひとつ戻す ${run.undo}`;show('s-stuck')}
-  else gameOver('stuck');
-}
-async function walk(r){
-  busy=true;run.phase='walk';sel=-1;renderStats();renderHand();
-  const path=[];for(let v=run.g;v!==-1;v=r.prev[v])path.push(v);path.reverse();
-  path.forEach(i=>{const el=board.children[i];if(el&&i!==run.s&&i!==run.g)el.classList.add('way')});
-  say('階段までつながった');
-  await sleep(STEP*1.5);
-  for(let k=1;k<path.length;k++){
-    const i=path[k];placeHero(i);await sleep(STEP);
-    const hit=i===run.g?fightBoss(i):resolve(i);
-    renderStats();
-    if(run.hp<=0){await sleep(700);busy=false;return gameOver('hp')}
-    if(hit)await sleep(STEP*2.2);
-  }
-  await sleep(350);busy=false;
-  run.phase='reward';run.rewards=pickRewards();save();showReward();
+function stuck(head,text){
+  save();
+  if(run.undo>0&&run.hist.length){
+    $('k-head').textContent=head;$('k-text').textContent=text;
+    $('k-undo').textContent=`ひとつ戻す ${run.undo}`;show('s-stuck');
+  }else gameOver('stuck');
 }
 function fight(e,i){
   const d=dmgFor(e);run.hp-=d;run.gold+=e.gold;
@@ -537,8 +597,8 @@ function fight(e,i){
 }
 function fightBoss(i){if(!run.boss)return false;fight(run.boss,i);run.boss=null;updateCell(i);return true}
 function resolve(i){
-  const c=run.cells[i];let hit=false;
-  const e=c.tile&&c.tile.e;
+  const c=run.cells[i];if(!c||!c.tile)return false;
+  let hit=false;const e=c.tile.e;
   if(e){
     c.tile.e=null;hit=true;
     if(e.k==='foe')fight(e,i);
@@ -597,9 +657,9 @@ const SHEETS=['s-title','s-reward','s-stuck','s-quit','s-over','s-shop'];
 function hideSheets(){SHEETS.forEach(id=>$(id).hidden=true)}
 function show(id){hideSheets();$(id).hidden=false;const b=$(id).querySelector('button:not([hidden])');if(b&&matchMedia('(hover:hover)').matches)b.focus({preventScroll:true})}
 function showTitle(){
-  const st=$('strip');
-  const demo=[SPR.door+SPR.hero,roadSVG(10)+SPR.coin,roadSVG(10)+SPR.slime,roadSVG(10)+SPR.sword,roadSVG(10),SPR.stairs];
-  st.innerHTML=demo.map((s,i)=>`<div class="cell${i>0&&i<5?' laid lit':''}">${svg(s)}</div>`).join('');
+  const demo=['',SPR.rock,SPR.stairs, SPR.gem,roadSVG(6)+SPR.slime,roadSVG(9)+SPR.sword, '',roadSVG(5)+SPR.coin,'', '',SPR.door+SPR.hero,''];
+  const laid=[4,5,7];
+  $('demo').innerHTML=demo.map((s,i)=>`<div class="cell${laid.includes(i)?' laid lit':''}">${s?svg(s):''}</div>`).join('');
   $('t-cont').hidden=!run;
   if(run)$('t-cont').textContent=`つづきから　B${run.floor}F`;
   $('t-shop').textContent=`強化する　金${meta.bank}`;
@@ -621,30 +681,27 @@ function buy(k){
   if(l>=u.max||meta.bank<c)return;
   meta.bank-=c;meta.up[k]++;saveMeta();showShop();
 }
-function startRun(){newRun()}
 function resume(){
   hideSheets();
-  if(run.phase==='reward'&&run.rewards){render();return showReward()}
-  run.phase='build';heroAt=run.s;render();
-  const r=reach();
-  if(r.found){walk(r);return}
+  if(run.phase==='reward'&&run.rewards){render();follow(run.at,false);return showReward()}
+  run.phase='build';busy=false;render();follow(run.at,false);
   say(`B${run.floor}F　つづきから`);
 }
 
-/* ---------- input: one pointer path for tap and drag (works with touch, pen, mouse) ---------- */
+/* ---------- input: one pointer path for tap and drag (touch, pen, mouse) ---------- */
 let drag=null,ghost=null,overCell=-1;
 function cellUnder(x,y){const el=document.elementFromPoint(x,y),c=el&&el.closest('.cell');return c&&board.contains(c)?+c.dataset.i:-1}
 function setOver(i){
   if(overCell===i)return;
   if(overCell>=0&&board.children[overCell])board.children[overCell].classList.remove('over');
   overCell=i;
-  if(i>=0&&isEmpty(i))board.children[i].classList.add('over');
+  if(i>=0&&sel>=0&&fits(run.hand[sel],i,frontier()))board.children[i].classList.add('over');
 }
 document.addEventListener('pointerdown',e=>{
   if(!run||run.phase!=='build'||busy||(e.pointerType==='mouse'&&e.button!==0))return;
   const s=e.target.closest('.slot'),c=e.target.closest('.cell');
   if(!(s&&handEl.contains(s))&&!(c&&board.contains(c)))return;
-  e.preventDefault();
+  if(s)e.preventDefault();
   drag={id:e.pointerId,x:e.clientX,y:e.clientY,slot:s?+s.dataset.i:-1,cell:!s?+c.dataset.i:-1,moving:false};
 },{passive:false});
 document.addEventListener('pointermove',e=>{
@@ -652,7 +709,7 @@ document.addEventListener('pointermove',e=>{
   if(!drag.moving){
     if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<8)return;
     if(!run.hand[drag.slot]){drag=null;return}
-    drag.moving=true;sel=drag.slot;renderHand();
+    drag.moving=true;sel=drag.slot;renderHand();refreshMarks();renderStats();
     ghost=document.createElement('div');ghost.className='ghost-tile';ghost.innerHTML=tileSVG(run.hand[sel]);
     ghost.firstChild.classList.add('lit');document.body.appendChild(ghost);
   }
@@ -665,12 +722,13 @@ function endPointer(e,cancel){
   const d=drag;drag=null;
   if(ghost){ghost.remove();ghost=null}
   setOver(-1);
-  if(cancel){if(d.moving){sel=-1;renderHand()}return}
+  if(cancel)return;
   if(d.moving){
     const t=cellUnder(e.clientX,e.clientY);
-    if(isEmpty(t))place(t,d.slot);else{say('空きマスの上で指をはなす')}
+    if(t>=0)place(t,d.slot);else say('光るマスの上で指をはなす');
     return;
   }
+  if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>10)return;
   if(d.slot>=0)tapSlot(d.slot);else if(d.cell>=0)tapCell(d.cell);
 }
 document.addEventListener('pointerup',e=>endPointer(e,false));
@@ -686,22 +744,23 @@ document.addEventListener('keydown',e=>{
 
 /* ---------- buttons ---------- */
 $('undo').addEventListener('click',undo);
+$('toss').addEventListener('click',toss);
 $('quit').addEventListener('click',()=>{if(!run||busy)return;$('q-text').textContent=`ここまでの金貨 ${run.gold} を持ち帰り、強化に使える。`;show('s-quit')});
 $('q-no').addEventListener('click',hideSheets);
 $('q-yes').addEventListener('click',()=>gameOver('quit'));
 $('k-undo').addEventListener('click',undo);
 $('k-end').addEventListener('click',()=>gameOver('stuck'));
 $('r-list').addEventListener('click',e=>{const b=e.target.closest('.choice');if(b)takeReward(+b.dataset.i)});
-$('t-new').addEventListener('click',()=>{if(run){meta.bank+=run.gold;saveMeta()}store.del(SAVE);startRun()});
+$('t-new').addEventListener('click',()=>{if(run){meta.bank+=run.gold;saveMeta()}store.del(SAVE);newRun()});
 $('t-cont').addEventListener('click',()=>{if(run)resume()});
 $('t-shop').addEventListener('click',showShop);
 $('o-shop').addEventListener('click',showShop);
-$('o-again').addEventListener('click',startRun);
+$('o-again').addEventListener('click',newRun);
 $('o-title').addEventListener('click',showTitle);
 $('sh-list').addEventListener('click',e=>{const b=e.target.closest('.choice');if(b&&!b.disabled)buy(b.dataset.k)});
-$('sh-go').addEventListener('click',()=>{if(run)resume();else startRun()});
+$('sh-go').addEventListener('click',()=>{if(run)resume();else newRun()});
 $('sh-back').addEventListener('click',showTitle);
-window.addEventListener('resize',()=>{if(run&&heroAt>=0)placeHero(heroAt,true)});
+window.addEventListener('resize',()=>{if(run)placeHero(run.at,true)});
 
 showTitle();
 })();
