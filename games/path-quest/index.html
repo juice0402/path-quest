@@ -17,6 +17,7 @@ header{text-align:center}h1{margin:0;font-size:clamp(28px,7vw,42px);letter-spaci
 .tile-path{stroke:var(--line);stroke-width:10;stroke-linecap:round;fill:none}.cell .tile-path{stroke-width:9}.option .tile-path{stroke-width:10}
 .section-title{display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px;font-size:15px}.section-title span{color:var(--muted);font-size:12px;font-weight:400}
 .options{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.option{aspect-ratio:1;background:var(--panel);border:2px solid #344761;border-radius:14px;position:relative;overflow:hidden;cursor:pointer;touch-action:manipulation;transition:transform .12s,border-color .12s}.option:active{transform:scale(.96)}.option.active{border-color:var(--accent);box-shadow:0 0 0 2px #ffd16633}.option:disabled{opacity:.38;cursor:not-allowed}
+.cell.drop-target{outline:3px solid var(--accent);outline-offset:-3px;box-shadow:0 0 16px #ffd16688}.drag-ghost{position:fixed;z-index:9999;width:68px;height:68px;pointer-events:none;opacity:.92;transform:translate(-50%,-50%);filter:drop-shadow(0 8px 12px #0009);border:2px solid var(--accent);border-radius:14px;background:var(--panel);overflow:hidden}
 .option small{position:absolute;left:0;right:0;bottom:5px;text-align:center;color:var(--muted);font-size:10px;z-index:2}
 .actions{display:flex;gap:10px}.actions button{flex:1;border:1px solid #49617e;background:#263750;color:#fff;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer}.actions button.primary{background:#d9a83e;border-color:#f6c65d;color:#182033}
 .help{color:var(--muted);font-size:12px;line-height:1.6;text-align:center;margin:0}.message{min-height:24px;text-align:center;font-weight:700;color:var(--line);font-size:14px}
@@ -55,6 +56,7 @@ function render(){
  board.innerHTML="";
  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
   const el=document.createElement("button");el.className="cell";el.type="button";
+  el.dataset.row=r;el.dataset.col=c;
   const tile=cells[r][c];
   if(r===START.r&&c===START.c){el.classList.add("start");el.innerHTML='<span class="endpoint">START</span>';}
   else if(r===GOAL.r&&c===GOAL.c){el.classList.add("goal");el.innerHTML='<span class="endpoint">GOAL</span>';}
@@ -64,7 +66,7 @@ function render(){
   board.appendChild(el);
  }
  options.innerHTML="";
- hand.forEach((tile,i)=>{const b=document.createElement("button");b.type="button";b.className="option"+(i===selected?" active":"");b.disabled=won;b.setAttribute("aria-label",`${i+1}番 ${tile.name}`);b.innerHTML=pathSvg(tile.dirs)+`<small>${i+1} · ${tile.name}</small>`;b.addEventListener("click",()=>{selected=i;render();document.getElementById("message").textContent=`${tile.name}を選択中。置きたいマスをタップ！`;});options.appendChild(b);});
+ hand.forEach((tile,i)=>{const b=document.createElement("button");b.type="button";b.className="option"+(i===selected?" active":"");b.dataset.index=i;b.disabled=won;b.setAttribute("aria-label",`${i+1}番 ${tile.name}`);b.innerHTML=pathSvg(tile.dirs)+`<small>${i+1} · ${tile.name}</small>`;b.addEventListener("click",()=>{selected=i;render();document.getElementById("message").textContent=`${tile.name}を選択中。置きたいマスをタップ！`;});options.appendChild(b);});
  document.getElementById("placed").textContent=history.length;
  document.getElementById("state").textContent=won?"CLEAR!":"START → GOAL";
 }
@@ -90,7 +92,60 @@ function place(r,c){
 }
 function undo(){if(!history.length||won)return;const prev=history.pop();cells[prev.r][prev.c]=prev.tile;hand=prev.hand;selected=prev.selected;document.getElementById("message").textContent="ひとつ前に戻したよ。";render();}
 function reset(){cells=Array.from({length:SIZE},()=>Array(SIZE).fill(null));hand=Array.from({length:4},randTile);selected=0;history=[];won=false;document.getElementById("message").textContent="下のパネルを選んで、盤面の空きマスをタップ！";render();}
-document.getElementById("undo").addEventListener("click",undo);document.getElementById("reset").addEventListener("click",reset);reset();
+document.getElementById("undo").addEventListener("click",undo);
+document.getElementById("reset").addEventListener("click",reset);
+
+// iPad / touch-friendly drag placement. Tapping a panel still selects it.
+let dragState=null;
+function clearDrag(){
+ if(dragState?.ghost)dragState.ghost.remove();
+ document.querySelectorAll(".cell.drop-target").forEach(el=>el.classList.remove("drop-target"));
+ dragState=null;
+}
+options.addEventListener("pointerdown",e=>{
+ const button=e.target.closest(".option");
+ if(!button||won)return;
+ e.preventDefault();
+ const index=Number(button.dataset.index);
+ selected=index;
+ options.querySelectorAll(".option").forEach((el,i)=>el.classList.toggle("active",i===selected));
+ document.getElementById("message").textContent=hand[index].name+"を選択中。盤面をタップするか、ここからドラッグ！";
+ dragState={index,startX:e.clientX,startY:e.clientY,moved:false,ghost:null};
+});
+document.addEventListener("pointermove",e=>{
+ if(!dragState)return;
+ const dx=e.clientX-dragState.startX,dy=e.clientY-dragState.startY;
+ if(!dragState.moved&&Math.hypot(dx,dy)>7){
+  dragState.moved=true;
+  const ghost=document.createElement("div");
+  ghost.className="drag-ghost";
+  ghost.innerHTML=pathSvg(hand[dragState.index].dirs);
+  document.body.appendChild(ghost);
+  dragState.ghost=ghost;
+ }
+ if(!dragState.moved)return;
+ e.preventDefault();
+ dragState.ghost.style.left=e.clientX+"px";
+ dragState.ghost.style.top=e.clientY+"px";
+ document.querySelectorAll(".cell.drop-target").forEach(el=>el.classList.remove("drop-target"));
+ const target=document.elementFromPoint(e.clientX,e.clientY)?.closest(".cell");
+ if(target?.classList.contains("empty"))target.classList.add("drop-target");
+},{passive:false});
+document.addEventListener("pointerup",e=>{
+ if(!dragState)return;
+ const moved=dragState.moved;
+ const target=moved?document.elementFromPoint(e.clientX,e.clientY)?.closest(".cell"):null;
+ const row=target?Number(target.dataset.row):NaN;
+ const col=target?Number(target.dataset.col):NaN;
+ clearDrag();
+ if(moved&&target?.classList.contains("empty")&&Number.isInteger(row)&&Number.isInteger(col)){
+  place(row,col);
+ }else if(moved){
+  document.getElementById("message").textContent="空いているマスにドロップしてね。パネルはそのままだよ。";
+ }
+});
+document.addEventListener("pointercancel",clearDrag);
+reset();
 </script>
 </body>
 </html>
