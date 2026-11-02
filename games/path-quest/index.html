@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<title>PATH QUEST — Prototype</title>
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#1b2940;--tile:#263750;--line:#67e8c1;--muted:#9fb0c7;--accent:#ffd166;--danger:#ff8c8c}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#1c3150,var(--bg) 65%);color:#f4f7fb;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;justify-content:center}
+main{width:min(760px,100%);padding:22px 16px 34px;display:flex;flex-direction:column;gap:16px}
+header{text-align:center}h1{margin:0;font-size:clamp(28px,7vw,42px);letter-spacing:.12em}header p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.status{background:var(--panel);border:1px solid #344761;border-radius:14px;padding:12px 15px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:14px}.status strong{color:var(--accent)}
+.board-wrap{display:flex;justify-content:center}.board{width:min( min(88vw,520px), 100%);aspect-ratio:1;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px;background:#0b1422;border:1px solid #344761;border-radius:18px;box-shadow:0 16px 40px #0005}
+.cell{position:relative;border:1px solid #344761;background:var(--tile);border-radius:9px;display:grid;place-items:center;min-width:0;min-height:0;overflow:hidden}.cell.empty{background:#1b2a40}.cell.target{background:#35445a}.cell.start{border:2px solid #67e8c1}.cell.goal{border:2px solid var(--accent)}.cell.selected-target{outline:3px solid var(--accent);outline-offset:-3px}
+.cell svg,.option svg{width:100%;height:100%;position:absolute;inset:0}.endpoint{position:relative;z-index:1;font-weight:800;font-size:clamp(10px,2.5vw,15px);letter-spacing:.04em}
+.tile-path{stroke:var(--line);stroke-width:10;stroke-linecap:round;fill:none}.cell .tile-path{stroke-width:9}.option .tile-path{stroke-width:10}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px;font-size:15px}.section-title span{color:var(--muted);font-size:12px;font-weight:400}
+.options{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.option{aspect-ratio:1;background:var(--panel);border:2px solid #344761;border-radius:14px;position:relative;overflow:hidden;cursor:pointer;touch-action:manipulation;transition:transform .12s,border-color .12s}.option:active{transform:scale(.96)}.option.active{border-color:var(--accent);box-shadow:0 0 0 2px #ffd16633}.option:disabled{opacity:.38;cursor:not-allowed}
+.option small{position:absolute;left:0;right:0;bottom:5px;text-align:center;color:var(--muted);font-size:10px;z-index:2}
+.actions{display:flex;gap:10px}.actions button{flex:1;border:1px solid #49617e;background:#263750;color:#fff;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer}.actions button.primary{background:#d9a83e;border-color:#f6c65d;color:#182033}
+.help{color:var(--muted);font-size:12px;line-height:1.6;text-align:center;margin:0}.message{min-height:24px;text-align:center;font-weight:700;color:var(--line);font-size:14px}
+@media(max-width:420px){main{padding:16px 12px 24px;gap:13px}.board{gap:4px;padding:6px}.options{gap:7px}.status{font-size:12px;padding:10px 12px}}
+</style>
+</head>
+<body>
+<main>
+<header><h1>PATH QUEST</h1><p>つなげて、ゴールを目指そう。</p></header>
+<div class="status"><div>ステージ <strong>01</strong></div><div>配置パネル <strong id="placed">0</strong></div><div id="state">START → GOAL</div></div>
+<div class="board-wrap"><div class="board" id="board" aria-label="ゲーム盤面"></div></div>
+<section>
+  <div class="section-title">パネルを選ぼう <span>4つから1つ選択</span></div>
+  <div class="options" id="options"></div>
+</section>
+<div class="message" id="message" aria-live="polite">下のパネルを選んで、盤面の空きマスをタップ！</div>
+<div class="actions"><button id="undo">ひとつ戻す</button><button class="primary" id="reset">最初から</button></div>
+<p class="help">パネルを選択 → 置きたいマスをタップ。向きは最初から決まっているよ。<br>STARTからGOALまで道をつなげよう！</p>
+</main>
+<script>
+const SIZE=5, START={r:2,c:0}, GOAL={r:2,c:4};
+const DIRS={N:[-1,0],E:[0,1],S:[1,0],W:[0,-1]};
+const SHAPES=[
+  {name:"直線",dirs:["N","S"]},{name:"直線",dirs:["E","W"]},
+  {name:"カーブ",dirs:["N","E"]},{name:"カーブ",dirs:["E","S"]},
+  {name:"カーブ",dirs:["S","W"]},{name:"カーブ",dirs:["W","N"]},
+  {name:"T字",dirs:["N","E","W"]},{name:"T字",dirs:["N","E","S"]},
+  {name:"T字",dirs:["E","S","W"]},{name:"T字",dirs:["N","S","W"]}
+];
+let cells=[],hand=[],selected=0,history=[],won=false;
+const board=document.getElementById("board"), options=document.getElementById("options");
+function randTile(){const s=SHAPES[Math.floor(Math.random()*SHAPES.length)];return {name:s.name,dirs:[...s.dirs]};}
+function pathSvg(dirs){let paths="";const center=50;for(const d of dirs){const [dr,dc]=DIRS[d];const x2=center+dc*50,y2=center+dr*50;paths+=`<path class="tile-path" d="M 50 50 L ${x2} ${y2}"/>`;}return `<svg viewBox="0 0 100 100" aria-hidden="true">${paths}<circle cx="50" cy="50" r="7" fill="#67e8c1"/></svg>`;}
+function isEndpoint(r,c){return (r===START.r&&c===START.c)||(r===GOAL.r&&c===GOAL.c);}
+function render(){
+ board.innerHTML="";
+ for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+  const el=document.createElement("button");el.className="cell";el.type="button";
+  const tile=cells[r][c];
+  if(r===START.r&&c===START.c){el.classList.add("start");el.innerHTML='<span class="endpoint">START</span>';}
+  else if(r===GOAL.r&&c===GOAL.c){el.classList.add("goal");el.innerHTML='<span class="endpoint">GOAL</span>';}
+  else if(tile){el.innerHTML=pathSvg(tile.dirs);}
+  else{el.classList.add("empty");el.setAttribute("aria-label",`空きマス ${r+1},${c+1}`);}
+  if(!tile&&!isEndpoint(r,c)&&selected!==null&&!won)el.addEventListener("click",()=>place(r,c));
+  board.appendChild(el);
+ }
+ options.innerHTML="";
+ hand.forEach((tile,i)=>{const b=document.createElement("button");b.type="button";b.className="option"+(i===selected?" active":"");b.disabled=won;b.setAttribute("aria-label",`${i+1}番 ${tile.name}`);b.innerHTML=pathSvg(tile.dirs)+`<small>${i+1} · ${tile.name}</small>`;b.addEventListener("click",()=>{selected=i;render();document.getElementById("message").textContent=`${tile.name}を選択中。置きたいマスをタップ！`;});options.appendChild(b);});
+ document.getElementById("placed").textContent=history.length;
+ document.getElementById("state").textContent=won?"CLEAR!":"START → GOAL";
+}
+function connected(){
+ const seen=new Set(["2,0"]),q=[[2,0]];
+ while(q.length){const [r,c]=q.shift();if(r===GOAL.r&&c===GOAL.c)return true;
+  let exits;if(r===START.r&&c===START.c)exits=["E"];else exits=cells[r][c]?.dirs||[];
+  for(const d of exits){const [dr,dc]=DIRS[d],nr=r+dr,nc=c+dc;if(nr<0||nr>=SIZE||nc<0||nc>=SIZE)continue;
+   const key=nr+","+nc;if(seen.has(key))continue;
+   let enters;if(nr===GOAL.r&&nc===GOAL.c)enters=["W"];else enters=cells[nr][nc]?.dirs||[];
+   const opposite={N:"S",E:"W",S:"N",W:"E"}[d];if(enters.includes(opposite)){seen.add(key);q.push([nr,nc]);}
+  }
+ }
+ return false;
+}
+function place(r,c){
+ if(won||!hand[selected])return;
+ history.push({r,c,tile:cells[r][c],hand:hand.map(t=>({...t})),selected});
+ cells[r][c]=hand[selected];hand[selected]=randTile();
+ if(connected()){won=true;document.getElementById("message").textContent="🎉 ゴールにつながった！ステージクリア！";}
+ else document.getElementById("message").textContent="いい感じ！道をつないでいこう。";
+ selected=0;render();
+}
+function undo(){if(!history.length||won)return;const prev=history.pop();cells[prev.r][prev.c]=prev.tile;hand=prev.hand;selected=prev.selected;document.getElementById("message").textContent="ひとつ前に戻したよ。";render();}
+function reset(){cells=Array.from({length:SIZE},()=>Array(SIZE).fill(null));hand=Array.from({length:4},randTile);selected=0;history=[];won=false;document.getElementById("message").textContent="下のパネルを選んで、盤面の空きマスをタップ！";render();}
+document.getElementById("undo").addEventListener("click",undo);document.getElementById("reset").addEventListener("click",reset);reset();
+</script>
+</body>
+</html>
