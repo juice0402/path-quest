@@ -736,8 +736,9 @@ const REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').
 const STEP=REDUCED?60:170;
 /* ---------- field effects: the modules at the end hook in with FXH.add(event,fn); FXH.cells (fn(i,c,F) → {cls,pre,post}; F = the open cells, null when one cell is redrawn) adds classes and inner html to every cell.
    events: render {lo,hi,pitch,cell} · update {i} (one cell redrawn) · place {j} (a block lands) · step {from,to,up} ·
-   strike {i,at,d,crit,atk,foeHp,boss,king} (the knight hits) · hurt {at,b,boss} · kill {i,e} (a toy breaks) · toyhit {i,d,cls} ·
-   boom {at,R} (marble bomb) · skill {id} · reach {r,s} (a new row) · tap {i} · over {at} (the knight falls) ---------- */
+   strike {i,at,d,crit,atk,hpBefore,hpMax,boss,king} (the knight hits; hpBefore-d<=0 is the finishing blow) ·
+   hurt {at,b,boss,i (the toy's cell),src:'fight'|'shot',max} · kill {i,e} (a toy breaks) · toyhit {i,d,cls} · cannon {hits:[{i,dead,dl}]} ·
+   land {j,kind:'wall'|'psn'} (a mason's wall or a clown's poison lands) · boom {at,R} (marble bomb) · skill {id} · reach {r,s} (a new row) · tap {i} · over {at} (the knight falls) ---------- */
 const FXH={on:{},cells:[],
   add(n,f){(this.on[n]=this.on[n]||[]).push(f)},
   emit(n,d){const a=this.on[n];if(a)for(const f of a){try{f(d||{})}catch(err){console.error('fx',n,err)}}},
@@ -1557,7 +1558,7 @@ async function battle(e,at,i){
   const strike=async()=>{ // the knight hits; now and then a crit
     let d=A;const cr=Math.random()<qv('crit');if(cr)d*=2+qv('critx');hp-=d;
     lunge(dx,dy);setTimeout(()=>{struck(eEl);spark(i)},80);pop(i,cr?`-${d}!`:`-${d}`,cr?'p-crit':'p-deal');if(cr)shake(5);
-    FXH.emit('strike',{i,at,d,crit:cr,atk:A,foeHp:e.hp,boss:!!e.boss,king:!!e.king});
+    FXH.emit('strike',{i,at,d,crit:cr,atk:A,hpBefore:hp+d,hpMax:e.hp,boss:!!e.boss,king:!!e.king});
     if(tp&&hp>0){const t=toyDmg(tp);hp-=t;setTimeout(()=>pop(i,`-${t}`,'p-top'),170)} // the spinning top follows up
     await sleep(gap/2+(REDUCED?0:60));
   };
@@ -1565,7 +1566,7 @@ async function battle(e,at,i){
     if(first){await strike();if(hp<=0)break}
     let b=back;if(b&&block>0){b=0;block--}else if(b&&bubbleBlock(at))b=0;
     run.hp-=b; // the toy hits
-    pop(at,b?`-${b}`:'0',b?'p-hurt':'p-guard');if(b){hurt();shake(e.boss?7:4);FXH.emit('hurt',{at,b,boss:!!e.boss})}
+    pop(at,b?`-${b}`:'0',b?'p-hurt':'p-guard');if(b){hurt();shake(e.boss?7:4);FXH.emit('hurt',{at,b,boss:!!e.boss,i,src:'fight',max:run.maxHp})}
     renderStats();
     if(run.hp<=0)return false;
     if(b&&ref){const r=Math.ceil(b*ref);hp-=r;setTimeout(()=>{pop(i,`-${r}`,'p-ref');struck(eEl)},120)} // the mirror throws it back
@@ -1707,7 +1708,7 @@ const SK_DO={ // each changes the climb and gives back what to show once it is d
     run.hand.forEach((t,k)=>{if(t&&t.e&&t.e.k==='foe')hits.push({k,e:t.e,on:t})});
     if(!hits.length)return '画面に 敵がいない';
     for(const h of hits){h.e.hp-=dmg;if(h.e.hp<=0){h.dead=true;h.g=addGold(h.e.gold);if(h.stand)h.stand.foe=null;else h.on.e=null}}
-    return ()=>{shake(7);hits.forEach((h,n)=>setTimeout(()=>{
+    return ()=>{shake(7);FXH.emit('cannon',{hits:hits.map((h,n)=>h.i!=null?{i:h.i,dead:!!h.dead,dl:n*90}:null).filter(Boolean)});hits.forEach((h,n)=>setTimeout(()=>{
       if(h.i!=null){
         if(h.dead){breakToy(h.i,h.e);pop(h.i,`+${h.g}`,'p-gold');fly(h.i,SPR.coin,$('i-gold'))}
         else{pop(h.i,`-${dmg}`,'p-deal');struck(elOf(h.i));spark(h.i)}
@@ -1767,7 +1768,7 @@ async function foesAct(){ // after each block: archers shoot, mages cast, clowns
     if(e.t==='archer'||e.t==='mage'){
       let d=FX().guard?0:e.t==='mage'?e.atk:Math.max(0,e.atk-run.def);if(d&&bubbleBlock(run.at))d=0;
       shoot(i,run.at,e.t==='mage'?SPR.orb:SPR.arrow);await sleep(REDUCED?60:330);
-      run.hp-=d;pop(run.at,d?`-${d}`:'0',d?'p-hurt':'p-guard');if(d){hurt();shake(4)}
+      run.hp-=d;pop(run.at,d?`-${d}`:'0',d?'p-hurt':'p-guard');if(d){hurt();shake(4);FXH.emit('hurt',{at:run.at,b:d,boss:false,i,src:'shot',max:run.maxHp})}
       renderStats();
       if(run.hp<=0){await knockOut();busy=false;gameOver('hp');return false}
       const rf=qv('ref');
@@ -1780,7 +1781,7 @@ async function foesAct(){ // after each block: archers shoot, mages cast, clowns
       const j=pickSpot(e.t==='mason');if(j<0)continue;
       if(e.t==='clown')cellAt(j).psn=Math.max(1,Math.ceil(e.atk/2));
       shoot(i,j,e.t==='clown'?SPR.drop:SPR.bricks,380);await sleep(REDUCED?60:380);
-      updateCell(j);puff(j);
+      updateCell(j);puff(j);FXH.emit('land',{j,kind:e.t==='mason'?'wall':'psn'});
     }
     await sleep(REDUCED?40:160);
   }
