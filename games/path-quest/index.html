@@ -5,174 +5,203 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PATH QUEST</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="パネルで道を作りながら、下の入口から上の階段へ進むダンジョンゲーム。敵・金貨・装備のパネルをどう通るかで、どこまで深く行けるかが変わる。">
-<meta name="theme-color" content="#14161a">
+<meta name="description" content="積み木で道を作りながら、ぜんまいの騎士が草原・森・湖・雪原・おもちゃの城を旅するゲーム。おもちゃの兵隊・金貨・キャンディの積み木をどう通るかで、どこまで遠くへ行けるかが決まる。">
+<meta name="theme-color" content="#fbeaf0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
 <style>
-/* layout: a dungeon floor seen from above, scrolled upward as the hero climbs. stone plate (status) on top, wooden tray of panels below. side by side on wide screens */
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* layout: a toy-block land seen from above, scrolled upward as the wind-up knight walks to the flag. the status floats over the field, the tray of blocks sits under it. one column at every width */
 :root{
-  color-scheme:dark;
-  --abyss:#14161a;
-  --stone:#2b2f35;
-  --stone-hi:#3a3f47;
-  --mortar:#191b20;
-  --road:#a98a57;
-  --road-lit:#ebc782;
-  --road-edge:#5f4a2c;
-  --torch:#f2a541;
-  --hp:#e0524a;
-  --heal:#86cf7c;
-  --gear:#b9cff2;
-  --ink:#efe8da;
-  --dim:#9b968b;
-  --wood:#3a2b21;
-  --wood-hi:#54402f;
-  --pixel:"DotGothic16","Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;
-  --sans:"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;
+  color-scheme:light;
+  --page:#fbeaf0;
+  --card:#fffaf6;
+  --ink:#4a3541;
+  --dim:#735766;
+  --accent:#c4467a;
+  --accent-deep:#8e2f57;
+  --edge:#e6c3d1;
+  --sun:#ffe58a;
+  --sun-deep:#f0b93a;
+  --hp:#e8607e;
+  --foe:#c43a5a;
+  --gold:#a86f08;
+  --heal:#2f8f5b;
+  --gear:#3a6ea8;
+  --ground:#cdeab3;
+  --line:#b6dc98;
+  --front:rgba(255,255,255,.95);
+  --round:"Hiragino Maru Gothic ProN","M PLUS Rounded 1c","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
 }
+.app[data-area=forest]{--ground:#b9dca6;--line:#9fcb8b}
+.app[data-area=lake]{--ground:#f3e6c8;--line:#e2d0a9;--front:#e27aa3}
+.app[data-area=snow]{--ground:#eef3fb;--line:#d6e0f0;--front:#e27aa3}
+.app[data-area=castle]{--ground:#f6dfe9;--line:#ebc6d6;--front:#c4467a}
 [hidden]{display:none!important}
-html,body{height:100%;margin:0;background:var(--abyss);color:var(--ink)}
-body{font-family:var(--sans);-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscroll-behavior:none}
+html,body{height:100%;margin:0;background:var(--page);color:var(--ink)}
+body{font-family:var(--round);font-weight:500;-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscroll-behavior:none}
 button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
-.app{box-sizing:border-box;height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:9px;padding-block:10px 12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{box-sizing:border-box;height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:12px;padding-block:8px 12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
-/* status plate */
-.plate{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:7px 12px;background:var(--mortar);border:2px solid var(--stone-hi);border-radius:3px}
-.floor{font:400 26px/1 var(--pixel);color:var(--torch)}
-.hpwrap{display:flex;flex-direction:column;gap:4px;min-width:0}
-.hptext{font:400 13px/1 var(--pixel)}
-.hpbar{position:relative;height:9px;background:#3b1816;overflow:hidden}
-.hpbar i{position:absolute;inset:0 auto 0 0;width:100%;background:var(--hp);transition:width .25s}
-.hpbar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 9px,var(--mortar) 9px 11px)}
-.stats{display:flex;gap:10px;font:400 15px/1 var(--pixel);color:var(--dim);white-space:nowrap}
-.stats b{font-weight:400;color:var(--ink);margin-left:2px}
-.stats .gold b{color:var(--torch)}
-
-/* scrolling floor */
-.viewwrap{position:relative;flex:1;min-height:150px;display:flex}
-.view{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;background:var(--mortar);border-radius:3px;scrollbar-width:none}
+/* the field: everything else floats on it */
+.field{position:relative;flex:1;min-height:220px;display:flex;border-radius:18px;overflow:hidden;background:var(--line);box-shadow:0 4px 0 rgba(74,53,65,.12)}
+.view{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:none}
 .view::-webkit-scrollbar{display:none}
-.hint{position:absolute;left:8px;top:8px;z-index:6;pointer-events:none;padding:4px 8px;border-radius:2px;background:rgba(16,17,20,.86);font:400 13px/1.2 var(--pixel);color:var(--ink)}
-.hint b{font-weight:400;color:var(--torch)}
-.board{--w:5;--h:9;position:relative;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));gap:3px;padding:3px;margin:0 auto;width:min(100%,420px);aspect-ratio:var(--w)/var(--h);max-width:100%;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.cell{position:relative;min-width:0;min-height:0;background:var(--stone);border-radius:2px;box-shadow:inset 0 2px 0 var(--stone-hi),inset 0 -2px 0 #212429}
+.track{padding:80px 0 64px}
+.board{--w:5;--h:9;position:relative;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));grid-template-rows:repeat(var(--h),minmax(0,1fr));gap:3px;padding:4px;margin:0 auto;width:min(100%,460px);aspect-ratio:var(--w)/var(--h);max-width:100%;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.cell{position:relative;min-width:0;min-height:0;background:var(--ground);border-radius:5px}
 .cell svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.cell.laid{background:#33373d}
-.cell.rock{background:#202328;box-shadow:none}
-.cell.goal,.cell.start{background:#202227}
-.cell.front{box-shadow:inset 0 0 0 2px rgba(242,165,65,.32),inset 0 2px 0 var(--stone-hi)}
-.cell.fit{background:#3c3a33;box-shadow:inset 0 0 0 3px var(--torch)}
-.cell.over{background:#57472f;box-shadow:inset 0 0 0 3px var(--torch)}
-.cell.new svg{animation:thunk .18s ease-out}
-@keyframes thunk{from{transform:scale(1.2)}to{transform:scale(1)}}
-.rd-edge{stroke:var(--road-edge)}
-.rd{stroke:var(--road)}
-.lit .rd{stroke:var(--road-lit)}
-.badge{position:absolute;right:1px;bottom:1px;padding:1px 3px;border-radius:2px;background:rgba(12,12,14,.78);font:700 clamp(10px,2.9vw,12px)/1.1 var(--sans);font-variant-numeric:tabular-nums;pointer-events:none}
-.b-foe{color:#ff8a80}.b-zero{color:var(--dim)}.b-coin{color:var(--torch)}.b-heal{color:var(--heal)}.b-gear{color:var(--gear)}
+.cell.laid{background:transparent}
+.cell.laid svg{overflow:visible}
+.cell.front::after{content:"";position:absolute;inset:6px;border:3px dashed var(--front);border-radius:9px;pointer-events:none}
+.cell.fit{background:#fff3c4}
+.cell.fit::after{border:3px solid var(--sun-deep);animation:glow .9s ease-in-out infinite alternate}
+.cell.over{background:var(--sun)}
+.cell.new svg{animation:thunk .2s ease-out}
+.app.look-b .board{gap:5px}
+.app.look-b .cell:not(.laid){border-radius:11px;box-shadow:inset 0 -6px 0 rgba(74,53,65,.09),inset 0 2px 0 rgba(255,255,255,.6)}
+@keyframes glow{from{opacity:.45}to{opacity:1}}
+@keyframes thunk{from{transform:translateY(-12%)}to{transform:none}}
+
+.badge{position:absolute;right:2px;bottom:3px;padding:1px 5px;border-radius:7px;background:rgba(255,255,255,.94);box-shadow:0 1px 0 rgba(74,53,65,.18);font:800 clamp(10px,2.9vw,12px)/1.25 var(--round);font-variant-numeric:tabular-nums;pointer-events:none}
+.b-foe{color:var(--foe)}.b-zero{color:var(--dim)}.b-coin{color:var(--gold)}.b-heal{color:var(--heal)}.b-gear{color:var(--gear)}
+
 .hero{position:absolute;left:0;top:0;z-index:3;pointer-events:none;transition:transform .15s linear}
-.hero svg{width:100%;height:100%;display:block}
-.pop{position:absolute;z-index:4;pointer-events:none;transform:translate(-50%,0);font:400 17px/1 var(--pixel);text-shadow:0 2px 0 #000,0 0 3px #000;white-space:nowrap;animation:rise .9s ease-out forwards}
-.p-hp{color:#ff8a80}.p-gold{color:var(--torch)}.p-heal{color:var(--heal)}.p-gear{color:var(--gear)}
-@keyframes rise{from{transform:translate(-50%,0)}to{transform:translate(-50%,-28px);opacity:0}}
+.hero svg{width:100%;height:100%;display:block;overflow:visible}
+.hero .key{transform-box:fill-box;transform-origin:0% 50%}
+.hero.walk svg{animation:bob .17s ease-in-out infinite alternate}
+.hero.walk .key{animation:wind .34s linear infinite}
+@keyframes bob{to{transform:translateY(-5%)}}
+@keyframes wind{50%{transform:scaleX(.25)}}
 
-/* message + tray */
-.side{display:flex;flex-direction:column;gap:9px}
-.msg{box-sizing:border-box;margin:0;height:calc(2 * 1.45em + 12px);padding:6px 10px;font:400 15px/1.45 var(--pixel);background:var(--mortar);border:2px solid var(--stone-hi);border-radius:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.tray{display:flex;gap:10px;align-items:center;padding:9px 9px 11px;background:var(--wood);border-top:3px solid var(--wood-hi);border-radius:3px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.pop{position:absolute;z-index:4;pointer-events:none;transform:translate(-50%,0);font:800 18px/1 var(--round);white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 2px 0 #fff;animation:rise .9s ease-out forwards}
+.p-hp{color:var(--foe)}.p-gold{color:var(--gold)}.p-heal{color:var(--heal)}.p-gear{color:var(--gear)}
+@keyframes rise{from{transform:translate(-50%,0)}to{transform:translate(-50%,-30px);opacity:0}}
+
+/* status floating over the field */
+.hud{position:absolute;top:8px;left:8px;right:8px;z-index:6;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none}
+.hud-l,.hud-r{display:flex;flex-direction:column;gap:6px;min-width:0}
+.hud-r{align-items:flex-end}
+.hud-row{display:flex;gap:6px}
+.pill{display:flex;align-items:center;gap:6px;height:30px;box-sizing:border-box;padding:0 10px;border:0;border-radius:15px;background:rgba(255,250,246,.94);box-shadow:0 3px 0 rgba(74,53,65,.16);font:800 14px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill svg{width:18px;height:18px;flex:none;display:block}
+.hpbar{position:relative;width:clamp(40px,14vw,72px);height:9px;border-radius:5px;background:#f6d3dc;overflow:hidden}
+.hpbar i{position:absolute;inset:0 auto 0 0;width:100%;border-radius:5px;background:var(--hp);transition:width .25s}
+.gear{gap:10px}
+.gear span{display:flex;align-items:center;gap:3px}
+.gear .g b{color:var(--gold)}
+.stage{gap:4px}
+.stage .an{font-size:12px;color:var(--dim)}
+.stage b{font-size:17px}
+.stage small{font-size:12px;color:var(--dim)}
+.menu{pointer-events:auto;cursor:pointer;color:var(--dim);font-size:13px}
+.menu:disabled{opacity:.5;cursor:default}
+.near{padding:5px 9px;border-radius:12px;background:rgba(255,250,246,.88);font:800 12px/1 var(--round);color:var(--dim)}
+.near b{margin:0 2px;font-size:15px;color:var(--accent)}
+.msg{position:absolute;left:10px;right:10px;bottom:10px;z-index:6;margin:0;padding:8px 12px;border-radius:14px;background:rgba(255,250,246,.96);box-shadow:0 3px 0 rgba(74,53,65,.16);font:500 14px/1.45 var(--round);pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.msg.on{opacity:1;transform:none}
+
+/* the tray of blocks */
+.tray{position:relative;display:flex;gap:10px;align-items:center;padding:10px;border-radius:18px;background:var(--card);box-shadow:0 4px 0 var(--edge);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .hand{--hs:4;flex:1;display:grid;grid-template-columns:repeat(var(--hs),minmax(0,1fr));gap:8px;min-width:0}
-.slot{position:relative;aspect-ratio:1;max-width:100%;background:#33373d;border-radius:3px;box-shadow:0 4px 0 #1d1611;cursor:grab;transition:transform .1s}
+.slot{position:relative;aspect-ratio:1;max-width:100%;border-radius:13px;cursor:grab;transition:transform .1s}
 .slot svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.slot .badge{font-size:12px;right:2px;bottom:2px}
-.slot.sel{transform:translateY(-7px);box-shadow:0 0 0 3px var(--torch),0 9px 0 #1d1611}
-.slot.dull{opacity:.55}
-.slot.none{background:transparent;box-shadow:inset 0 0 0 2px var(--wood-hi);cursor:default}
-.deck{flex:none;width:44px;display:flex;flex-direction:column;align-items:center;gap:5px;font:400 11px/1 var(--pixel);color:#c9b8a2}
-.deck i{display:block;width:30px;height:30px;background:#33373d;box-shadow:2px 2px 0 #292c31,4px 4px 0 #1f2125}
-.deck b{font:400 20px/1 var(--pixel);color:var(--ink)}
-.ctrl{display:flex;gap:10px;align-items:center}
-.ctrl .grow{flex:1}
+.slot .badge{right:3px;bottom:6px;font-size:12px}
+.slot.sel{transform:translateY(-8px)}
+.slot.sel::before{content:"";position:absolute;inset:-4px;border:3px solid var(--accent);border-radius:16px}
+.slot.dull{opacity:.45;filter:saturate(.4)}
+.slot.none{box-sizing:border-box;border:2px dashed var(--edge);cursor:default}
+.tools{flex:none;width:68px;display:flex;flex-direction:column;gap:7px}
+.tool{height:30px;padding:0;border:0;border-radius:11px;background:#fff;box-shadow:0 3px 0 var(--edge);font:800 14px/1 var(--round);color:var(--ink);cursor:pointer}
+.tool.toss{background:#f7c3d4;box-shadow:0 3px 0 #d993ad}
+.tool:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
+.tool:disabled{opacity:.4;cursor:default;transform:none}
+.decktag{position:absolute;right:14px;top:-12px;padding:4px 9px;border-radius:10px;background:#fff;box-shadow:0 2px 0 var(--edge);font:800 12px/1 var(--round);color:var(--dim)}
+.decktag b{margin-left:3px;font-size:13px;color:var(--ink)}
 
-.btn{border:0;border-bottom:3px solid #1d2025;border-radius:3px;background:var(--stone-hi);padding:10px 14px;font:400 15px/1.2 var(--pixel);color:var(--ink);cursor:pointer}
-.btn:active{transform:translateY(2px);border-bottom-width:1px}
-.btn.main{background:var(--torch);color:#2a1a08;border-bottom-color:#9a6420}
-.btn.toss{background:#5a3b2c;border-bottom-color:#2e1d15}
-.btn.ghost{background:transparent;border:0;color:var(--dim);padding:10px 4px;text-decoration:underline;text-underline-offset:3px}
-.btn:disabled{opacity:.4;cursor:default}
-.btn:focus-visible,.slot:focus-visible,.cell:focus-visible,.choice:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-
-.ghost-tile{position:fixed;left:0;top:0;z-index:30;width:66px;height:66px;margin:-86px 0 0 -33px;pointer-events:none;background:#33373d;border-radius:3px;box-shadow:0 0 0 3px var(--torch),0 10px 18px rgba(0,0,0,.6)}
+.ghost-tile{position:fixed;left:0;top:0;z-index:30;width:66px;height:66px;margin:-86px 0 0 -33px;pointer-events:none;filter:drop-shadow(0 10px 8px rgba(74,53,65,.3))}
 .ghost-tile svg{width:100%;height:100%;display:block}
 
+/* buttons are blocks too */
+.btn{padding:13px 16px;border:0;border-radius:14px;background:#fff;box-shadow:0 4px 0 var(--edge);font:800 16px/1.2 var(--round);color:var(--ink);cursor:pointer}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--edge)}
+.btn.main{background:var(--accent);color:#fff;box-shadow:0 4px 0 var(--accent-deep)}
+.btn.main:active{box-shadow:0 1px 0 var(--accent-deep)}
+.btn.link{padding:10px 4px;background:transparent;box-shadow:none;font-weight:500;color:var(--dim);text-decoration:underline;text-underline-offset:3px}
+.btn:disabled{opacity:.4;cursor:default}
+
 /* sheets */
-.sheet{position:fixed;inset:0;z-index:20;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:rgba(8,9,11,.84);padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.sheet.solid{background:var(--abyss)}
-.tablet{box-sizing:border-box;width:min(100%,380px);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:20px 18px;background:var(--stone);border:3px solid var(--stone-hi);box-shadow:0 0 0 3px var(--mortar);border-radius:3px}
-.tablet h2{margin:0;font:400 24px/1.3 var(--pixel);color:var(--torch);text-wrap:balance}
-.tablet p{margin:0;font-size:14px;line-height:1.6}
-.tablet .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.tablet .row .btn{flex:1}
+.sheet{position:fixed;inset:0;z-index:20;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:rgba(74,53,65,.45);padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet.solid{background:var(--page)}
+.card{box-sizing:border-box;width:min(100%,380px);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:22px 18px 20px;border-radius:20px;background:var(--card);box-shadow:0 6px 0 var(--edge)}
+.card h2{margin:0;font:800 22px/1.3 var(--round);text-wrap:balance}
+.card p{margin:0;font-size:15px;line-height:1.6;color:var(--dim)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row .btn{flex:1}
 .choices{display:flex;flex-direction:column;gap:8px}
-.choice{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:7px 10px;text-align:left;background:var(--mortar);border:2px solid var(--stone-hi);border-radius:3px;cursor:pointer}
-.choice svg{width:42px;height:42px;display:block}
-.choice b{display:block;font:400 16px/1.3 var(--pixel)}
+.choice{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:8px 12px;border:0;border-radius:14px;background:#fff;box-shadow:0 3px 0 #ecd2dc;text-align:left;cursor:pointer}
+.choice svg{width:44px;height:44px;display:block}
+.choice b{display:block;font:800 16px/1.3 var(--round)}
 .choice small{display:block;margin-top:2px;font-size:12px;color:var(--dim)}
-.choice .cost{font:400 15px/1 var(--pixel);color:var(--torch);white-space:nowrap}
-.choice:active{background:#24262b}
-.choice:disabled{opacity:.45;cursor:default}
+.choice .cost{font:800 15px/1 var(--round);color:var(--gold);white-space:nowrap}
+.choice:active{transform:translateY(2px);box-shadow:0 1px 0 #ecd2dc}
+.choice:disabled{opacity:.45;cursor:default;transform:none}
 .pips{display:inline-flex;gap:3px;margin-left:6px;vertical-align:2px}
-.pips i{width:6px;height:6px;background:#4a4f57}
-.pips i.on{background:var(--torch)}
-.bank{font:400 16px/1 var(--pixel);color:var(--torch)}
+.pips i{width:7px;height:7px;border-radius:2px;background:#ecd2dc}
+.pips i.on{background:var(--accent)}
+.bank{font-weight:800;color:var(--gold)}
 
 .title{display:flex;flex-direction:column;align-items:center;gap:16px;width:min(100%,360px)}
-.logo{margin:0;font:400 clamp(44px,13vw,64px)/1 var(--pixel);letter-spacing:.03em;text-align:center}
-.logo span{color:var(--torch)}
-.lead{margin:0;font:400 15px/1.5 var(--pixel);color:var(--dim);text-align:center}
-.demo{box-sizing:border-box;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;width:156px;background:var(--mortar);border-radius:3px}
+.logo{margin:0;display:flex;flex-direction:column;align-items:center;gap:7px}
+.logo span{display:flex;gap:6px}
+.logo i{display:grid;place-items:center;width:clamp(40px,12.5vw,54px);aspect-ratio:1;border-radius:11px;box-shadow:inset 0 -6px 0 rgba(74,53,65,.13);font:800 clamp(23px,7.4vw,32px)/1 var(--round);font-style:normal;color:var(--ink)}
+.c0{background:#f7c3d4}.c1{background:#bfe6d6}.c2{background:#fbe2a0}.c3{background:#d8cdf6}.c4{background:#c4e2f5}
+.lead{margin:0;font-size:15px;line-height:1.5;color:var(--dim);text-align:center}
+.demo{box-sizing:border-box;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:4px;width:168px;border-radius:14px;background:var(--line)}
 .demo .cell{aspect-ratio:1}
 .title .btn{width:100%}
-.record{font:400 14px/1 var(--pixel);color:var(--dim);min-height:14px}
+.record{min-height:14px;font-size:14px;color:var(--dim)}
 
-@media (min-width:880px) and (min-height:560px){
-  .app{max-width:1000px;display:grid;grid-template-columns:minmax(0,1fr) 380px;grid-template-rows:auto 1fr;grid-template-areas:"view plate" "view side";column-gap:36px;row-gap:12px}
-  .plate{grid-area:plate}
-  .viewwrap{grid-area:view;min-height:0}
-  .side{grid-area:side;align-self:start}
-  .board{width:min(100%,520px)}
-}
 @media (prefers-reduced-motion:reduce){
-  .hero{transition:none}
+  .hero,.slot,.msg{transition:none}
+  .hero.walk svg,.hero.walk .key,.cell.fit::after{animation:none}
   .cell.new svg,.pop{animation-duration:.01s}
-  .slot{transition:none}
 }
 </style>
 </head>
 <body>
-<div class="app" id="app">
-  <header class="plate">
-    <div class="floor" id="floor">B1F</div>
-    <div class="hpwrap"><span class="hptext" id="hptext">HP 10/10</span><div class="hpbar"><i id="hpfill"></i></div></div>
-    <div class="stats"><span>攻<b id="atk">2</b></span><span>守<b id="def">0</b></span><span class="gold">金<b id="gold">0</b></span></div>
-  </header>
-  <div class="viewwrap">
-    <div class="view" id="view"><div class="board" id="board" aria-label="ダンジョンの床"></div></div>
-    <div class="hint" id="hint"></div>
-  </div>
-  <div class="side">
+<div class="app look-a" id="app" data-area="grass">
+  <div class="field">
+    <div class="view" id="view"><div class="track"><div class="board" id="board" aria-label="積み木の国の地図"></div></div></div>
+    <div class="hud">
+      <div class="hud-l">
+        <div class="pill hp"><span id="hpicon"></span><span class="hpbar"><i id="hpfill"></i></span><b id="hptext">10/10</b></div>
+        <div class="pill gear"><span id="i-atk"></span><span id="i-def"></span><span class="g" id="i-gold"></span></div>
+      </div>
+      <div class="hud-r">
+        <div class="hud-row">
+          <div class="pill stage"><span class="an" id="area">草原</span><b id="floor">1</b><small>/5</small></div>
+          <button class="pill menu" id="quit" type="button">おえる</button>
+        </div>
+        <div class="near" id="hint"></div>
+      </div>
+    </div>
     <p class="msg" id="msg" aria-live="polite"></p>
-    <div class="tray"><div class="hand" id="hand"></div><div class="deck" aria-label="のこりのパネル"><i></i><b id="deckn">0</b>のこり</div></div>
-    <div class="ctrl"><button class="btn" id="undo" type="button">ひとつ戻す</button><button class="btn toss" id="toss" type="button">捨てる</button><span class="grow"></span><button class="btn ghost" id="quit" type="button">冒険をおえる</button></div>
+  </div>
+  <div class="tray">
+    <div class="hand" id="hand"></div>
+    <div class="tools"><button class="tool toss" id="toss" type="button">捨てる</button><button class="tool" id="undo" type="button">戻す</button></div>
+    <div class="decktag" aria-label="のこりの積み木">のこり<b id="deckn">0</b></div>
   </div>
 </div>
 
 <div class="sheet solid" id="s-title">
   <div class="title">
-    <h1 class="logo">PATH <span>QUEST</span></h1>
-    <p class="lead">道を作りながら、上の階段へ</p>
+    <h1 class="logo" aria-label="PATH QUEST"><span><i class="c0">P</i><i class="c1">A</i><i class="c2">T</i><i class="c3">H</i></span><span><i class="c4">Q</i><i class="c0">U</i><i class="c1">E</i><i class="c2">S</i><i class="c3">T</i></span></h1>
+    <p class="lead">積み木で道を作って、<br>おもちゃの国を旅しよう</p>
     <div class="demo" id="demo"></div>
     <button class="btn main" id="t-new" type="button">冒険に出る</button>
     <button class="btn" id="t-cont" type="button" hidden>つづきから</button>
@@ -182,15 +211,15 @@ button{font:inherit;color:inherit}
 </div>
 
 <div class="sheet" id="s-reward" hidden>
-  <div class="tablet">
-    <h2 id="r-head">B1F 突破</h2>
+  <div class="card">
+    <h2 id="r-head">草原 1 クリア</h2>
     <p>ごほうびをひとつえらぶ</p>
     <div class="choices" id="r-list"></div>
   </div>
 </div>
 
 <div class="sheet" id="s-stuck" hidden>
-  <div class="tablet">
+  <div class="card">
     <h2 id="k-head">行き止まり</h2>
     <p id="k-text"></p>
     <div class="row"><button class="btn main" id="k-undo" type="button">ひとつ戻す</button><button class="btn" id="k-end" type="button">冒険をおえる</button></div>
@@ -198,7 +227,7 @@ button{font:inherit;color:inherit}
 </div>
 
 <div class="sheet" id="s-quit" hidden>
-  <div class="tablet">
+  <div class="card">
     <h2>冒険をおえる？</h2>
     <p id="q-text"></p>
     <div class="row"><button class="btn main" id="q-no" type="button">つづける</button><button class="btn" id="q-yes" type="button">おえる</button></div>
@@ -206,16 +235,16 @@ button{font:inherit;color:inherit}
 </div>
 
 <div class="sheet" id="s-over" hidden>
-  <div class="tablet">
+  <div class="card">
     <h2 id="o-head"></h2>
     <p id="o-text"></p>
-    <div class="row"><button class="btn main" id="o-shop" type="button">強化する</button><button class="btn" id="o-again" type="button">もう一度潜る</button></div>
-    <button class="btn ghost" id="o-title" type="button">タイトルへ</button>
+    <div class="row"><button class="btn main" id="o-shop" type="button">強化する</button><button class="btn" id="o-again" type="button">もう一度旅に出る</button></div>
+    <button class="btn link" id="o-title" type="button">タイトルへ</button>
   </div>
 </div>
 
 <div class="sheet" id="s-shop" hidden>
-  <div class="tablet">
+  <div class="card">
     <h2>強化</h2>
     <p>持ち帰った金貨 <span class="bank" id="sh-bank">0</span></p>
     <div class="choices" id="sh-list"></div>
@@ -239,8 +268,8 @@ const W=5;
 const DIRS=[[-1,0,1],[0,1,2],[1,0,4],[0,-1,8]]; // N E S W as bits 1 2 4 8
 const BITS=[1,2,4,8];
 const OPP={1:4,2:8,4:1,8:2};
-const SHAPES=[[5,22],[10,8],[3,9],[6,9],[12,9],[9,9],[11,4],[7,6],[14,4],[13,6],[15,6]]; // tilted toward N-S because the hero climbs upward
-const SHAPE_NAME=m=>({5:'直線',10:'直線',15:'十字'})[m]||([3,6,12,9].includes(m)?'カーブ':'T字');
+const SHAPES=[[5,22],[10,8],[3,9],[6,9],[12,9],[9,9],[11,4],[7,6],[14,4],[13,6],[15,6]]; // tilted toward N-S because the knight walks upward
+const SHAPE_NAME=m=>({5:'まっすぐ',10:'まっすぐ',15:'十字'})[m]||([3,6,12,9].includes(m)?'カーブ':'T字');
 const rnd=n=>Math.floor(Math.random()*n);
 const pickW=a=>{let t=0;for(const x of a)t+=x[1];let r=Math.random()*t;for(const x of a){if((r-=x[1])<0)return x[0]}return a[a.length-1][0]};
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -248,52 +277,105 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const STEP=REDUCED?60:170;
 
+/* ---------- the land: five areas of five stages, the 5th has the captain ---------- */
+const AREAS=[
+  {k:'grass',n:'草原',ob:'積み木の山'},
+  {k:'forest',n:'森',ob:'木'},
+  {k:'lake',n:'湖',ob:'池'},
+  {k:'snow',n:'雪原',ob:'雪だるま'},
+  {k:'castle',n:'おもちゃの城',ob:'城のかべ'}
+];
+const areaOf=f=>AREAS[Math.floor((Math.max(1,f)-1)/5)%AREAS.length];
+const stepOf=f=>(Math.max(1,f)-1)%5+1;
+const lapOf=f=>Math.floor((Math.max(1,f)-1)/(5*AREAS.length))+1;
+const placeName=f=>`${areaOf(f).n} ${stepOf(f)}`+(lapOf(f)>1?`（${lapOf(f)}周め）`:'');
+
 /* ---------- sprites (100x100) ---------- */
 const svg=s=>`<svg viewBox="0 0 100 100" aria-hidden="true">${s}</svg>`;
+const ico=s=>`<svg viewBox="22 22 56 56" aria-hidden="true">${s}</svg>`;
+const BLOCKS=[['#f7c3d4','#e29ab4'],['#bfe6d6','#8fcdb6'],['#fbe2a0','#e5bf63'],['#d8cdf6','#b4a3e8'],['#c4e2f5','#93c3e4']];
+const SHADOW=(rx)=>`<ellipse cx="50" cy="86" rx="${rx}" ry="4.5" fill="rgba(74,53,65,.22)"/>`;
+const soldier=(coat,extra)=>SHADOW(15)+
+  '<rect x="42" y="66" width="7" height="18" rx="2" fill="#3d4170"/><rect x="51" y="66" width="7" height="18" rx="2" fill="#3d4170"/>'+
+  `<rect x="39" y="44" width="22" height="26" rx="6" fill="${coat}"/>`+
+  '<path d="M41 47 59 67M59 47 41 67" stroke="#fffaf6" stroke-width="3"/>'+
+  '<circle cx="50" cy="38" r="8" fill="#ffd9c2"/><circle cx="47" cy="38.5" r="1.4" fill="#4a3541"/><circle cx="53" cy="38.5" r="1.4" fill="#4a3541"/><circle cx="45" cy="41.5" r="1.8" fill="#f4a6b8"/><circle cx="55" cy="41.5" r="1.8" fill="#f4a6b8"/>'+
+  '<rect x="42" y="13" width="16" height="22" rx="7" fill="#3d4170"/><path d="M42 33h16" stroke="#f2c14e" stroke-width="2.5"/>'+extra;
+const FLAG='<rect x="30" y="73" width="40" height="13" rx="4" fill="#e5bf63"/><rect x="30" y="70" width="40" height="11" rx="4" fill="#fbe2a0"/><path d="M42 72V18" stroke="#b08968" stroke-width="4" stroke-linecap="round"/><path d="M44 19 72 28 44 38z" fill="#ee88ac"/><circle cx="53" cy="28" r="3.2" fill="#fffaf6"/>';
 const SPR={
-  door:'<path d="M28 84V48a22 22 0 0 1 44 0v36z" fill="#120f0c" stroke="#8b7d68" stroke-width="5"/><path d="M22 86h56" stroke="#8b7d68" stroke-width="5"/>',
-  stairs:'<rect x="20" y="20" width="60" height="60" fill="#0b0c0e"/><path d="M20 32h60v9H20zM20 49h46v9H20zM20 66h32v9H20z" fill="#8b7d68"/><path d="M20 20h60v60H20z" fill="none" stroke="#5c5346" stroke-width="4"/>',
-  rock:'<path d="M18 72 28 42 50 28 74 36 84 66 68 82H32z" fill="#565a61"/><path d="M28 42 50 28 58 46 38 54z" fill="#71767e"/><path d="M58 46 74 36 84 66 66 64z" fill="#4a4e54"/>',
-  gem:'<path d="M50 30 68 47 50 72 32 47z" fill="#3fb6c2"/><path d="M50 30 58 47 50 72 42 47z" fill="#a7eef3"/>',
-  slime:'<path d="M28 68C28 46 39 35 50 35S72 46 72 68z" fill="#6cc25a"/><path d="M34 52q4-9 12-11" stroke="#b6ec9f" stroke-width="3" fill="none"/><circle cx="43" cy="56" r="3.6" fill="#1b2a14"/><circle cx="57" cy="56" r="3.6" fill="#1b2a14"/>',
-  bat:'<path d="M50 42 58 49 73 38 69 55 82 58 62 65 50 61 38 65 18 58 31 55 27 38 42 49z" fill="#7d61aa"/><circle cx="46" cy="52" r="2.6" fill="#ffd36e"/><circle cx="54" cy="52" r="2.6" fill="#ffd36e"/>',
-  bone:'<path d="M35 52a15 15 0 0 1 30 0v8h-4v8H39v-8h-4z" fill="#e7e1d1"/><circle cx="44" cy="53" r="4.2" fill="#2a2620"/><circle cx="56" cy="53" r="4.2" fill="#2a2620"/><path d="M45 62v6M50 62v6M55 62v6" stroke="#2a2620" stroke-width="2"/>',
-  golem:'<path d="M26 54h8v14h-8zM66 54h8v14h-8z" fill="#5f6268"/><rect x="33" y="36" width="34" height="34" rx="3" fill="#7d8087"/><rect x="38" y="47" width="8" height="5" fill="#ff9a3c"/><rect x="54" y="47" width="8" height="5" fill="#ff9a3c"/><path d="M40 62h20" stroke="#55585e" stroke-width="3"/>',
-  boss:'<path d="M28 44 34 22 42 38q8-4 16 0l8-16 6 22q5 10 0 22-8 14-22 14T28 66q-5-12 0-22z" fill="#c8453b"/><path d="M37 52l9 4M63 52l-9 4" stroke="#ffd36e" stroke-width="4"/><path d="M41 66h18" stroke="#3a0e0b" stroke-width="3"/>',
-  coin:'<circle cx="46" cy="58" r="13" fill="#b97a22"/><circle cx="52" cy="50" r="14" fill="#f2b33d"/><circle cx="52" cy="50" r="8.5" fill="none" stroke="#b97a22" stroke-width="3"/>',
-  potion:'<rect x="43" y="25" width="14" height="6" fill="#8a6a45"/><rect x="45" y="30" width="10" height="12" fill="#c9d6da"/><circle cx="50" cy="56" r="16" fill="#c9d6da"/><path d="M36 58a14 14 0 0 0 28 0z" fill="#e0524a"/>',
-  sword:'<path d="M66 26 72 32 46 58 40 52z" fill="#d3d9de"/><path d="M66 26 72 32 70 28z" fill="#fff"/><path d="M34 50 50 66" stroke="#8a6a45" stroke-width="6"/><path d="M40 60 30 70" stroke="#6b4f30" stroke-width="7" stroke-linecap="round"/>',
-  shield:'<path d="M50 28 69 35V51q0 15-19 23-19-8-19-23V35z" fill="#5b7fb5"/><path d="M50 34v36M37 49h26" stroke="#dfe7f2" stroke-width="4"/>',
-  heart:'<path d="M50 74 28 52a12 12 0 0 1 22-14 12 12 0 0 1 22 14z" fill="#e0524a"/>',
-  bag:'<path d="M37 40q13-8 26 0l5 28q-18 9-36 0z" fill="#8a6a45"/><path d="M41 37h18" stroke="#5b4630" stroke-width="5"/>',
-  glass:'<path d="M34 26h32M34 74h32" stroke="#8a6a45" stroke-width="5"/><path d="M38 28h24l-10 22 10 22H38l10-22z" fill="#c9d6da"/><path d="M42 70h16l-8-12z" fill="#f2b33d"/>',
-  hand:'<rect x="26" y="40" width="14" height="14" fill="#a98a57"/><rect x="43" y="40" width="14" height="14" fill="#a98a57"/><rect x="60" y="40" width="14" height="14" fill="#a98a57"/><rect x="34" y="58" width="14" height="14" fill="#a98a57"/><rect x="52" y="58" width="14" height="14" fill="#ebc782"/>',
-  hero:'<ellipse cx="50" cy="80" rx="20" ry="5" fill="rgba(0,0,0,.45)"/><path d="M50 30q10-15 22-11-10 5-14 14z" fill="#e0524a"/><path d="M28 62q0-30 22-32 22 2 22 32v14H28z" fill="#cdd1d7"/><path d="M28 62q0-30 22-32v46H28z" fill="#e6e9ed"/><rect x="34" y="52" width="32" height="7" fill="#17191d"/><path d="M50 59v17" stroke="#9aa0a8" stroke-width="3"/>'
+  start:'<rect x="20" y="50" width="60" height="34" rx="6" fill="#e889ad"/><rect x="20" y="50" width="60" height="8" fill="#d4689a"/><path d="M18 50 26 34h56l-2 16z" fill="#f7c3d4"/><path d="M50 61l3.5 7 7.5 1-5.5 5 1.5 7.5-7-3.8-7 3.8 1.5-7.5-5.5-5 7.5-1z" fill="#ffe08a"/>',
+  goal:FLAG,
+  ob:{
+    grass:'<rect x="16" y="56" width="34" height="30" rx="4" fill="#e5bf63"/><rect x="16" y="52" width="34" height="28" rx="4" fill="#fbe2a0"/><path d="M16 52 33 28 50 52z" fill="#f08a8a"/><rect x="54" y="44" width="30" height="42" rx="5" fill="#8fcdb6"/><ellipse cx="69" cy="45" rx="15" ry="6" fill="#bfe6d6"/>',
+    forest:'<rect x="44" y="62" width="12" height="22" rx="3" fill="#d1a37a"/><path d="M50 13 76 48H24z" fill="#8fd08a"/><path d="M50 30 80 67H20z" fill="#74bf70"/>',
+    lake:'<ellipse cx="50" cy="58" rx="38" ry="27" fill="#a8d8f3" stroke="#86c3e8" stroke-width="3"/><path d="M26 68q6-4 12 0M62 72q6-4 12 0" stroke="#e8f6fd" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="51" cy="57" rx="13" ry="8" fill="#ffd95e"/><circle cx="59" cy="47" r="7" fill="#ffd95e"/><path d="M65 47l6 2-6 2z" fill="#f29a3a"/><circle cx="60" cy="45.5" r="1.3" fill="#4a3541"/>',
+    snow:'<circle cx="50" cy="64" r="18" fill="#fff" stroke="#c9d3ea" stroke-width="2.5"/><circle cx="50" cy="38" r="12" fill="#fff" stroke="#c9d3ea" stroke-width="2.5"/><rect x="41" y="20" width="18" height="10" rx="2" fill="#9f8fd6"/><path d="M50 40l9 2-9 2z" fill="#f29a3a"/><circle cx="46" cy="36" r="1.5" fill="#4a3541"/><circle cx="54" cy="36" r="1.5" fill="#4a3541"/><path d="M40 50q10 5 20 0" stroke="#e8607e" stroke-width="4" fill="none" stroke-linecap="round"/>',
+    castle:'<path d="M16 86V34h12v8h16v-8h12v8h16v-8h12v52z" fill="#b4a3e8"/><path d="M16 82V30h12v8h16v-8h12v8h16v-8h12v52z" fill="#d8cdf6"/><path d="M42 82V68a8 8 0 0 1 16 0v14z" fill="#9f8fd6"/><path d="M16 54h68M30 54v14M70 54v14" stroke="#c2b5ee" stroke-width="2"/>'
+  },
+  gem:'<circle cx="50" cy="52" r="14" fill="#a8d8f3"/><path d="M41 55q9-14 18-2" stroke="#ee88ac" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="45" cy="46" r="3.5" fill="#fff" opacity=".85"/>',
+  soldier:soldier('#f08a8a','<path d="M65 30v40" stroke="#b08968" stroke-width="3.5" stroke-linecap="round"/><path d="M60 50h6" stroke="#ffd9c2" stroke-width="4" stroke-linecap="round"/>'),
+  bugle:soldier('#8fcdb6','<path d="M54 40l14-5v11z" fill="#f2c14e" stroke="#d99a1e" stroke-width="1.5" stroke-linejoin="round"/>'),
+  cannon:SHADOW(22)+'<path d="M36 64 57 29l13 8-20 33z" fill="#9f8fd6"/><circle cx="64" cy="33" r="7" fill="#7f6fc0"/><rect x="30" y="60" width="40" height="14" rx="5" fill="#b4a3e8"/><circle cx="36" cy="76" r="9" fill="#e6b98e" stroke="#b08968" stroke-width="2.5"/><circle cx="36" cy="76" r="2.5" fill="#b08968"/><circle cx="64" cy="76" r="9" fill="#e6b98e" stroke="#b08968" stroke-width="2.5"/><circle cx="64" cy="76" r="2.5" fill="#b08968"/>',
+  robot:SHADOW(16)+'<path d="M50 22v-8" stroke="#8e9cc0" stroke-width="2.5"/><circle cx="50" cy="12" r="3.5" fill="#e8607e"/><rect x="37" y="22" width="26" height="20" rx="4" fill="#cfd8e8" stroke="#8e9cc0" stroke-width="2"/><rect x="42" y="29" width="6" height="5" rx="1" fill="#ffd36e"/><rect x="52" y="29" width="6" height="5" rx="1" fill="#ffd36e"/><rect x="34" y="44" width="32" height="26" rx="4" fill="#aebbd3" stroke="#8e9cc0" stroke-width="2"/><circle cx="44" cy="55" r="3.5" fill="#e8607e"/><circle cx="56" cy="55" r="3.5" fill="#6cc4ad"/><rect x="38" y="70" width="9" height="14" rx="2" fill="#8e9cc0"/><rect x="53" y="70" width="9" height="14" rx="2" fill="#8e9cc0"/>',
+  boss:'<g transform="translate(50 54) scale(1.2) translate(-50 -54)">'+soldier('#e8607e','<rect x="35" y="44" width="8" height="5" rx="2" fill="#f2c14e"/><rect x="57" y="44" width="8" height="5" rx="2" fill="#f2c14e"/><path d="M56 14q6-12 12-6-6 1-9 8z" fill="#ee88ac"/><path d="M45.5 42.5q4.5 2.5 9 0" stroke="#7a5a48" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M64 70 70 36" stroke="#dfe6f0" stroke-width="3" stroke-linecap="round"/><path d="M61 68h7" stroke="#f2c14e" stroke-width="3" stroke-linecap="round"/>')+'</g>',
+  coin:'<circle cx="50" cy="52" r="15" fill="#ffd95e" stroke="#e0a12a" stroke-width="3"/><path d="M50 43l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z" fill="#e0a12a"/>',
+  potion:'<path d="M37 52 24 42v20z" fill="#f7c3d4"/><path d="M63 52 76 42v20z" fill="#f7c3d4"/><circle cx="50" cy="52" r="14" fill="#ee88ac"/><path d="M43 52a7 7 0 1 1 7 7" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".85"/>',
+  sword:'<path d="M64 26 70 32 47 58 41 52z" fill="#eef2f9" stroke="#9aa8c8" stroke-width="2" stroke-linejoin="round"/><path d="M36 50 52 66" stroke="#ee88ac" stroke-width="6" stroke-linecap="round"/><path d="M42 60 34 68" stroke="#b4a3e8" stroke-width="7" stroke-linecap="round"/><circle cx="31" cy="71" r="4" fill="#ffd95e"/>',
+  shield:'<path d="M50 28 69 35V51q0 15-19 23-19-8-19-23V35z" fill="#93c3e4" stroke="#fff" stroke-width="3"/><path d="M50 41l3 6 6.6.9-4.8 4.6 1.2 6.5L50 56l-6 3 1.2-6.5-4.8-4.6 6.6-.9z" fill="#fff"/>',
+  heart:'<path d="M50 74 28 52a12 12 0 0 1 22-14 12 12 0 0 1 22 14z" fill="#e8607e"/>',
+  bag:'<path d="M36 42q14-8 28 0l6 28q-20 10-40 0z" fill="#b4a3e8"/><path d="M40 39h20" stroke="#9f8fd6" stroke-width="5" stroke-linecap="round"/><rect x="44" y="52" width="12" height="12" rx="2" fill="#fbe2a0"/>',
+  glass:'<path d="M34 26h32M34 74h32" stroke="#d1a37a" stroke-width="5" stroke-linecap="round"/><path d="M38 28h24l-10 22 10 22H38l10-22z" fill="#e6f2fb" stroke="#93c3e4" stroke-width="2" stroke-linejoin="round"/><path d="M42 70h16l-8-12z" fill="#ffd95e"/>',
+  hand:'<rect x="24" y="38" width="16" height="16" rx="3" fill="#f7c3d4"/><rect x="42" y="38" width="16" height="16" rx="3" fill="#bfe6d6"/><rect x="60" y="38" width="16" height="16" rx="3" fill="#fbe2a0"/><rect x="33" y="57" width="16" height="16" rx="3" fill="#d8cdf6"/><rect x="51" y="57" width="16" height="16" rx="3" fill="#c4e2f5"/>',
+  hero:SHADOW(19)+
+    '<rect x="40" y="70" width="8" height="14" rx="3" fill="#8e9cc0"/><rect x="52" y="70" width="8" height="14" rx="3" fill="#8e9cc0"/>'+
+    '<g class="key"><path d="M66 60h10" stroke="#d99a1e" stroke-width="4" stroke-linecap="round"/><ellipse cx="80" cy="54" rx="5" ry="7" fill="#f2c14e" stroke="#d99a1e" stroke-width="2"/><ellipse cx="80" cy="66" rx="5" ry="7" fill="#f2c14e" stroke="#d99a1e" stroke-width="2"/></g>'+
+    '<rect x="34" y="50" width="32" height="25" rx="9" fill="#b9c6e6"/><rect x="34" y="62" width="32" height="4" fill="#e8607e"/>'+
+    '<circle cx="31" cy="62" r="8" fill="#ffe08a" stroke="#e8b84a" stroke-width="2"/>'+
+    '<circle cx="50" cy="38" r="16" fill="#eef2f9" stroke="#9aa8c8" stroke-width="2.5"/><rect x="39" y="36" width="22" height="7" rx="3.5" fill="#4a3541"/>'+
+    '<path d="M50 22q6-14 19-10-9 3-12 12z" fill="#ee88ac"/>'
 };
-function roadSVG(m){
-  const seg={1:'M50 50V0',2:'M50 50H100',4:'M50 50V100',8:'M50 50H0'};
-  let d='';for(const b of BITS)if(m&b)d+=seg[b];
-  return `<path d="${d}" class="rd-edge" stroke-width="42" stroke-linecap="square" fill="none"/><path d="${d}" class="rd" stroke-width="30" stroke-linecap="square" fill="none"/>`;
+const DECO={
+  grass:['<path d="M22 76q3-10 6 0M28 76q3-14 6 0M34 76q3-9 6 0" stroke="#9fd083" stroke-width="3" fill="none" stroke-linecap="round"/>','<circle cx="70" cy="30" r="5" fill="#fff"/><circle cx="70" cy="30" r="2" fill="#ffd36e"/><circle cx="80" cy="41" r="4" fill="#fbd3e0"/>','<path d="M62 70q3-10 6 0M68 70q3-13 6 0" stroke="#9fd083" stroke-width="3" fill="none" stroke-linecap="round"/>'],
+  forest:['<path d="M64 72q8-14 16 0z" fill="#f08a8a"/><rect x="70" y="72" width="4" height="7" rx="1" fill="#fff6ec"/><circle cx="69" cy="67" r="1.6" fill="#fff"/>','<path d="M26 30q10-6 14 4-10 4-14-4z" fill="#8fcf8a"/>','<path d="M24 76q3-10 6 0M30 76q3-13 6 0" stroke="#86bf72" stroke-width="3" fill="none" stroke-linecap="round"/>'],
+  lake:['<ellipse cx="30" cy="72" rx="6" ry="4" fill="#ddd0bb"/><ellipse cx="40" cy="76" rx="4" ry="3" fill="#cdbfa8"/>','<path d="M66 32q6-8 12 0z" fill="#f7c3d4"/>','<path d="M64 74q3-10 6 0M70 74q3-13 6 0" stroke="#a9cf8f" stroke-width="3" fill="none" stroke-linecap="round"/>'],
+  snow:['<ellipse cx="66" cy="74" rx="13" ry="5" fill="#fff"/>','<ellipse cx="28" cy="34" rx="3" ry="4.5" fill="#d9e2f2"/><ellipse cx="36" cy="44" rx="3" ry="4.5" fill="#d9e2f2"/>','<ellipse cx="34" cy="72" rx="10" ry="4" fill="#fff"/>'],
+  castle:['<path d="M50 38 62 50 50 62 38 50z" fill="none" stroke="#e6b6ca" stroke-width="2.5"/>','<circle cx="30" cy="30" r="3" fill="#e6b6ca"/><circle cx="70" cy="70" r="3" fill="#e6b6ca"/>','']
+};
+function blockSVG(c){
+  const b=BLOCKS[c]||BLOCKS[0];
+  return `<rect x="4" y="9" width="92" height="88" rx="13" fill="${b[1]}"/><rect x="4" y="4" width="92" height="85" rx="13" fill="${b[0]}"/><path d="M15 10h70" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/>`;
 }
+function roadSVG(m,sh,lo,hi){ // on the field the road runs past the block into the gap (lo -4, hi 104); in the tray it stops at the block's edge
+  lo=lo??-4;hi=hi??104;
+  const seg={1:`M50 47V${lo}`,2:`M50 47H${hi}`,4:`M50 47V${hi}`,8:`M50 47H${lo}`};
+  let d='';for(const b of BITS)if(m&b)d+=seg[b];
+  return `<path d="${d}" stroke="${sh}" stroke-width="36" fill="none"/><circle cx="50" cy="47" r="18" fill="${sh}"/><path d="${d}" stroke="#fffdf8" stroke-width="28" fill="none"/><circle cx="50" cy="47" r="14" fill="#fffdf8"/><path d="${d}" stroke="${sh}" stroke-width="3.5" stroke-dasharray="7 7" fill="none"/>`;
+}
+const tileArt=(t,inTray)=>{const c=t.c|0;return blockSVG(c)+(inTray?roadSVG(t.m,BLOCKS[c][1],4,96):roadSVG(t.m,BLOCKS[c][1]))+evSVG(t.e)};
 function evSVG(e){
   if(!e)return '';
-  if(e.k==='foe')return SPR[e.t]||'';
+  if(e.k==='foe')return SPR[e.t]||SPR.soldier;
   return SPR[e.k]||'';
+}
+function deco(i){
+  const h=((i+1)*2654435761+run.floor*40503)>>>0,r=h%9,set=DECO[areaOf(run.floor).k];
+  return r<3?set[r]:'';
 }
 
 /* ---------- enemies, events ---------- */
 const FOES=[
-  {t:'slime',name:'スライム',from:1,hp:0,atk:0},
-  {t:'bat',name:'コウモリ',from:3,hp:-1,atk:1},
-  {t:'bone',name:'ガイコツ',from:6,hp:1,atk:0},
-  {t:'golem',name:'ゴーレム',from:10,hp:4,atk:0}
+  {t:'soldier',name:'へいたい',from:1,hp:0,atk:0},
+  {t:'bugle',name:'ラッパ兵',from:3,hp:-1,atk:1},
+  {t:'cannon',name:'おもちゃの大砲',from:6,hp:1,atk:0},
+  {t:'robot',name:'ブリキのロボ',from:10,hp:4,atk:0}
 ];
+const OLD_FOE={slime:'soldier',bat:'bugle',bone:'cannon',golem:'robot'};
 function makeFoe(f){
   const pool=FOES.filter(x=>x.from<=f);
   const t=pool.length>1&&Math.random()<.55?pool[pool.length-1]:pool[rnd(pool.length)];
   return {k:'foe',t:t.t,name:t.name,hp:Math.max(2,2+f+t.hp),atk:Math.max(1,1+Math.floor((f-1)/2)+t.atk),gold:3+Math.floor(f*.8)};
 }
-function makeBoss(f){return {k:'foe',t:'boss',name:'階のぬし',hp:4+Math.round(f*1.6),atk:1+Math.ceil(f/2),gold:10+2*f,boss:true}}
+function makeBoss(f){return {k:'foe',t:'boss',name:'兵隊長',hp:4+Math.round(f*1.6),atk:1+Math.ceil(f/2),gold:10+2*f,boss:true}}
 function makeEvent(f){
   const x=Math.random(),fp=Math.min(.3,.16+.012*f);
   if(x<fp)return makeFoe(f);
@@ -303,17 +385,17 @@ function makeEvent(f){
   if(x<fp+.29)return {k:'shield'};
   return null;
 }
-const makeTile=(f,m)=>({m:m||pickW(SHAPES),e:makeEvent(f)});
+const makeTile=(f,m)=>({m:m||pickW(SHAPES),e:makeEvent(f),c:rnd(BLOCKS.length)});
 const dmgFor=e=>Math.max(0,e.atk-run.def)*Math.ceil(e.hp/run.atk); // one hit back per round of the fight
 
 /* ---------- meta (kept between runs) ---------- */
 const UPS=[
   {k:'hp',name:'体力',desc:'はじめの最大HP+2',icon:'heart',max:10,cost:l=>12+8*l},
   {k:'atk',name:'剣のうで',desc:'はじめの攻撃+1',icon:'sword',max:5,cost:l=>25+20*l},
-  {k:'def',name:'守りのうで',desc:'はじめの守り+1',icon:'shield',max:5,cost:l=>25+20*l},
-  {k:'bag',name:'道具ぶくろ',desc:'どの階もパネル+2',icon:'bag',max:5,cost:l=>18+12*l},
-  {k:'undo',name:'砂時計',desc:'ひとつ戻すが1階ごとに+1',icon:'glass',max:3,cost:l=>30+25*l},
-  {k:'hand',name:'広い手',desc:'パネルの候補が5枚',icon:'hand',max:1,cost:()=>90}
+  {k:'def',name:'盾のうで',desc:'はじめの守り+1',icon:'shield',max:5,cost:l=>25+20*l},
+  {k:'bag',name:'おもちゃ袋',desc:'どのステージも積み木+2',icon:'bag',max:5,cost:l=>18+12*l},
+  {k:'undo',name:'砂時計',desc:'「戻す」がステージごとに+1',icon:'glass',max:3,cost:l=>30+25*l},
+  {k:'hand',name:'広い手',desc:'えらべる積み木が5こ',icon:'hand',max:1,cost:()=>90}
 ];
 let meta=store.get(META)||{};
 meta={bank:meta.bank|0,best:meta.best|0,up:Object.assign({hp:0,atk:0,def:0,bag:0,undo:0,hand:0},meta.up||{})};
@@ -322,6 +404,11 @@ const saveMeta=()=>store.set(META,meta);
 /* ---------- run state ---------- */
 let run=store.get(SAVE);
 if(run&&!(run.cells&&run.hand&&run.h))run=null;
+if(run){ // saves from the dungeon version: rename its monsters
+  const fix=e=>{if(e&&e.k==='foe'&&OLD_FOE[e.t]){e.t=OLD_FOE[e.t];e.name=FOES.find(x=>x.t===e.t).name}};
+  [...run.hand,...run.deck,...run.cells.map(c=>c.tile)].forEach(t=>t&&fix(t.e));
+  if(run.boss){run.boss.name='兵隊長'}
+}
 let sel=-1,busy=false,justPlaced=-1;
 const save=()=>{if(run)store.set(SAVE,run)};
 
@@ -336,7 +423,11 @@ function nextFloor(){
   if(run.floor>meta.best){meta.best=run.floor;saveMeta()}
   run.phase='build';save();
   hideSheets();render();follow(run.at,false);
-  say(run.floor===1?'光っている道の先にパネルを置くと、勇者が進む。':run.boss?`B${run.floor}F　階段の前に、階のぬしがいる。`:`B${run.floor}F　上の階段をめざす。`);
+  const f=run.floor,a=areaOf(f);
+  if(f===1)say('光るマスに積み木を置くと、騎士が進む。上の旗まで道をつなごう',true);
+  else if(run.boss)say(`${placeName(f)}　旗の前に兵隊長がいる`);
+  else if(stepOf(f)===1)say(`${a.n}に着いた。上の旗をめざそう`);
+  else say(`${placeName(f)}　上の旗をめざそう`);
 }
 const heightFor=f=>f<=2?7:f<=5?9:f<=9?11:13;
 function nbr(i,b,h){const r=i/W|0,c=i%W,d=DIRS[BITS.indexOf(b)],rr=r+d[0],cc=c+d[1];return rr<0||rr>=h||cc<0||cc>=W?-1:rr*W+cc}
@@ -417,9 +508,14 @@ const fits=(t,j,F)=>!!t&&F.has(j)&&!!(t.m&F.get(j));
 const anyFit=(t,F)=>{if(!t)return false;for(const j of F.keys())if(t.m&F.get(j))return true;return false};
 
 /* ---------- rendering ---------- */
-const view=$('view'),board=$('board'),handEl=$('hand'),msgEl=$('msg');
+const app=$('app'),view=$('view'),board=$('board'),handEl=$('hand'),msgEl=$('msg');
 const hero=document.createElement('div');hero.className='hero';hero.innerHTML=svg(SPR.hero);
-function say(t){msgEl.textContent=t}
+$('hpicon').innerHTML=ico(SPR.heart);
+let msgTimer=0;
+function say(t,stay){
+  msgEl.textContent=t;msgEl.classList.add('on');clearTimeout(msgTimer);
+  if(!stay)msgTimer=setTimeout(()=>msgEl.classList.remove('on'),4500);
+}
 function badge(e){
   if(!e)return '';
   if(e.k==='foe'){const d=dmgFor(e);return `<span class="badge ${d?'b-foe':'b-zero'}">-${d}</span>`}
@@ -431,12 +527,12 @@ function badge(e){
 }
 function cellHTML(i,F){
   const c=run.cells[i];let cls='cell',inner='',tab='';
-  if(i===run.s){cls+=' start';inner=svg(SPR.door)}
-  else if(i===run.g){cls+=' goal';inner=svg(SPR.stairs+(run.boss?SPR.boss:''))+(run.boss?badge(run.boss):'')}
-  else if(c.rock){cls+=' rock';inner=svg(SPR.rock)}
-  else if(c.tile){cls+=' laid lit'+(i===justPlaced?' new':'');inner=svg(roadSVG(c.tile.m)+evSVG(c.tile.e))+badge(c.tile.e)}
+  if(i===run.s){cls+=' start';inner=svg(SPR.start)}
+  else if(i===run.g){cls+=' goal';inner=run.boss?svg(`<g transform="translate(36 -4) scale(.6)">${FLAG}</g>`+SPR.boss)+badge(run.boss):svg(FLAG)}
+  else if(c.rock){cls+=' rock';inner=svg(SPR.ob[areaOf(run.floor).k])}
+  else if(c.tile){cls+=' laid'+(i===justPlaced?' new':'');inner=svg(tileArt(c.tile))+badge(c.tile.e)}
   else{
-    if(c.gem)inner=svg(SPR.gem);
+    inner=svg(deco(i)+(c.gem?SPR.gem:''));
     if(F&&F.has(i)){cls+=' front'+(sel>=0&&fits(run.hand[sel],i,F)?' fit':'');tab=' tabindex="0" role="button" aria-label="道の先"'}
   }
   return `<div class="${cls}" data-i="${i}"${tab}>${inner}</div>`;
@@ -453,21 +549,24 @@ function refreshMarks(){
   for(const [j] of F){const el=board.children[j];if(el)el.classList.toggle('fit',sel>=0&&fits(run.hand[sel],j,F))}
 }
 function updateCell(i){const el=board.children[i];if(el&&el!==hero)el.outerHTML=cellHTML(i,null)}
-function tileSVG(t){return svg(roadSVG(t.m)+evSVG(t.e))}
 function renderHand(F){
   F=F||frontier();
   handEl.style.setProperty('--hs',run.hand.length);
-  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot lit${i===sel?' sel':''}${anyFit(t,F)?'':' dull'}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}">${tileSVG(t)}${badge(t.e)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('');
+  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${anyFit(t,F)?'':' dull'}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}">${svg(tileArt(t,true))}${badge(t.e)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('');
   $('deckn').textContent=run.deck.length;
 }
 function renderStats(){
   const hp=Math.max(0,run.hp),row=run.at/W|0;
-  $('floor').textContent=`B${run.floor}F`;
-  $('hptext').textContent=`HP ${hp}/${run.maxHp}`;
+  app.dataset.area=areaOf(run.floor).k;
+  $('area').textContent=areaOf(run.floor).n;
+  $('floor').textContent=stepOf(run.floor);
+  $('hptext').textContent=`${hp}/${run.maxHp}`;
   $('hpfill').style.width=(hp/run.maxHp*100)+'%';
-  $('atk').textContent=run.atk;$('def').textContent=run.def;$('gold').textContent=run.gold;
-  $('hint').innerHTML=row>0?`階段まで あと<b>${row}</b>マス`:'階段';
-  const u=$('undo');u.textContent=`ひとつ戻す ${run.undo}`;u.disabled=busy||run.phase!=='build'||!run.hist.length||run.undo<=0;
+  $('i-atk').innerHTML=ico(SPR.sword)+`<b>${run.atk}</b>`;
+  $('i-def').innerHTML=ico(SPR.shield)+`<b>${run.def}</b>`;
+  $('i-gold').innerHTML=ico(SPR.coin)+`<b>${run.gold}</b>`;
+  const hint=$('hint');hint.hidden=row<=0;hint.innerHTML=`旗まで<b>${row}</b>マス`;
+  const u=$('undo');u.textContent=`戻す ${run.undo}`;u.disabled=busy||run.phase!=='build'||!run.hist.length||run.undo<=0;
   $('toss').disabled=busy||run.phase!=='build'||sel<0;
   $('quit').disabled=busy;
 }
@@ -494,16 +593,16 @@ function pop(i,text,cls,delay){
 }
 function tileName(t){
   const e=t.e,s=SHAPE_NAME(t.m);
-  if(!e)return s;
-  return `${s}・`+(e.k==='foe'?e.name:({coin:'金貨',potion:'薬',sword:'剣',shield:'盾'})[e.k]);
+  if(!e)return `${s}の積み木`;
+  return `${s}の積み木・`+(e.k==='foe'?e.name:({coin:'金貨',potion:'キャンディ',sword:'剣',shield:'盾'})[e.k]);
 }
 function describe(e){
   if(!e)return '';
   if(e.k==='foe')return `${e.name}　HP${e.hp} 攻${e.atk}　うけるダメージ${dmgFor(e)}　金+${e.gold}`;
   if(e.k==='coin')return `金貨　+${e.v}`;
-  if(e.k==='potion')return `薬　HP+${e.v}`;
-  if(e.k==='sword')return '剣　攻撃+1。敵を早くたおせる';
-  if(e.k==='shield')return '盾　守り+1。うけるダメージがへる';
+  if(e.k==='potion')return `キャンディ　HP+${e.v}`;
+  if(e.k==='sword')return 'おもちゃの剣　攻撃+1。敵を早くたおせる';
+  if(e.k==='shield')return 'おもちゃの盾　守り+1。うけるダメージがへる';
   return '';
 }
 
@@ -525,26 +624,26 @@ function tapCell(i){
   const c=run.cells[i],F=frontier();
   if(F.has(i)){
     if(sel>=0)return place(i,sel);
-    return say(c.gem?`宝石　通ると金+${c.gem}。下のパネルを先にえらぶ`:'下のパネルを先にえらぶ');
+    return say(c.gem?`ビー玉　通ると金+${c.gem}。下の積み木を先にえらぶ`:'下の積み木を先にえらぶ');
   }
-  if(i===run.s)return say('入口。ここから上の階段まで道を作る');
-  if(i===run.g)return say(run.boss?describe(run.boss):'階段。道がつながると次の階へ');
-  if(c.rock)return say('岩。通れない');
-  if(c.tile)return say(c.tile.e?describe(c.tile.e):SHAPE_NAME(c.tile.m)+'の道');
-  say(c.gem?`宝石　通ると金+${c.gem}。道の先にだけ置ける`:'道の先（光っているマス）にだけ置ける');
+  if(i===run.s)return say('おもちゃ箱。ここから上の旗まで道を作る');
+  if(i===run.g)return say(run.boss?describe(run.boss):'旗。道がつながると次のステージへ');
+  if(c.rock)return say(`${areaOf(run.floor).ob}。通れない`);
+  if(c.tile)return say(c.tile.e?describe(c.tile.e):`${SHAPE_NAME(c.tile.m)}の道`);
+  say(c.gem?`ビー玉　通ると金+${c.gem}。道の先にだけ置ける`:'道の先（光っているマス）にだけ置ける');
 }
 async function place(j,hi){
   if(busy||!run||run.phase!=='build')return;
   const t=run.hand[hi],F=frontier();
   if(!t)return;
   if(!F.has(j))return say('道の先（光っているマス）にだけ置ける');
-  if(!(t.m&F.get(j)))return say('このパネルはここにつながらない');
+  if(!(t.m&F.get(j)))return say('この積み木はここにつながらない');
   snapshot();
   run.cells[j].tile=t;run.hand[hi]=run.deck.length?run.deck.shift():null;sel=-1;justPlaced=j;
   busy=true;run.phase='walk';render();
   if(!await walkTo(j))return;
   if(bfs(run.s).has(run.g)){
-    say('階段までつながった');
+    say('旗までつながった');
     if(!await walkTo(run.g))return;
     await sleep(350);busy=false;
     run.phase='reward';run.rewards=pickRewards();save();return showReward();
@@ -553,28 +652,30 @@ async function place(j,hi){
 }
 async function walkTo(target){
   const path=pathTo(run.at,target)||[run.at,target];
+  hero.classList.add('walk');
   for(let k=1;k<path.length;k++){
     const i=path[k];run.at=i;placeHero(i);follow(i,true);
     await sleep(STEP);
     const hit=i===run.g?fightBoss(i):resolve(i);
     renderStats();
-    if(run.hp<=0){await sleep(700);busy=false;gameOver('hp');return false}
+    if(run.hp<=0){hero.classList.remove('walk');await sleep(700);busy=false;gameOver('hp');return false}
     if(hit)await sleep(STEP*2);
   }
+  hero.classList.remove('walk');
   return true;
 }
 function toss(){
   if(busy||!run||run.phase!=='build'||sel<0||!run.hand[sel])return;
   snapshot();
   run.hand[sel]=run.deck.length?run.deck.shift():null;sel=-1;
-  render();say('パネルを1枚捨てた');afterAction(true);
+  render();say('積み木を1こ捨てた');afterAction(true);
 }
 function afterAction(tossed){
   const F=frontier();
   if(!F.size)return stuck('行き止まり','道の先に置ける所がない。');
-  if(run.hand.every(x=>!x))return stuck('パネルがなくなった','上の階段までとどかなかった。');
-  if(!run.hand.some(t=>anyFit(t,F)))say('つながるパネルがない。パネルをえらんで「捨てる」');
-  else if(!tossed&&run.floor===1&&run.hist.length===1)say('合わないパネルは、えらんで「捨てる」と入れかわる。');
+  if(run.hand.every(x=>!x))return stuck('積み木がなくなった','旗までとどかなかった。');
+  if(!run.hand.some(t=>anyFit(t,F)))say('つながる積み木がない。積み木をえらんで「捨てる」',true);
+  else if(!tossed&&run.floor===1&&run.hist.length===1)say('合わない積み木は、えらんで「捨てる」と入れかわる');
   save();
 }
 function undo(){
@@ -587,7 +688,7 @@ function stuck(head,text){
   save();
   if(run.undo>0&&run.hist.length){
     $('k-head').textContent=head;$('k-text').textContent=text;
-    $('k-undo').textContent=`ひとつ戻す ${run.undo}`;show('s-stuck');
+    $('k-undo').textContent=`ひとつ戻す（のこり${run.undo}）`;show('s-stuck');
   }else gameOver('stuck');
 }
 function fight(e,i){
@@ -603,11 +704,11 @@ function resolve(i){
     c.tile.e=null;hit=true;
     if(e.k==='foe')fight(e,i);
     else if(e.k==='coin'){run.gold+=e.v;pop(i,`+${e.v}`,'p-gold');say(`金貨をひろった　+${e.v}`)}
-    else if(e.k==='potion'){const h=Math.min(e.v,run.maxHp-run.hp);run.hp+=h;pop(i,`+${h}`,'p-heal');say(`薬をのんだ　HP+${h}`)}
-    else if(e.k==='sword'){run.atk++;pop(i,'攻+1','p-gear');say('剣を手に入れた　攻撃+1')}
-    else if(e.k==='shield'){run.def++;pop(i,'守+1','p-gear');say('盾を手に入れた　守り+1')}
+    else if(e.k==='potion'){const h=Math.min(e.v,run.maxHp-run.hp);run.hp+=h;pop(i,`+${h}`,'p-heal');say(`キャンディを食べた　HP+${h}`)}
+    else if(e.k==='sword'){run.atk++;pop(i,'攻+1','p-gear');say('おもちゃの剣を手に入れた　攻撃+1')}
+    else if(e.k==='shield'){run.def++;pop(i,'守+1','p-gear');say('おもちゃの盾を手に入れた　守り+1')}
   }
-  if(c.gem&&run.hp>0){const v=c.gem;c.gem=0;run.gold+=v;pop(i,`+${v}`,'p-gold',e?420:0);if(!e)say(`宝石を見つけた　金+${v}`);hit=true}
+  if(c.gem&&run.hp>0){const v=c.gem;c.gem=0;run.gold+=v;pop(i,`+${v}`,'p-gold',e?420:0);if(!e)say(`ビー玉を見つけた　金+${v}`);hit=true}
   if(hit)updateCell(i);
   return hit;
 }
@@ -620,14 +721,14 @@ function pickRewards(){
     {k:'maxhp',icon:'heart',t:'最大HP+3',s:'HPも3ふえる',v:3},
     {k:'atk',icon:'sword',t:'攻撃+1',s:`いま ${run.atk}`},
     {k:'def',icon:'shield',t:'守り+1',s:`いま ${run.def}`},
-    {k:'deck',icon:'bag',t:'パネル+3',s:'次の階から'},
+    {k:'deck',icon:'bag',t:'積み木+3',s:'次のステージから'},
     {k:'gold',icon:'coin',t:`金貨+${g}`,s:'持ち帰って強化に使える',v:g}
   ];
   if(run.hp>=run.maxHp)pool=pool.filter(x=>x.k!=='heal');
   return shuffle(pool).slice(0,3);
 }
 function showReward(){
-  $('r-head').textContent=`B${run.floor}F 突破`;
+  $('r-head').textContent=`${placeName(run.floor)} クリア`;
   $('r-list').innerHTML=run.rewards.map((x,i)=>`<button class="choice" type="button" data-i="${i}">${svg(SPR[x.icon])}<span><b>${x.t}</b><small>${x.s}</small></span><span></span></button>`).join('');
   renderStats();show('s-reward');
 }
@@ -646,8 +747,9 @@ function takeReward(i){
 function gameOver(why){
   if(!run)return;
   meta.bank+=run.gold;meta.best=Math.max(meta.best,run.floor);saveMeta();
-  $('o-head').textContent=why==='hp'?`B${run.floor}Fで力つきた`:why==='stuck'?`B${run.floor}Fで道がとぎれた`:`B${run.floor}Fで引き返した`;
-  $('o-text').textContent=`持ち帰った金貨 ${run.gold}　いちばん深く B${meta.best}F`;
+  const p=placeName(run.floor);
+  $('o-head').textContent=why==='hp'?`${p}で力つきた`:why==='stuck'?`${p}で道がとぎれた`:`${p}で旅をおえた`;
+  $('o-text').textContent=`持ち帰った金貨 ${run.gold}　いちばん遠く ${placeName(meta.best)}`;
   store.del(SAVE);run=null;busy=false;
   hideSheets();show('s-over');
 }
@@ -657,13 +759,14 @@ const SHEETS=['s-title','s-reward','s-stuck','s-quit','s-over','s-shop'];
 function hideSheets(){SHEETS.forEach(id=>$(id).hidden=true)}
 function show(id){hideSheets();$(id).hidden=false;const b=$(id).querySelector('button:not([hidden])');if(b&&matchMedia('(hover:hover)').matches)b.focus({preventScroll:true})}
 function showTitle(){
-  const demo=['',SPR.rock,SPR.stairs, SPR.gem,roadSVG(6)+SPR.slime,roadSVG(9)+SPR.sword, '',roadSVG(5)+SPR.coin,'', '',SPR.door+SPR.hero,''];
+  const B=(c,m,e)=>blockSVG(c)+roadSVG(m,BLOCKS[c][1])+e;
+  const demo=['',SPR.ob.grass,FLAG, SPR.gem,B(0,6,SPR.soldier),B(2,9,SPR.sword), '',B(1,5,SPR.coin),'', '',SPR.start+SPR.hero,''];
   const laid=[4,5,7];
-  $('demo').innerHTML=demo.map((s,i)=>`<div class="cell${laid.includes(i)?' laid lit':''}">${s?svg(s):''}</div>`).join('');
+  $('demo').innerHTML=demo.map((s,i)=>`<div class="cell${laid.includes(i)?' laid':''}">${s?svg(s):''}</div>`).join('');
   $('t-cont').hidden=!run;
-  if(run)$('t-cont').textContent=`つづきから　B${run.floor}F`;
+  if(run)$('t-cont').textContent=`つづきから　${placeName(run.floor)}`;
   $('t-shop').textContent=`強化する　金${meta.bank}`;
-  $('t-best').textContent=meta.best?`いちばん深く B${meta.best}F`:'';
+  $('t-best').textContent=meta.best?`いちばん遠く ${placeName(meta.best)}`:'';
   show('s-title');
 }
 function showShop(){
@@ -685,14 +788,14 @@ function resume(){
   hideSheets();
   if(run.phase==='reward'&&run.rewards){render();follow(run.at,false);return showReward()}
   run.phase='build';busy=false;render();follow(run.at,false);
-  say(`B${run.floor}F　つづきから`);
+  say(`${placeName(run.floor)}　つづきから`);
 }
 
 /* ---------- input: one pointer path for tap and drag (touch, pen, mouse) ---------- */
 let drag=null,ghost=null,overCell=-1;
 function cellUnder(x,y){const el=document.elementFromPoint(x,y),c=el&&el.closest('.cell');return c&&board.contains(c)?+c.dataset.i:-1}
-const LIFT=53; // the ghost tile floats this far above the finger (.ghost-tile margin-top -86px, height 66px)
-function dropCell(x,y){ // the cell under the floating tile wins; the cell under the finger is the fallback
+const LIFT=53; // the ghost block floats this far above the finger (.ghost-tile margin-top -86px, height 66px)
+function dropCell(x,y){ // the cell under the floating block wins; the cell under the finger is the fallback
   const F=frontier(),t=run.hand[sel],up=cellUnder(x,y-LIFT),at=cellUnder(x,y);
   if(fits(t,up,F))return up;if(fits(t,at,F))return at;return up>=0?up:at;
 }
@@ -715,8 +818,8 @@ document.addEventListener('pointermove',e=>{
     if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<8)return;
     if(!run.hand[drag.slot]){drag=null;return}
     drag.moving=true;sel=drag.slot;renderHand();refreshMarks();renderStats();
-    ghost=document.createElement('div');ghost.className='ghost-tile';ghost.innerHTML=tileSVG(run.hand[sel]);
-    ghost.firstChild.classList.add('lit');document.body.appendChild(ghost);
+    ghost=document.createElement('div');ghost.className='ghost-tile';ghost.innerHTML=svg(tileArt(run.hand[sel],true));
+    document.body.appendChild(ghost);
   }
   e.preventDefault();
   ghost.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;
@@ -750,7 +853,7 @@ document.addEventListener('keydown',e=>{
 /* ---------- buttons ---------- */
 $('undo').addEventListener('click',undo);
 $('toss').addEventListener('click',toss);
-$('quit').addEventListener('click',()=>{if(!run||busy)return;$('q-text').textContent=`ここまでの金貨 ${run.gold} を持ち帰り、強化に使える。`;show('s-quit')});
+$('quit').addEventListener('click',()=>{if(!run||busy)return;$('q-text').textContent=`ここまでの金貨 ${run.gold} を持ち帰って、強化に使える。`;show('s-quit')});
 $('q-no').addEventListener('click',hideSheets);
 $('q-yes').addEventListener('click',()=>gameOver('quit'));
 $('k-undo').addEventListener('click',undo);
