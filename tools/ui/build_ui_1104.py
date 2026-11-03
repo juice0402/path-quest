@@ -77,7 +77,7 @@ CSS = f'''/* ===== Canva UI 11/4 ===== */
 .dt-btn{{--capw:27px;padding:0 6px}}
 .dt-btn:disabled{{filter:grayscale(.8) opacity(.6)}}
 .rw-go{{--capw:28px}}
-.rw-go:disabled{{filter:grayscale(.8) opacity(.6)}}
+.rw-go:disabled{{filter:grayscale(.8) opacity(.6);outline:0;color:#fff;text-shadow:0 2px 0 #3d3d3d;font:400 20px/1 var(--disp);letter-spacing:.1em}}
 .skn .sb-go{{--capw:22px;padding:0 4px}}
 .ov-sub .btn{{--capw:26px;padding:8px 4px}}
 .ov .ov-go .mk{{position:static;align-self:flex-start;margin:6px 0 0 -2px;flex:none}}
