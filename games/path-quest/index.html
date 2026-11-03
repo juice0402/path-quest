@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-/* layout: a toy-block land seen from above, scrolled upward as the wind-up knight walks to the flag. the status floats over the field, the tray of blocks sits under it. one column at every width */
+/* layout: a toy-block land seen from above, scrolled upward as the wind-up knight walks to the flag. the status and the reroll die float over the field, the tray of blocks sits under it. one column at every width */
 :root{
   color-scheme:light;
   --page:#fbeaf0;
@@ -25,7 +25,9 @@
   --sun:#ffe58a;
   --sun-deep:#f0b93a;
   --hp:#e8607e;
-  --foe:#c43a5a;
+  --bad:rgba(232,72,98,.6);
+  --foe:#d6334f;
+  --deal:#e8730c;
   --gold:#a86f08;
   --heal:#2f8f5b;
   --gear:#3a6ea8;
@@ -46,11 +48,11 @@ button{font:inherit;color:inherit}
 
 .app{box-sizing:border-box;height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:12px;padding-block:8px 12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
-/* the field: everything else floats on it */
+/* the field: the status and the die float on it */
 .field{position:relative;flex:1;min-height:220px;display:flex;border-radius:18px;overflow:hidden;background:var(--line);box-shadow:0 4px 0 rgba(74,53,65,.12)}
 .view{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:none}
 .view::-webkit-scrollbar{display:none}
-.track{padding:80px 0 64px}
+.track{padding:48px 0 84px}
 .board{--w:5;--h:9;position:relative;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));grid-template-rows:repeat(var(--h),minmax(0,1fr));gap:3px;padding:4px;margin:0 auto;width:min(100%,460px);aspect-ratio:var(--w)/var(--h);max-width:100%;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .cell{position:relative;min-width:0;min-height:0;background:var(--ground);border-radius:5px}
 .cell svg{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -66,6 +68,12 @@ button{font:inherit;color:inherit}
 @keyframes glow{from{opacity:.45}to{opacity:1}}
 @keyframes thunk{from{transform:translateY(-12%)}to{transform:none}}
 
+/* "can't put it there": a red blink on the cell and the block */
+.cell.bad::before,.slot.bad::after{content:"";position:absolute;inset:0;z-index:4;border-radius:inherit;background:var(--bad);pointer-events:none;opacity:0;animation:blink .26s ease-in-out 4 alternate}
+.slot.bad{animation:shake .3s}
+@keyframes blink{from{opacity:0}to{opacity:1}}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
 .badge{position:absolute;right:2px;bottom:3px;padding:1px 5px;border-radius:7px;background:rgba(255,255,255,.94);box-shadow:0 1px 0 rgba(74,53,65,.18);font:800 clamp(10px,2.9vw,12px)/1.25 var(--round);font-variant-numeric:tabular-nums;pointer-events:none}
 .b-foe{color:var(--foe)}.b-zero{color:var(--dim)}.b-coin{color:var(--gold)}.b-heal{color:var(--heal)}.b-gear{color:var(--gear)}
 
@@ -74,39 +82,43 @@ button{font:inherit;color:inherit}
 .hero .key{transform-box:fill-box;transform-origin:0% 50%}
 .hero.walk svg{animation:bob .17s ease-in-out infinite alternate}
 .hero.walk .key{animation:wind .34s linear infinite}
+.hero.hurt svg{animation:hurt .3s ease-out}
 @keyframes bob{to{transform:translateY(-5%)}}
 @keyframes wind{50%{transform:scaleX(.25)}}
+@keyframes hurt{30%{transform:translateX(-7%);filter:drop-shadow(0 0 5px var(--bad))}70%{transform:translateX(7%);filter:drop-shadow(0 0 5px var(--bad))}}
 
-.pop{position:absolute;z-index:4;pointer-events:none;transform:translate(-50%,0);font:800 18px/1 var(--round);white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 2px 0 #fff;animation:rise .9s ease-out forwards}
-.p-hp{color:var(--foe)}.p-gold{color:var(--gold)}.p-heal{color:var(--heal)}.p-gear{color:var(--gear)}
-@keyframes rise{from{transform:translate(-50%,0)}to{transform:translate(-50%,-30px);opacity:0}}
+.pop{position:absolute;z-index:5;pointer-events:none;transform:translate(-50%,0);font:800 20px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 2px 0 #fff;animation:rise .95s ease-out forwards}
+.p-deal{color:var(--deal)}.p-hurt{color:var(--foe)}.p-guard{color:var(--dim)}.p-gold{color:var(--gold)}.p-heal{color:var(--heal)}.p-gear{color:var(--gear)}
+@keyframes rise{from{transform:translate(-50%,4px) scale(.7)}20%{transform:translate(-50%,-6px) scale(1.15)}to{transform:translate(-50%,-32px);opacity:0}}
 
 /* status floating over the field */
-.hud{position:absolute;top:8px;left:8px;right:8px;z-index:6;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none}
-.hud-l,.hud-r{display:flex;flex-direction:column;gap:6px;min-width:0}
-.hud-r{align-items:flex-end}
-.hud-row{display:flex;gap:6px}
+.hud{position:absolute;top:8px;left:8px;right:8px;z-index:6;display:flex;align-items:flex-start;gap:6px;pointer-events:none}
+.hud-l{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:6px}
 .pill{display:flex;align-items:center;gap:6px;height:30px;box-sizing:border-box;padding:0 10px;border:0;border-radius:15px;background:rgba(255,250,246,.94);box-shadow:0 3px 0 rgba(74,53,65,.16);font:800 14px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill svg{width:18px;height:18px;flex:none;display:block}
-.hpbar{position:relative;width:clamp(40px,14vw,72px);height:9px;border-radius:5px;background:#f6d3dc;overflow:hidden}
+.hpbar{position:relative;width:clamp(30px,9vw,64px);height:9px;border-radius:5px;background:#f6d3dc;overflow:hidden}
 .hpbar i{position:absolute;inset:0 auto 0 0;width:100%;border-radius:5px;background:var(--hp);transition:width .25s}
-.gear{gap:10px}
+.gear{gap:9px}
 .gear span{display:flex;align-items:center;gap:3px}
 .gear .g b{color:var(--gold)}
-.stage{gap:4px}
-.stage .an{font-size:12px;color:var(--dim)}
-.stage b{font-size:17px}
-.stage small{font-size:12px;color:var(--dim)}
-.menu{pointer-events:auto;cursor:pointer;color:var(--dim);font-size:13px}
+.menu{flex:none;pointer-events:auto;cursor:pointer;color:var(--dim);font-size:13px}
 .menu:disabled{opacity:.5;cursor:default}
-.near{padding:5px 9px;border-radius:12px;background:rgba(255,250,246,.88);font:800 12px/1 var(--round);color:var(--dim)}
-.near b{margin:0 2px;font-size:15px;color:var(--accent)}
-.msg{position:absolute;left:10px;right:10px;bottom:10px;z-index:6;margin:0;padding:8px 12px;border-radius:14px;background:rgba(255,250,246,.96);box-shadow:0 3px 0 rgba(74,53,65,.16);font:500 14px/1.45 var(--round);pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.msg.on{opacity:1;transform:none}
+
+/* the reroll die */
+.roll{position:absolute;right:10px;bottom:10px;z-index:6;width:60px;height:60px;padding:0;border:0;border-radius:18px;background:var(--card);box-shadow:0 4px 0 rgba(74,53,65,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer}
+.roll svg{width:34px;height:34px;display:block}
+.roll span{font:800 10px/1 var(--round);color:var(--dim)}
+.roll b{position:absolute;right:-5px;top:-5px;min-width:22px;height:22px;box-sizing:border-box;padding:0 5px;border-radius:11px;background:var(--accent);font:800 13px/22px var(--round);color:#fff;text-align:center}
+.roll:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(74,53,65,.2)}
+.roll:disabled{cursor:default;transform:none}
+.roll:disabled svg,.roll:disabled span{opacity:.4}
+.roll:disabled b{background:#c9b3bd}
+.roll.hint{animation:nudge .8s ease-in-out infinite}
+@keyframes nudge{50%{transform:scale(1.1) rotate(-6deg)}}
 
 /* the tray of blocks */
-.tray{position:relative;display:flex;gap:10px;align-items:center;padding:10px;border-radius:18px;background:var(--card);box-shadow:0 4px 0 var(--edge);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.hand{--hs:4;flex:1;display:grid;grid-template-columns:repeat(var(--hs),minmax(0,1fr));gap:8px;min-width:0}
+.tray{position:relative;padding:12px 10px 10px;border-radius:18px;background:var(--card);box-shadow:0 4px 0 var(--edge);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.hand{--hs:4;display:grid;grid-template-columns:repeat(var(--hs),minmax(0,84px));justify-content:center;gap:7px}
 .slot{position:relative;aspect-ratio:1;max-width:100%;border-radius:13px;cursor:grab;transition:transform .1s}
 .slot svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .slot .badge{right:3px;bottom:6px;font-size:12px}
@@ -114,12 +126,10 @@ button{font:inherit;color:inherit}
 .slot.sel::before{content:"";position:absolute;inset:-4px;border:3px solid var(--accent);border-radius:16px}
 .slot.dull{opacity:.45;filter:saturate(.4)}
 .slot.none{box-sizing:border-box;border:2px dashed var(--edge);cursor:default}
-.tools{flex:none;width:68px;display:flex;flex-direction:column;gap:7px}
-.tool{height:30px;padding:0;border:0;border-radius:11px;background:#fff;box-shadow:0 3px 0 var(--edge);font:800 14px/1 var(--round);color:var(--ink);cursor:pointer}
-.tool.toss{background:#f7c3d4;box-shadow:0 3px 0 #d993ad}
-.tool:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
-.tool:disabled{opacity:.4;cursor:default;transform:none}
-.decktag{position:absolute;right:14px;top:-12px;padding:4px 9px;border-radius:10px;background:#fff;box-shadow:0 2px 0 var(--edge);font:800 12px/1 var(--round);color:var(--dim)}
+.slot.deal{animation:deal .3s ease-out backwards}
+.slot.deal:nth-child(2){animation-delay:.04s}.slot.deal:nth-child(3){animation-delay:.08s}.slot.deal:nth-child(4){animation-delay:.12s}.slot.deal:nth-child(5){animation-delay:.16s}.slot.deal:nth-child(6){animation-delay:.2s}
+@keyframes deal{from{transform:translateY(40%) scale(.7);opacity:0}}
+.decktag{position:absolute;left:14px;top:-11px;padding:4px 9px;border-radius:10px;background:#fff;box-shadow:0 2px 0 var(--edge);font:800 12px/1 var(--round);color:var(--dim)}
 .decktag b{margin-left:3px;font-size:13px;color:var(--ink)}
 
 .ghost-tile{position:fixed;left:0;top:0;z-index:30;width:66px;height:66px;margin:-86px 0 0 -33px;pointer-events:none;filter:drop-shadow(0 10px 8px rgba(74,53,65,.3))}
@@ -138,7 +148,7 @@ button{font:inherit;color:inherit}
 .sheet.solid{background:var(--page)}
 .card{box-sizing:border-box;width:min(100%,380px);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:22px 18px 20px;border-radius:20px;background:var(--card);box-shadow:0 6px 0 var(--edge)}
 .card h2{margin:0;font:800 22px/1.3 var(--round);text-wrap:balance}
-.card p{margin:0;font-size:15px;line-height:1.6;color:var(--dim)}
+.card p{margin:0;font-size:15px;line-height:1.6;color:var(--dim);white-space:pre-line}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .row .btn{flex:1}
 .choices{display:flex;flex-direction:column;gap:8px}
@@ -166,9 +176,9 @@ button{font:inherit;color:inherit}
 .record{min-height:14px;font-size:14px;color:var(--dim)}
 
 @media (prefers-reduced-motion:reduce){
-  .hero,.slot,.msg{transition:none}
-  .hero.walk svg,.hero.walk .key,.cell.fit::after{animation:none}
-  .cell.new svg,.pop{animation-duration:.01s}
+  .hero,.slot{transition:none}
+  .hero.walk svg,.hero.walk .key,.cell.fit::after,.roll.hint,.slot.deal{animation:none}
+  .cell.new svg,.pop,.hero.hurt svg{animation-duration:.01s}
 }
 </style>
 </head>
@@ -178,22 +188,15 @@ button{font:inherit;color:inherit}
     <div class="view" id="view"><div class="track"><div class="board" id="board" aria-label="積み木の国の地図"></div></div></div>
     <div class="hud">
       <div class="hud-l">
-        <div class="pill hp"><span id="hpicon"></span><span class="hpbar"><i id="hpfill"></i></span><b id="hptext">10/10</b></div>
-        <div class="pill gear"><span id="i-atk"></span><span id="i-def"></span><span class="g" id="i-gold"></span></div>
+        <div class="pill hp" aria-label="体力"><span id="hpicon"></span><span class="hpbar"><i id="hpfill"></i></span><b id="hptext">10/10</b></div>
+        <div class="pill gear"><span id="i-atk" aria-label="攻撃"></span><span id="i-def" aria-label="守り"></span><span class="g" id="i-gold" aria-label="金貨"></span></div>
       </div>
-      <div class="hud-r">
-        <div class="hud-row">
-          <div class="pill stage"><span class="an" id="area">草原</span><b id="floor">1</b><small>/5</small></div>
-          <button class="pill menu" id="quit" type="button">おえる</button>
-        </div>
-        <div class="near" id="hint"></div>
-      </div>
+      <button class="pill menu" id="quit" type="button">帰還</button>
     </div>
-    <p class="msg" id="msg" aria-live="polite"></p>
+    <button class="roll" id="roll" type="button" aria-label="リロール。積み木を全部まぜて引き直す"><span id="rollicon"></span><span>リロール</span><b id="rolln">3</b></button>
   </div>
   <div class="tray">
     <div class="hand" id="hand"></div>
-    <div class="tools"><button class="tool toss" id="toss" type="button">捨てる</button><button class="tool" id="undo" type="button">戻す</button></div>
     <div class="decktag" aria-label="のこりの積み木">のこり<b id="deckn">0</b></div>
   </div>
 </div>
@@ -201,7 +204,7 @@ button{font:inherit;color:inherit}
 <div class="sheet solid" id="s-title">
   <div class="title">
     <h1 class="logo" aria-label="PATH QUEST"><span><i class="c0">P</i><i class="c1">A</i><i class="c2">T</i><i class="c3">H</i></span><span><i class="c4">Q</i><i class="c0">U</i><i class="c1">E</i><i class="c2">S</i><i class="c3">T</i></span></h1>
-    <p class="lead">積み木で道を作って、<br>おもちゃの国を旅しよう</p>
+    <p class="lead">光るマスに積み木を置いて、<br>旗まで道をつなごう</p>
     <div class="demo" id="demo"></div>
     <button class="btn main" id="t-new" type="button">冒険に出る</button>
     <button class="btn" id="t-cont" type="button" hidden>つづきから</button>
@@ -218,19 +221,11 @@ button{font:inherit;color:inherit}
   </div>
 </div>
 
-<div class="sheet" id="s-stuck" hidden>
-  <div class="card">
-    <h2 id="k-head">行き止まり</h2>
-    <p id="k-text"></p>
-    <div class="row"><button class="btn main" id="k-undo" type="button">ひとつ戻す</button><button class="btn" id="k-end" type="button">冒険をおえる</button></div>
-  </div>
-</div>
-
 <div class="sheet" id="s-quit" hidden>
   <div class="card">
-    <h2>冒険をおえる？</h2>
+    <h2>帰還する？</h2>
     <p id="q-text"></p>
-    <div class="row"><button class="btn main" id="q-no" type="button">つづける</button><button class="btn" id="q-yes" type="button">おえる</button></div>
+    <div class="row"><button class="btn main" id="q-no" type="button">つづける</button><button class="btn" id="q-yes" type="button">帰還する</button></div>
   </div>
 </div>
 
@@ -279,11 +274,11 @@ const STEP=REDUCED?60:170;
 
 /* ---------- the land: five areas of five stages, the 5th has the captain ---------- */
 const AREAS=[
-  {k:'grass',n:'草原',ob:'積み木の山'},
-  {k:'forest',n:'森',ob:'木'},
-  {k:'lake',n:'湖',ob:'池'},
-  {k:'snow',n:'雪原',ob:'雪だるま'},
-  {k:'castle',n:'おもちゃの城',ob:'城のかべ'}
+  {k:'grass',n:'草原'},
+  {k:'forest',n:'森'},
+  {k:'lake',n:'湖'},
+  {k:'snow',n:'雪原'},
+  {k:'castle',n:'おもちゃの城'}
 ];
 const areaOf=f=>AREAS[Math.floor((Math.max(1,f)-1)/5)%AREAS.length];
 const stepOf=f=>(Math.max(1,f)-1)%5+1;
@@ -294,7 +289,7 @@ const placeName=f=>`${areaOf(f).n} ${stepOf(f)}`+(lapOf(f)>1?`（${lapOf(f)}周�
 const svg=s=>`<svg viewBox="0 0 100 100" aria-hidden="true">${s}</svg>`;
 const ico=s=>`<svg viewBox="22 22 56 56" aria-hidden="true">${s}</svg>`;
 const BLOCKS=[['#f7c3d4','#e29ab4'],['#bfe6d6','#8fcdb6'],['#fbe2a0','#e5bf63'],['#d8cdf6','#b4a3e8'],['#c4e2f5','#93c3e4']];
-const SHADOW=(rx)=>`<ellipse cx="50" cy="86" rx="${rx}" ry="4.5" fill="rgba(74,53,65,.22)"/>`;
+const SHADOW=rx=>`<ellipse cx="50" cy="86" rx="${rx}" ry="4.5" fill="rgba(74,53,65,.22)"/>`;
 const soldier=(coat,extra)=>SHADOW(15)+
   '<rect x="42" y="66" width="7" height="18" rx="2" fill="#3d4170"/><rect x="51" y="66" width="7" height="18" rx="2" fill="#3d4170"/>'+
   `<rect x="39" y="44" width="22" height="26" rx="6" fill="${coat}"/>`+
@@ -304,7 +299,6 @@ const soldier=(coat,extra)=>SHADOW(15)+
 const FLAG='<rect x="30" y="73" width="40" height="13" rx="4" fill="#e5bf63"/><rect x="30" y="70" width="40" height="11" rx="4" fill="#fbe2a0"/><path d="M42 72V18" stroke="#b08968" stroke-width="4" stroke-linecap="round"/><path d="M44 19 72 28 44 38z" fill="#ee88ac"/><circle cx="53" cy="28" r="3.2" fill="#fffaf6"/>';
 const SPR={
   start:'<rect x="20" y="50" width="60" height="34" rx="6" fill="#e889ad"/><rect x="20" y="50" width="60" height="8" fill="#d4689a"/><path d="M18 50 26 34h56l-2 16z" fill="#f7c3d4"/><path d="M50 61l3.5 7 7.5 1-5.5 5 1.5 7.5-7-3.8-7 3.8 1.5-7.5-5.5-5 7.5-1z" fill="#ffe08a"/>',
-  goal:FLAG,
   ob:{
     grass:'<rect x="16" y="56" width="34" height="30" rx="4" fill="#e5bf63"/><rect x="16" y="52" width="34" height="28" rx="4" fill="#fbe2a0"/><path d="M16 52 33 28 50 52z" fill="#f08a8a"/><rect x="54" y="44" width="30" height="42" rx="5" fill="#8fcdb6"/><ellipse cx="69" cy="45" rx="15" ry="6" fill="#bfe6d6"/>',
     forest:'<rect x="44" y="62" width="12" height="22" rx="3" fill="#d1a37a"/><path d="M50 13 76 48H24z" fill="#8fd08a"/><path d="M50 30 80 67H20z" fill="#74bf70"/>',
@@ -324,7 +318,7 @@ const SPR={
   shield:'<path d="M50 28 69 35V51q0 15-19 23-19-8-19-23V35z" fill="#93c3e4" stroke="#fff" stroke-width="3"/><path d="M50 41l3 6 6.6.9-4.8 4.6 1.2 6.5L50 56l-6 3 1.2-6.5-4.8-4.6 6.6-.9z" fill="#fff"/>',
   heart:'<path d="M50 74 28 52a12 12 0 0 1 22-14 12 12 0 0 1 22 14z" fill="#e8607e"/>',
   bag:'<path d="M36 42q14-8 28 0l6 28q-20 10-40 0z" fill="#b4a3e8"/><path d="M40 39h20" stroke="#9f8fd6" stroke-width="5" stroke-linecap="round"/><rect x="44" y="52" width="12" height="12" rx="2" fill="#fbe2a0"/>',
-  glass:'<path d="M34 26h32M34 74h32" stroke="#d1a37a" stroke-width="5" stroke-linecap="round"/><path d="M38 28h24l-10 22 10 22H38l10-22z" fill="#e6f2fb" stroke="#93c3e4" stroke-width="2" stroke-linejoin="round"/><path d="M42 70h16l-8-12z" fill="#ffd95e"/>',
+  dice:'<rect x="27" y="31" width="46" height="46" rx="11" fill="#e5bf63"/><rect x="27" y="27" width="46" height="44" rx="11" fill="#fbe2a0"/><circle cx="39" cy="38" r="4.5" fill="#c4467a"/><circle cx="50" cy="49" r="4.5" fill="#c4467a"/><circle cx="61" cy="60" r="4.5" fill="#c4467a"/>',
   hand:'<rect x="24" y="38" width="16" height="16" rx="3" fill="#f7c3d4"/><rect x="42" y="38" width="16" height="16" rx="3" fill="#bfe6d6"/><rect x="60" y="38" width="16" height="16" rx="3" fill="#fbe2a0"/><rect x="33" y="57" width="16" height="16" rx="3" fill="#d8cdf6"/><rect x="51" y="57" width="16" height="16" rx="3" fill="#c4e2f5"/>',
   hero:SHADOW(19)+
     '<rect x="40" y="70" width="8" height="14" rx="3" fill="#8e9cc0"/><rect x="52" y="70" width="8" height="14" rx="3" fill="#8e9cc0"/>'+
@@ -386,7 +380,9 @@ function makeEvent(f){
   return null;
 }
 const makeTile=(f,m)=>({m:m||pickW(SHAPES),e:makeEvent(f),c:rnd(BLOCKS.length)});
-const dmgFor=e=>Math.max(0,e.atk-run.def)*Math.ceil(e.hp/run.atk); // one hit back per round of the fight
+// a fight is rounds of (the toy hits, then the knight hits) until the toy falls, so the toy hits once per round
+const roundsOf=e=>Math.ceil(e.hp/run.atk);
+const dmgFor=e=>Math.max(0,e.atk-run.def)*roundsOf(e);
 
 /* ---------- meta (kept between runs) ---------- */
 const UPS=[
@@ -394,20 +390,26 @@ const UPS=[
   {k:'atk',name:'剣のうで',desc:'はじめの攻撃+1',icon:'sword',max:5,cost:l=>25+20*l},
   {k:'def',name:'盾のうで',desc:'はじめの守り+1',icon:'shield',max:5,cost:l=>25+20*l},
   {k:'bag',name:'おもちゃ袋',desc:'どのステージも積み木+2',icon:'bag',max:5,cost:l=>18+12*l},
-  {k:'undo',name:'砂時計',desc:'「戻す」がステージごとに+1',icon:'glass',max:3,cost:l=>30+25*l},
-  {k:'hand',name:'広い手',desc:'えらべる積み木が5こ',icon:'hand',max:1,cost:()=>90}
+  {k:'roll',name:'サイコロ',desc:'リロールがステージごとに+1',icon:'dice',max:3,cost:l=>30+25*l},
+  {k:'hand',name:'広い手',desc:'えらべる積み木+1（最大6こ）',icon:'hand',max:2,cost:l=>90+70*l}
 ];
 let meta=store.get(META)||{};
-meta={bank:meta.bank|0,best:meta.best|0,up:Object.assign({hp:0,atk:0,def:0,bag:0,undo:0,hand:0},meta.up||{})};
+{
+  const u=meta.up||{};
+  if(u.roll==null&&u.undo!=null)u.roll=u.undo; // the old "undo" upgrade becomes the reroll upgrade
+  meta={bank:meta.bank|0,best:meta.best|0,up:{hp:u.hp|0,atk:u.atk|0,def:u.def|0,bag:u.bag|0,roll:u.roll|0,hand:u.hand|0}};
+}
 const saveMeta=()=>store.set(META,meta);
 
 /* ---------- run state ---------- */
 let run=store.get(SAVE);
 if(run&&!(run.cells&&run.hand&&run.h))run=null;
-if(run){ // saves from the dungeon version: rename its monsters
+if(run){ // saves from earlier versions
   const fix=e=>{if(e&&e.k==='foe'&&OLD_FOE[e.t]){e.t=OLD_FOE[e.t];e.name=FOES.find(x=>x.t===e.t).name}};
   [...run.hand,...run.deck,...run.cells.map(c=>c.tile)].forEach(t=>t&&fix(t.e));
-  if(run.boss){run.boss.name='兵隊長'}
+  if(run.boss)run.boss.name='兵隊長';
+  if(run.rolls==null)run.rolls=3+meta.up.roll;
+  delete run.hist;delete run.undo;
 }
 let sel=-1,busy=false,justPlaced=-1;
 const save=()=>{if(run)store.set(SAVE,run)};
@@ -423,11 +425,6 @@ function nextFloor(){
   if(run.floor>meta.best){meta.best=run.floor;saveMeta()}
   run.phase='build';save();
   hideSheets();render();follow(run.at,false);
-  const f=run.floor,a=areaOf(f);
-  if(f===1)say('光るマスに積み木を置くと、騎士が進む。上の旗まで道をつなごう',true);
-  else if(run.boss)say(`${placeName(f)}　旗の前に兵隊長がいる`);
-  else if(stepOf(f)===1)say(`${a.n}に着いた。上の旗をめざそう`);
-  else say(`${placeName(f)}　上の旗をめざそう`);
 }
 const heightFor=f=>f<=2?7:f<=5?9:f<=9?11:13;
 function nbr(i,b,h){const r=i/W|0,c=i%W,d=DIRS[BITS.indexOf(b)],rr=r+d[0],cc=c+d[1];return rr<0||rr>=h||cc<0||cc>=W?-1:rr*W+cc}
@@ -464,7 +461,7 @@ function genFloor(){
   const total=deck.length+18+2*meta.up.bag+run.extra;
   while(deck.length<total)deck.push(makeTile(f));
   shuffle(deck);
-  Object.assign(run,{h,cells,s,g,at:s,boss:f%5===0?makeBoss(f):null,hand:deck.splice(0,run.handSize),deck,hist:[],undo:3+meta.up.undo});
+  Object.assign(run,{h,cells,s,g,at:s,boss:f%5===0?makeBoss(f):null,hand:deck.splice(0,run.handSize),deck,rolls:3+meta.up.roll,target:-1});
   sel=-1;
 }
 
@@ -508,14 +505,10 @@ const fits=(t,j,F)=>!!t&&F.has(j)&&!!(t.m&F.get(j));
 const anyFit=(t,F)=>{if(!t)return false;for(const j of F.keys())if(t.m&F.get(j))return true;return false};
 
 /* ---------- rendering ---------- */
-const app=$('app'),view=$('view'),board=$('board'),handEl=$('hand'),msgEl=$('msg');
+const app=$('app'),view=$('view'),board=$('board'),handEl=$('hand'),rollBtn=$('roll');
 const hero=document.createElement('div');hero.className='hero';hero.innerHTML=svg(SPR.hero);
 $('hpicon').innerHTML=ico(SPR.heart);
-let msgTimer=0;
-function say(t,stay){
-  msgEl.textContent=t;msgEl.classList.add('on');clearTimeout(msgTimer);
-  if(!stay)msgTimer=setTimeout(()=>msgEl.classList.remove('on'),4500);
-}
+$('rollicon').innerHTML=ico(SPR.dice);
 function badge(e){
   if(!e)return '';
   if(e.k==='foe'){const d=dmgFor(e);return `<span class="badge ${d?'b-foe':'b-zero'}">-${d}</span>`}
@@ -556,21 +549,19 @@ function renderHand(F){
   $('deckn').textContent=run.deck.length;
 }
 function renderStats(){
-  const hp=Math.max(0,run.hp),row=run.at/W|0;
+  const hp=Math.max(0,run.hp);
   app.dataset.area=areaOf(run.floor).k;
-  $('area').textContent=areaOf(run.floor).n;
-  $('floor').textContent=stepOf(run.floor);
   $('hptext').textContent=`${hp}/${run.maxHp}`;
   $('hpfill').style.width=(hp/run.maxHp*100)+'%';
   $('i-atk').innerHTML=ico(SPR.sword)+`<b>${run.atk}</b>`;
   $('i-def').innerHTML=ico(SPR.shield)+`<b>${run.def}</b>`;
   $('i-gold').innerHTML=ico(SPR.coin)+`<b>${run.gold}</b>`;
-  const hint=$('hint');hint.hidden=row<=0;hint.innerHTML=`旗まで<b>${row}</b>マス`;
-  const u=$('undo');u.textContent=`戻す ${run.undo}`;u.disabled=busy||run.phase!=='build'||!run.hist.length||run.undo<=0;
-  $('toss').disabled=busy||run.phase!=='build'||sel<0;
+  $('rolln').textContent=run.rolls;
+  rollBtn.disabled=busy||run.phase!=='build'||run.rolls<=0;
   $('quit').disabled=busy;
 }
-function render(){const F=frontier();renderStats();renderBoard(F);renderHand(F)}
+function markStuck(F){rollBtn.classList.toggle('hint',run.phase==='build'&&!busy&&run.rolls>0&&!run.hand.some(t=>anyFit(t,F)))}
+function render(){const F=frontier();renderStats();renderBoard(F);renderHand(F);markStuck(F)}
 function placeHero(i,instant){
   const el=board.children[i];if(!el||el===hero)return;
   if(instant)hero.style.transition='none';
@@ -583,67 +574,51 @@ function follow(i,smooth){
   const top=board.offsetTop+el.offsetTop+el.offsetHeight/2-view.clientHeight*.62;
   view.scrollTo({top:Math.max(0,top),behavior:smooth&&!REDUCED?'smooth':'auto'});
 }
-function pop(i,text,cls,delay){
+function pop(i,text,cls,delay){ // a number over a cell's head
   setTimeout(()=>{
     const el=board.children[i];if(!el)return;
     const p=document.createElement('span');p.className='pop '+cls;p.textContent=text;
-    p.style.left=(el.offsetLeft+el.offsetWidth/2)+'px';p.style.top=(el.offsetTop+2)+'px';
-    board.appendChild(p);setTimeout(()=>p.remove(),950);
+    p.style.left=(el.offsetLeft+el.offsetWidth/2+(Math.random()*16-8))+'px';p.style.top=(el.offsetTop-4)+'px';
+    board.appendChild(p);setTimeout(()=>p.remove(),1000);
   },delay||0);
 }
+function flash(el){if(!el)return;el.classList.remove('bad');void el.offsetWidth;el.classList.add('bad');setTimeout(()=>el.classList.remove('bad'),1150)}
+const flashCell=i=>{if(i>=0)flash(board.children[i])};
+const flashSlot=i=>{if(i>=0)flash(handEl.children[i])};
+function hop(){if(REDUCED)return;[...handEl.children].forEach((s,k)=>s.animate([{transform:'none'},{transform:'translateY(-10px)'},{transform:'none'}],{duration:280,delay:k*35}))}
+function lunge(dx,dy){if(!REDUCED)hero.firstElementChild.animate([{transform:'none'},{transform:`translate(${dx}px,${dy}px)`},{transform:'none'}],{duration:200,easing:'ease-out'})}
+function struck(el){const s=el&&el.firstElementChild;if(s&&!REDUCED)s.animate([{transform:'none'},{transform:'translateX(7%)',filter:'brightness(1.35)'},{transform:'translateX(-7%)'},{transform:'none'}],{duration:220})}
+function hurt(){hero.classList.remove('hurt');void hero.offsetWidth;hero.classList.add('hurt')}
 function tileName(t){
   const e=t.e,s=SHAPE_NAME(t.m);
   if(!e)return `${s}の積み木`;
   return `${s}の積み木・`+(e.k==='foe'?e.name:({coin:'金貨',potion:'キャンディ',sword:'剣',shield:'盾'})[e.k]);
 }
-function describe(e){
-  if(!e)return '';
-  if(e.k==='foe')return `${e.name}　HP${e.hp} 攻${e.atk}　うけるダメージ${dmgFor(e)}　金+${e.gold}`;
-  if(e.k==='coin')return `金貨　+${e.v}`;
-  if(e.k==='potion')return `キャンディ　HP+${e.v}`;
-  if(e.k==='sword')return 'おもちゃの剣　攻撃+1。敵を早くたおせる';
-  if(e.k==='shield')return 'おもちゃの盾　守り+1。うけるダメージがへる';
-  return '';
-}
 
 /* ---------- actions ---------- */
-function snapshot(){
-  run.hist.push(JSON.stringify({cells:run.cells,hand:run.hand,deck:run.deck,hp:run.hp,maxHp:run.maxHp,atk:run.atk,def:run.def,gold:run.gold,boss:run.boss,at:run.at}));
-  if(run.hist.length>6)run.hist.shift();
-}
 function tapSlot(i){
-  if(!run.hand[i])return;
+  const t=run.hand[i];if(!t)return;
+  if(sel!==i&&!anyFit(t,frontier()))return flashSlot(i);
   sel=sel===i?-1:i;
-  renderHand();refreshMarks();renderStats();
-  if(sel>=0){
-    const t=run.hand[i],ok=anyFit(t,frontier());
-    say((t.e?describe(t.e)+'。':'')+(ok?'光るマスに置ける':'つながる所がない。「捨てる」で入れかえ'));
-  }
+  renderHand();refreshMarks();
 }
 function tapCell(i){
-  const c=run.cells[i],F=frontier();
-  if(F.has(i)){
-    if(sel>=0)return place(i,sel);
-    return say(c.gem?`ビー玉　通ると金+${c.gem}。下の積み木を先にえらぶ`:'下の積み木を先にえらぶ');
-  }
-  if(i===run.s)return say('おもちゃ箱。ここから上の旗まで道を作る');
-  if(i===run.g)return say(run.boss?describe(run.boss):'旗。道がつながると次のステージへ');
-  if(c.rock)return say(`${areaOf(run.floor).ob}。通れない`);
-  if(c.tile)return say(c.tile.e?describe(c.tile.e):`${SHAPE_NAME(c.tile.m)}の道`);
-  say(c.gem?`ビー玉　通ると金+${c.gem}。道の先にだけ置ける`:'道の先（光っているマス）にだけ置ける');
+  if(sel<0){if(frontier().has(i))hop();return}
+  place(i,sel);
 }
-async function place(j,hi){
+function place(j,hi){
   if(busy||!run||run.phase!=='build')return;
-  const t=run.hand[hi],F=frontier();
+  const t=run.hand[hi];
   if(!t)return;
-  if(!F.has(j))return say('道の先（光っているマス）にだけ置ける');
-  if(!(t.m&F.get(j)))return say('この積み木はここにつながらない');
-  snapshot();
+  if(!fits(t,j,frontier())){flashCell(j);flashSlot(hi);return}
   run.cells[j].tile=t;run.hand[hi]=run.deck.length?run.deck.shift():null;sel=-1;justPlaced=j;
-  busy=true;run.phase='walk';render();
-  if(!await walkTo(j))return;
+  run.phase='walk';run.target=j;save(); // saved before the walk, so reloading mid-walk replays it instead of undoing it
+  proceed();
+}
+async function proceed(){
+  busy=true;render();
+  if(!await walkTo(run.target))return;
   if(bfs(run.s).has(run.g)){
-    say('旗までつながった');
     if(!await walkTo(run.g))return;
     await sleep(350);busy=false;
     run.phase='reward';run.rewards=pickRewards();save();return showReward();
@@ -652,65 +627,73 @@ async function place(j,hi){
 }
 async function walkTo(target){
   const path=pathTo(run.at,target)||[run.at,target];
-  hero.classList.add('walk');
   for(let k=1;k<path.length;k++){
-    const i=path[k];run.at=i;placeHero(i);follow(i,true);
+    const i=path[k],c=run.cells[i];
+    const foe=i===run.g?run.boss:(c.tile&&c.tile.e&&c.tile.e.k==='foe'?c.tile.e:null);
+    if(foe){ // fight from the cell in front of the toy
+      hero.classList.remove('walk');
+      if(!await battle(foe,run.at,i)){await sleep(800);busy=false;gameOver('hp');return false}
+      if(i===run.g)run.boss=null;else c.tile.e=null;
+      updateCell(i);await sleep(STEP);
+    }
+    hero.classList.add('walk');
+    run.at=i;placeHero(i);follow(i,true);
     await sleep(STEP);
-    const hit=i===run.g?fightBoss(i):resolve(i);
-    renderStats();
-    if(run.hp<=0){hero.classList.remove('walk');await sleep(700);busy=false;gameOver('hp');return false}
-    if(hit)await sleep(STEP*2);
+    if(resolve(i)){renderStats();hero.classList.remove('walk');await sleep(STEP*2)}
   }
   hero.classList.remove('walk');
   return true;
 }
-function toss(){
-  if(busy||!run||run.phase!=='build'||sel<0||!run.hand[sel])return;
-  snapshot();
-  run.hand[sel]=run.deck.length?run.deck.shift():null;sel=-1;
-  render();say('積み木を1こ捨てた');afterAction(true);
+async function battle(e,at,i){
+  const hEl=board.children[at],eEl=board.children[i];
+  const back=Math.max(0,e.atk-run.def),rounds=roundsOf(e);
+  const gap=REDUCED?80:rounds<=4?340:Math.max(170,1400/rounds);
+  const dx=(eEl.offsetLeft-hEl.offsetLeft)*.3,dy=(eEl.offsetTop-hEl.offsetTop)*.3;
+  follow(at,true);await sleep(REDUCED?0:140);
+  for(let r=0;r<rounds;r++){
+    run.hp-=back; // the toy hits
+    pop(at,back?`-${back}`:'0',back?'p-hurt':'p-guard');if(back)hurt();
+    renderStats();
+    if(run.hp<=0)return false;
+    await sleep(gap/2);
+    lunge(dx,dy);struck(eEl);pop(i,`-${run.atk}`,'p-deal'); // the knight hits
+    await sleep(gap/2);
+  }
+  run.gold+=e.gold;pop(i,`+${e.gold}`,'p-gold');renderStats();
+  await sleep(REDUCED?0:200);
+  return true;
 }
-function afterAction(tossed){
-  const F=frontier();
-  if(!F.size)return stuck('行き止まり','道の先に置ける所がない。');
-  if(run.hand.every(x=>!x))return stuck('積み木がなくなった','旗までとどかなかった。');
-  if(!run.hand.some(t=>anyFit(t,F)))say('つながる積み木がない。積み木をえらんで「捨てる」',true);
-  else if(!tossed&&run.floor===1&&run.hist.length===1)say('合わない積み木は、えらんで「捨てる」と入れかわる');
-  save();
-}
-function undo(){
-  if(!run||run.phase!=='build'||busy||!run.hist.length||run.undo<=0)return;
-  Object.assign(run,JSON.parse(run.hist.pop()));
-  run.undo--;sel=-1;hideSheets();render();follow(run.at,false);save();
-  say(`ひとつ戻した（のこり${run.undo}回）`);
-}
-function stuck(head,text){
-  save();
-  if(run.undo>0&&run.hist.length){
-    $('k-head').textContent=head;$('k-text').textContent=text;
-    $('k-undo').textContent=`ひとつ戻す（のこり${run.undo}）`;show('s-stuck');
-  }else gameOver('stuck');
-}
-function fight(e,i){
-  const d=dmgFor(e);run.hp-=d;run.gold+=e.gold;
-  pop(i,d?`-${d}`:'0',d?'p-hp':'p-gear');pop(i,`金+${e.gold}`,'p-gold',260);
-  say(run.hp<=0?`${e.name}にやられた`:`${e.name}をたおした　HP-${d}　金+${e.gold}`);
-}
-function fightBoss(i){if(!run.boss)return false;fight(run.boss,i);run.boss=null;updateCell(i);return true}
 function resolve(i){
   const c=run.cells[i];if(!c||!c.tile)return false;
   let hit=false;const e=c.tile.e;
-  if(e){
+  if(e&&e.k!=='foe'){
     c.tile.e=null;hit=true;
-    if(e.k==='foe')fight(e,i);
-    else if(e.k==='coin'){run.gold+=e.v;pop(i,`+${e.v}`,'p-gold');say(`金貨をひろった　+${e.v}`)}
-    else if(e.k==='potion'){const h=Math.min(e.v,run.maxHp-run.hp);run.hp+=h;pop(i,`+${h}`,'p-heal');say(`キャンディを食べた　HP+${h}`)}
-    else if(e.k==='sword'){run.atk++;pop(i,'攻+1','p-gear');say('おもちゃの剣を手に入れた　攻撃+1')}
-    else if(e.k==='shield'){run.def++;pop(i,'守+1','p-gear');say('おもちゃの盾を手に入れた　守り+1')}
+    if(e.k==='coin'){run.gold+=e.v;pop(i,`+${e.v}`,'p-gold')}
+    else if(e.k==='potion'){const h=Math.min(e.v,run.maxHp-run.hp);run.hp+=h;pop(i,`+${h}`,'p-heal')}
+    else if(e.k==='sword'){run.atk++;pop(i,'攻+1','p-gear')}
+    else if(e.k==='shield'){run.def++;pop(i,'守+1','p-gear')}
   }
-  if(c.gem&&run.hp>0){const v=c.gem;c.gem=0;run.gold+=v;pop(i,`+${v}`,'p-gold',e?420:0);if(!e)say(`ビー玉を見つけた　金+${v}`);hit=true}
+  if(c.gem&&run.hp>0){const v=c.gem;c.gem=0;run.gold+=v;pop(i,`+${v}`,'p-gold',e?420:0);hit=true}
   if(hit)updateCell(i);
   return hit;
+}
+function reroll(){
+  if(busy||!run||run.phase!=='build'||run.rolls<=0)return;
+  run.deck.push(...run.hand.filter(Boolean));shuffle(run.deck);
+  run.hand=run.hand.map(()=>run.deck.length?run.deck.shift():null);
+  run.rolls--;sel=-1;render();
+  [...handEl.children].forEach(s=>s.classList.add('deal'));
+  afterAction();
+}
+async function afterAction(){
+  const F=frontier();
+  let why='';
+  if(!F.size){why='dead';flashCell(run.at)}
+  else if(run.hand.every(x=>!x))why='empty';
+  else if(run.rolls<=0&&!run.hand.some(t=>anyFit(t,F))){why='nofit';run.hand.forEach((t,i)=>{if(t)flashSlot(i)})}
+  markStuck(F);
+  if(!why)return save();
+  busy=true;renderStats();await sleep(1200);busy=false;gameOver(why);
 }
 
 /* ---------- rewards ---------- */
@@ -748,14 +731,16 @@ function gameOver(why){
   if(!run)return;
   meta.bank+=run.gold;meta.best=Math.max(meta.best,run.floor);saveMeta();
   const p=placeName(run.floor);
-  $('o-head').textContent=why==='hp'?`${p}で力つきた`:why==='stuck'?`${p}で道がとぎれた`:`${p}で旅をおえた`;
-  $('o-text').textContent=`持ち帰った金貨 ${run.gold}　いちばん遠く ${placeName(meta.best)}`;
+  const head={hp:`${p}で力つきた`,dead:`${p}で行き止まり`,nofit:`${p}で道がとぎれた`,empty:`${p}で積み木がなくなった`,quit:`${p}から帰還した`};
+  const note={dead:'道の先に置ける所がなくなった。\n',nofit:'つながる積み木がなく、リロールものこっていなかった。\n',empty:'積み木を使いきった。\n'};
+  $('o-head').textContent=head[why]||head.quit;
+  $('o-text').textContent=`${note[why]||''}持ち帰った金貨 ${run.gold}\nいちばん遠く ${placeName(meta.best)}`;
   store.del(SAVE);run=null;busy=false;
   hideSheets();show('s-over');
 }
 
 /* ---------- sheets ---------- */
-const SHEETS=['s-title','s-reward','s-stuck','s-quit','s-over','s-shop'];
+const SHEETS=['s-title','s-reward','s-quit','s-over','s-shop'];
 function hideSheets(){SHEETS.forEach(id=>$(id).hidden=true)}
 function show(id){hideSheets();$(id).hidden=false;const b=$(id).querySelector('button:not([hidden])');if(b&&matchMedia('(hover:hover)').matches)b.focus({preventScroll:true})}
 function showTitle(){
@@ -787,8 +772,8 @@ function buy(k){
 function resume(){
   hideSheets();
   if(run.phase==='reward'&&run.rewards){render();follow(run.at,false);return showReward()}
-  run.phase='build';busy=false;render();follow(run.at,false);
-  say(`${placeName(run.floor)}　つづきから`);
+  if(run.phase==='walk'&&run.target>=0){follow(run.at,false);return proceed()}
+  run.phase='build';busy=false;render();follow(run.at,false);afterAction();
 }
 
 /* ---------- input: one pointer path for tap and drag (touch, pen, mouse) ---------- */
@@ -817,7 +802,7 @@ document.addEventListener('pointermove',e=>{
   if(!drag.moving){
     if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<8)return;
     if(!run.hand[drag.slot]){drag=null;return}
-    drag.moving=true;sel=drag.slot;renderHand();refreshMarks();renderStats();
+    drag.moving=true;sel=drag.slot;renderHand();refreshMarks();
     ghost=document.createElement('div');ghost.className='ghost-tile';ghost.innerHTML=svg(tileArt(run.hand[sel],true));
     document.body.appendChild(ghost);
   }
@@ -833,7 +818,7 @@ function endPointer(e,cancel){
   if(cancel)return;
   if(d.moving){
     const t=dropCell(e.clientX,e.clientY);
-    if(t>=0)place(t,d.slot);else say('光るマスの上で指をはなす');
+    if(t>=0)place(t,d.slot);else flashSlot(d.slot);
     return;
   }
   if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>10)return;
@@ -851,13 +836,10 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ---------- buttons ---------- */
-$('undo').addEventListener('click',undo);
-$('toss').addEventListener('click',toss);
+rollBtn.addEventListener('click',reroll);
 $('quit').addEventListener('click',()=>{if(!run||busy)return;$('q-text').textContent=`ここまでの金貨 ${run.gold} を持ち帰って、強化に使える。`;show('s-quit')});
 $('q-no').addEventListener('click',hideSheets);
 $('q-yes').addEventListener('click',()=>gameOver('quit'));
-$('k-undo').addEventListener('click',undo);
-$('k-end').addEventListener('click',()=>gameOver('stuck'));
 $('r-list').addEventListener('click',e=>{const b=e.target.closest('.choice');if(b)takeReward(+b.dataset.i)});
 $('t-new').addEventListener('click',()=>{if(run){meta.bank+=run.gold;saveMeta()}store.del(SAVE);newRun()});
 $('t-cont').addEventListener('click',()=>{if(run)resume()});
