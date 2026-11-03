@@ -185,9 +185,22 @@ button{font:inherit;color:inherit}
 .pull:disabled b,.pull.out b{background:#dccbd2;color:var(--dim)}
 .pull.hint{animation:nudge .9s ease-in-out infinite}
 .drawer-in{display:flex;align-items:center;gap:6px;padding:0 8px 0 2px}
-.skill{position:relative;flex:none;width:var(--ds);height:var(--ds);padding:0;box-sizing:border-box;border:2px dashed #e3c6d2;border-radius:12px;background:#f8eef2;cursor:default}
-.skill::before{content:"？";position:absolute;inset:0;display:grid;place-items:center;font:800 18px/1 var(--round);color:#d6b3c3}
-.skill::after{content:"";position:absolute;right:-5px;bottom:-5px;width:16px;height:16px;border-radius:50%;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='4' y='7' width='8' height='6' rx='1.5' fill='%23c9a9b8'/%3E%3Cpath d='M5.6 7V5.6a2.4 2.4 0 0 1 4.8 0V7' fill='none' stroke='%23c9a9b8' stroke-width='1.6'/%3E%3C/svg%3E") center/14px no-repeat;box-shadow:0 1px 0 var(--edge)}
+.skill{position:relative;flex:none;width:var(--ds);height:var(--ds);padding:0;box-sizing:border-box;border:2px solid var(--sun-deep);border-radius:12px;background:#fff;box-shadow:0 3px 0 var(--edge);cursor:pointer;transition:transform .12s}
+.skill svg{position:absolute;inset:2px;width:calc(100% - 4px);height:calc(100% - 4px);display:block;pointer-events:none}
+.skill b{position:absolute;top:-7px;right:-6px;min-width:20px;height:20px;box-sizing:border-box;padding:0 5px;border-radius:10px;background:#fff;box-shadow:0 2px 0 var(--edge);font:800 12px/20px var(--round);font-variant-numeric:tabular-nums;color:var(--dim)}
+.skill.rest{border-color:#ecd9e1;background:#f6eef1;box-shadow:none;cursor:default}
+.skill.rest svg{opacity:.35;filter:grayscale(.85)}
+.skill.aim{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent),0 5px 0 var(--accent-deep)}
+.skill.none{border:2px dashed #e3c6d2;background:#f8eef2;box-shadow:none;cursor:default}
+.skill:not(.none):not(.rest):active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
+/* a skill waiting for its target: the blocks or things it can take wear a dashed ring */
+.slot.aim::before{content:"";position:absolute;inset:-4px;border:3px dashed var(--accent);border-radius:16px;animation:glow .7s ease-in-out infinite alternate}
+.cell.aim{cursor:pointer}
+.cell.aim::after{content:"";position:absolute;inset:4px;z-index:2;border:3px dashed var(--accent);border-radius:9px;pointer-events:none;animation:glow .7s ease-in-out infinite alternate}
+.say{position:absolute;left:50%;top:calc(var(--hudh) + 6px);z-index:7;transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);box-sizing:border-box;padding:7px 14px;border-radius:14px;background:rgba(255,250,246,.96);box-shadow:0 3px 0 var(--edge);font:800 14px/1.4 var(--round);color:var(--ink);text-align:center;pointer-events:none}
+.hero.pow svg{filter:drop-shadow(0 0 3px #ffd95e) drop-shadow(0 0 3px #f0b93a)}
+.hero.guard svg{filter:drop-shadow(0 0 3px #a9d6f2) drop-shadow(0 0 3px #5fa8d8)}
+.hero.pow.guard svg{filter:drop-shadow(0 0 3px #ffd95e) drop-shadow(0 0 4px #5fa8d8)}
 .drawer .dice{width:var(--ds);height:var(--ds);border-radius:12px}
 .drawer .dice b{top:-7px;right:-6px}
 
@@ -238,6 +251,15 @@ button{font:inherit;color:inherit}
 .card .ginfo{min-height:3.2em;font-size:14px;line-height:1.6;color:var(--ink)}
 .card .gnote{font-size:12px}
 .b-new{background:var(--accent);color:#fff}
+.skbar{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;background:#f6e4ec}
+.skbar>span{margin-right:auto;font:800 13px/1.2 var(--round);color:var(--dim)}
+.skbar i{position:relative;width:46px;height:46px;box-sizing:border-box;border-radius:11px;background:#fff;box-shadow:0 2px 0 #ecd2dc}
+.skbar i.none{border:2px dashed #e3c6d2;background:transparent;box-shadow:none}
+.skbar svg{position:absolute;inset:2px;width:calc(100% - 4px);height:calc(100% - 4px)}
+.skillbox{display:flex;flex-direction:column;gap:10px}
+.choice.on{background:#fff4f8;box-shadow:0 0 0 3px var(--accent),0 3px 0 var(--accent-deep)}
+.choice .cost.set{color:var(--accent);font-size:13px}
+.choice .cost.own{color:var(--dim);font-size:13px}
 
 .title{display:flex;flex-direction:column;align-items:center;gap:16px;width:min(100%,360px)}
 .logo{margin:0;display:flex;flex-direction:column;align-items:center;gap:7px}
@@ -289,7 +311,7 @@ body.art #s-title .record:empty{display:none}
 
 @media (prefers-reduced-motion:reduce){
   .hero,.slot,.drawer,.pull svg{transition:none}
-  .pull.hint{animation:none}
+  .pull.hint,.slot.aim::before,.cell.aim::after{animation:none}
   .hero.walk svg,.cell.fit::after,.dice.hint,.slot.deal{animation:none}
   .blocks s{animation:none;opacity:.6}
   .board .toy,.board .eye,.hero:not(.walk) svg,.hero.down svg{animation:none}
@@ -312,12 +334,13 @@ body.art #s-title .record:empty{display:none}
   <div class="field">
     <div class="view" id="view"><div class="board" id="board" aria-label="積み木の国の地図"></div></div>
     <div class="weather" id="weather" aria-hidden="true"></div>
+    <div class="say" id="say" role="status" hidden></div>
     <div class="drawer" id="drawer">
       <button class="pull" id="pull" type="button" aria-expanded="false" aria-controls="drawer-in" aria-label="引き出し（スキルとリロール）"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><b id="pulln">3</b></button>
       <div class="drawer-in" id="drawer-in" inert>
-        <button class="skill" type="button" disabled aria-label="スキル枠（まだ使えない）"></button>
-        <button class="skill" type="button" disabled aria-label="スキル枠（まだ使えない）"></button>
-        <button class="skill" type="button" disabled aria-label="スキル枠（まだ使えない）"></button>
+        <button class="skill none" type="button" data-k="0" aria-label="スキル枠"></button>
+        <button class="skill none" type="button" data-k="1" aria-label="スキル枠"></button>
+        <button class="skill none" type="button" data-k="2" aria-label="スキル枠"></button>
         <button class="dice" id="roll" type="button" aria-label="リロール。積み木を全部まぜて引き直す"><span id="rollicon"></span><b id="rolln">3</b></button>
       </div>
     </div>
@@ -368,9 +391,10 @@ body.art #s-title .record:empty{display:none}
   <div class="card">
     <h2>強化</h2>
     <p>持ち帰った金貨 <span class="bank" id="sh-bank">0</span></p>
-    <div class="tabs" role="tablist"><button type="button" role="tab" id="tab-up" aria-selected="true">強化</button><button type="button" role="tab" id="tab-gear" aria-selected="false">装備<small id="gear-n"></small></button></div>
+    <div class="tabs" role="tablist"><button type="button" role="tab" id="tab-up" aria-selected="true">強化</button><button type="button" role="tab" id="tab-gear" aria-selected="false">装備<small id="gear-n"></small></button><button type="button" role="tab" id="tab-skill" aria-selected="false">スキル<small id="skill-n"></small></button></div>
     <div class="choices" id="sh-list" role="tabpanel" aria-labelledby="tab-up"></div>
     <div class="gearbox" id="sh-gear" role="tabpanel" aria-labelledby="tab-gear" hidden></div>
+    <div class="skillbox" id="sh-skill" role="tabpanel" aria-labelledby="tab-skill" hidden></div>
     <div class="row"><button class="btn main" id="sh-go" type="button">冒険に出る</button><button class="btn" id="sh-back" type="button">もどる</button></div>
   </div>
 </div>
@@ -555,8 +579,10 @@ function makeEvent(f){
 }
 const makeTile=(f,m)=>({m:m||pickW(SHAPES),e:makeEvent(f),c:rnd(BLOCKS.length)});
 // a fight is rounds of (the toy hits, then the knight hits) until the toy falls, so the toy hits once per round
-const roundsOf=e=>Math.ceil(e.hp/run.atk);
-const dmgFor=e=>Math.max(0,e.atk-run.def)*roundsOf(e);
+const FX=()=>run.fx||(run.fx={wind:0,guard:0}); // what the skills left running: the wound spring (steps of double attack) and the raised shield
+const atkNow=()=>run.atk*(FX().wind>0?2:1);
+const roundsOf=e=>Math.ceil(e.hp/atkNow());
+const dmgFor=e=>FX().guard?0:Math.max(0,e.atk-run.def)*roundsOf(e);
 
 /* ---------- equipment: found on the road, kept forever, worn from the next climb ---------- */
 const SWD=(bl,ed,gd,gr,pm)=>`<path d="M64 26 70 32 47 58 41 52z" fill="${bl}" stroke="${ed}" stroke-width="2" stroke-linejoin="round"/><path d="M36 50 52 66" stroke="${gd}" stroke-width="6" stroke-linecap="round"/><path d="M42 60 34 68" stroke="${gr}" stroke-width="7" stroke-linecap="round"/><circle cx="31" cy="71" r="4" fill="${pm}"/>`;
@@ -597,6 +623,40 @@ const gearOf=e=>!e?null:e.k==='gear'?GEAR_ID[e.g]||null:e.k==='sword'?GEAR_ID.w1
 const owned=id=>meta.gear.own.includes(id);
 const dupGold=g=>6+4*g.t; // a second one turns into gold
 
+/* ---------- skills: learned and set (three) in the shop; after a use each rests for some steps walked ---------- */
+const rot=m=>((m<<1)|(m>>3))&15; // a quarter turn to the right
+const SKILLS=[ // aim: what the skill is pointed at — any block, a block with a toy, a block without one, or a thing in the way
+  {id:'turn',n:'くるっと回す',d:'手持ちの積み木1こを右に回す',ct:3,cost:20,aim:'tile'},
+  {id:'cross',n:'まほうの十字',d:'手持ちの積み木1こを十字路にする',ct:8,cost:60,aim:'tile'},
+  {id:'clear',n:'おかたづけ',d:'家や木などの じゃまな物を1つどかす',ct:10,cost:50,aim:'rock'},
+  {id:'box',n:'おもちゃ箱',d:'手持ちを全部、いまつながる積み木に入れかえる',ct:12,cost:90},
+  {id:'cannon',n:'大砲どーん',d:'画面の中の敵ぜんぶに 攻撃力ぶんのダメージ',ct:15,cost:100},
+  {id:'wind',n:'ぜんまい全開',d:'つぎの3マスは 攻撃が2倍',ct:12,cost:60},
+  {id:'guard',n:'かたい盾',d:'つぎの戦い1回は ダメージ0',ct:10,cost:40},
+  {id:'bugle',n:'おどかしラッパ',d:'手持ちの積み木の敵を1体 追い出す',ct:8,cost:40,aim:'foe'},
+  {id:'rain',n:'金貨の雨',d:'前の空き地に 金貨を3つふらせる',ct:12,cost:60},
+  {id:'magnet',n:'じしゃく',d:'画面の中の金貨とビー玉を ぜんぶ集める',ct:12,cost:50},
+  {id:'candy',n:'キャンディ',d:'HPを3回復',ct:10,cost:30},
+  {id:'treasure',n:'宝さがし',d:'手持ちの積み木1こに 装備をのせる',ct:20,cost:120,aim:'free'}
+];
+const SKILL_ID={};SKILLS.forEach(k=>SKILL_ID[k.id]=k);
+const STAR=(x,y,r)=>`<path d="M${x} ${y-r}l${r*.3} ${r*.7} ${r*.7} ${r*.3}-${r*.7} ${r*.3}-${r*.3} ${r*.7}-${r*.3}-${r*.7}-${r*.7}-${r*.3} ${r*.7}-${r*.3}z" fill="#ffd95e" stroke="#e0a12a" stroke-width="2" stroke-linejoin="round"/>`;
+const BIG=x=>`<g transform="translate(50 52) scale(1.45) translate(-50 -50)">${x}</g>`; // the old drawings live in the 22..78 window
+const SK_ART={
+  turn:blockSVG(4)+roadSVG(3,BLOCKS[4][1],4,96)+'<path d="M80 52a30 30 0 0 1-30 30" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round"/><path d="M80 52a30 30 0 0 1-30 30" fill="none" stroke="#c4467a" stroke-width="7" stroke-linecap="round"/><path d="M53 70 38 82l15 12z" fill="#c4467a" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>',
+  cross:blockSVG(2)+roadSVG(15,BLOCKS[2][1],4,96)+STAR(82,16,12),
+  clear:(HAS_ART?U('house',14,18,64,68):BIG(SPR.ob.grass))+STAR(80,22,11)+STAR(22,70,8),
+  box:HAS_ART?U('box',6,12,88,76):BIG(SPR.start),
+  cannon:HAS_ART?U('cannon',4,10,92,84):BIG(SPR.cannon),
+  wind:HAS_ART?U('key',8,8,84,84):'<circle cx="36" cy="50" r="17" fill="#f2c14e" stroke="#d99a1e" stroke-width="4"/><circle cx="36" cy="50" r="6" fill="#fff"/><path d="M53 50h30M73 50v12M82 50v9" stroke="#d99a1e" stroke-width="7" stroke-linecap="round"/>',
+  guard:HAS_ART?U('s3',12,10,76,76):BIG(GEAR_ID.s3.art),
+  bugle:'<path d="M16 42h34l30-18v52L50 58H16z" fill="#f2c14e" stroke="#d99a1e" stroke-width="4" stroke-linejoin="round"/><path d="M24 58v10h10V58" fill="none" stroke="#d99a1e" stroke-width="4" stroke-linejoin="round"/><path d="M88 34q7 16 0 32" fill="none" stroke="#c4467a" stroke-width="5" stroke-linecap="round"/><path d="M95 26q11 24 0 48" fill="none" stroke="#c4467a" stroke-width="4" stroke-linecap="round" opacity=".55"/>',
+  rain:HAS_ART?U('coin',30,6,40,40)+U('coin',6,46,40,40)+U('coin',54,46,40,40):BIG(SPR.coin),
+  magnet:'<path d="M22 20h18v32a10 10 0 0 0 20 0V20h18v32a28 28 0 0 1-56 0z" fill="#e8607e" stroke="#c4467a" stroke-width="3.5" stroke-linejoin="round"/><path d="M22 20h18v14H22zM60 20h18v14H60z" fill="#e6ecf5" stroke="#9aa8c8" stroke-width="3.5" stroke-linejoin="round"/>'+STAR(86,64,9)+STAR(12,70,7),
+  candy:HAS_ART?U('candy',4,22,92,58):BIG(SPR.potion),
+  treasure:(HAS_ART?U('c5',10,10,80,80):BIG(GEAR_ID.c5.art))+STAR(84,18,11)
+};
+
 /* ---------- meta (kept between runs) ---------- */
 const UPS=[
   {k:'hp',name:'体力',desc:'はじめの最大HP+2',icon:'heart',max:10,cost:l=>12+8*l},
@@ -612,14 +672,18 @@ let meta=store.get(META)||{};
   if(u.roll==null&&u.undo!=null)u.roll=u.undo; // the old "undo" upgrade becomes the reroll upgrade
   const g=meta.gear||{},own=Array.isArray(g.own)?g.own.filter(id=>GEAR_ID[id]):[],eq={};
   for(const s of SLOTS){const id=g.eq&&g.eq[s.k];eq[s.k]=id&&own.includes(id)&&GEAR_ID[id].s===s.k?id:null}
-  meta={bank:meta.bank|0,best:meta.best|0,far:meta.far|0,up:{hp:u.hp|0,atk:u.atk|0,def:u.def|0,bag:u.bag|0,roll:u.roll|0,hand:u.hand|0},gear:{own,eq}};
+  const k=meta.sk,sown=k&&Array.isArray(k.own)?k.own.filter(id=>SKILL_ID[id]):['turn'],seq=[null,null,null]; // the first climb starts with the quarter turn learned and set
+  if(!k)seq[0]='turn';else [0,1,2].forEach(j=>{const id=k.eq&&k.eq[j];if(id&&sown.includes(id)&&!seq.includes(id))seq[j]=id});
+  meta={bank:meta.bank|0,best:meta.best|0,far:meta.far|0,up:{hp:u.hp|0,atk:u.atk|0,def:u.def|0,bag:u.bag|0,roll:u.roll|0,hand:u.hand|0},gear:{own,eq},sk:{own:sown,eq:seq}};
 }
 const saveMeta=()=>store.set(META,meta);
 
 /* ---------- run state ---------- */
 let run=store.get(SAVE);
 if(run&&!(run.rows&&run.hand&&run.at>=0))run=null;
-let sel=-1,busy=false,justPlaced=-1;
+const setSkills=()=>meta.sk.eq.map(id=>id?{id,cd:0}:null); // fixed when the climb starts, all ready
+if(run&&!Array.isArray(run.sk)){run.sk=setSkills();run.fx={wind:0,guard:0}}
+let sel=-1,busy=false,justPlaced=-1,aim=null; // aim: a skill waiting for its target, {k: its slot, kind}
 const save=()=>{if(run)store.set(SAVE,run)};
 const Q=()=>run.q||ZERO;
 const gainOf=v=>Q().gold?Math.ceil(v*(1+Q().gold)):v;
@@ -628,10 +692,10 @@ const cellAt=i=>{const row=run.rows[rowOf(i)];return row?row[colOf(i)]:null};
 
 function newRun(){
   const u=meta.up,q=gearSum(meta.gear.eq); // the gear is fixed when the climb starts
-  run={maxHp:10+2*u.hp+q.hp,hp:10+2*u.hp+q.hp,atk:2+u.atk+q.atk,def:u.def+q.def,gold:0,handSize:4+u.hand,rolls:3+u.roll+q.roll,q,found:[],best:meta.far,rows:{},made:-1,spine:2,at:idOf(1,2),top:1,target:-1,reward:false,phase:'build'};
+  run={maxHp:10+2*u.hp+q.hp,hp:10+2*u.hp+q.hp,atk:2+u.atk+q.atk,def:u.def+q.def,gold:0,handSize:4+u.hand,rolls:3+u.roll+q.roll,q,found:[],sk:setSkills(),fx:{wind:0,guard:0},best:meta.far,rows:{},made:-1,spine:2,at:idOf(1,2),top:1,target:-1,reward:false,phase:'build'};
   grow();
   run.hand=Array.from({length:run.handSize},()=>makeTile(1));
-  sel=-1;save();hideSheets();if(drawerAuto)setDrawer(false);render();afterAction();
+  sel=-1;aim=null;hideSay();save();hideSheets();if(drawerAuto)setDrawer(false);render();afterAction();
 }
 function newRow(r){ // a free "spine" runs through every row, so the way up is never walled off
   const row=Array.from({length:W},()=>({rock:0,gem:0,tile:null}));
@@ -673,7 +737,7 @@ function gateFrom(i,m){ // the captain's gap that an open side of this block lea
   for(const b of BITS){
     if(b===DOWN||!(m&b))continue;
     const j=nbr(i,b),c=j>=0&&cellAt(j);
-    if(c&&c.tile&&c.tile.gate&&c.tile.e)return j;
+    if(c&&c.tile&&c.tile.gate)return j; // even once the cannon has cleared it
   }
   return -1;
 }
@@ -684,8 +748,10 @@ const anyFit=(t,F)=>{if(!t)return false;for(const j of F.keys())if(t.m&F.get(j))
 const app=$('app'),view=$('view'),board=$('board'),handEl=$('hand'),rollBtn=$('roll');
 const drawer=$('drawer'),drawerIn=$('drawer-in'),pullBtn=$('pull');
 let drawerOpen=false,drawerAuto=false,drawerTimer=0; // auto: opened by itself at a dead end, so it closes by itself once a block fits again
+const skillEls=[...drawerIn.querySelectorAll('.skill')];
 function setDrawer(open,auto){
   clearTimeout(drawerTimer);
+  if(!open&&aim){aim=null;hideSay();if(run)renderHand()}
   drawerOpen=open;drawerAuto=open&&!!auto;
   drawer.classList.toggle('open',open);pullBtn.setAttribute('aria-expanded',open);drawerIn.inert=!open;
 }
@@ -707,10 +773,10 @@ function cellHTML(i,F){
   if(!c){}
   else if(c.start){cls+=' start';inner=svg(SPR.start)}
   else if(c.rock===2){cls+=' fence';inner=svg(SPR.fence)}
-  else if(c.rock){cls+=' rock';inner=svg(SPR.ob[a])}
+  else if(c.rock){cls+=' rock'+(aim&&aim.kind==='rock'&&c.rock===1&&rowOf(i)>=rowOf(run.at)?' aim':'');inner=svg(SPR.ob[a])}
   else if(c.tile){cls+=' laid'+(i===justPlaced?' new':'');inner=svg(tileArt(c.tile))+badge(c.tile.e);if(c.tile.e&&c.tile.e.k==='foe')tab=` style="--d:-${(i*7%23)/5}s"`}
   else{
-    inner=svg(deco(i)+(c.gem?SPR.gem:''));
+    inner=svg(deco(i)+(c.gem?SPR.gem:'')+(c.coin?SPR.coin:''));
     if(F&&F.has(i)){cls+=' front'+(sel>=0&&fits(run.hand[sel],i,F)?' fit':'');tab=' tabindex="0" role="button" aria-label="道の先"'}
   }
   return `<div class="${cls}" data-i="${i}"${tab}>${inner}</div>`;
@@ -747,7 +813,8 @@ function updateCell(i){const el=elOf(i);if(el)el.outerHTML=cellHTML(i,null)}
 function renderHand(F){
   F=F||frontier();
   handEl.style.setProperty('--hs',run.hand.length);
-  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${anyFit(t,F)?'':' dull'}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}">${svg(tileArt(t,true))}${badge(t.e)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('');
+  const can=aim&&aim.kind!=='rock'?targets(aim.kind):null;
+  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${can?(can.includes(i)?' aim':' dull'):anyFit(t,F)?'':' dull'}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}">${svg(tileArt(t,true))}${badge(t.e)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('');
 }
 let preview=0; // the hp the held block would cost
 function renderHp(){
@@ -761,7 +828,7 @@ function renderHp(){
 function previewFor(hi,j){ // the toy on the block, plus the captain when this block opens onto his gap
   const t=run.hand[hi];if(!t)return 0;
   let d=t.e&&t.e.k==='foe'?dmgFor(t.e):0;
-  if(j>=0&&fits(t,j,frontier())){const g=gateFrom(j,t.m);if(g>=0)d+=dmgFor(cellAt(g).tile.e)}
+  if(j>=0&&fits(t,j,frontier())){const g=gateFrom(j,t.m),ge=g>=0&&cellAt(g).tile.e;if(ge)d+=dmgFor(ge)}
   return d;
 }
 function setPreview(j){const d=sel>=0&&run&&run.phase==='build'?previewFor(sel,j):0;if(d!==preview){preview=d;renderHp()}}
@@ -769,16 +836,18 @@ function renderStats(){
   if(sel<0)preview=0;
   app.dataset.area=areaOf(rowOf(run.at)).k;weather();
   renderHp();
-  $('i-atk').innerHTML=ico(SPR.sword)+`<b>${run.atk}</b>`;
+  $('i-atk').innerHTML=ico(SPR.sword)+`<b>${atkNow()}</b>`;
   $('i-def').innerHTML=ico(SPR.shield)+`<b>${run.def}</b>`;
   $('i-gold').innerHTML=ico(SPR.coin)+`<b>${run.gold}</b>`;
   $('rolln').textContent=run.rolls;$('pulln').textContent=run.rolls;pullBtn.classList.toggle('out',run.rolls<=0);
   rollBtn.disabled=busy||run.phase!=='build'||run.rolls<=0;
   $('quit').disabled=busy;
+  renderSkills();
 }
 function markStuck(F){
-  const stuck=run.phase==='build'&&!busy&&run.rolls>0&&F.size>0&&!run.hand.some(t=>anyFit(t,F));
-  rollBtn.classList.toggle('hint',stuck);
+  const noFit=F.size>0&&!run.hand.some(t=>anyFit(t,F));
+  const stuck=run.phase==='build'&&!busy&&((noFit&&run.rolls>0)||((noFit||!F.size)&&rescue(F))); // a ready skill can save a dead end too
+  rollBtn.classList.toggle('hint',stuck&&noFit&&run.rolls>0);
   clearTimeout(drawerTimer);
   if(stuck&&!drawerOpen)setDrawer(true,true); // a dead end: the drawer opens by itself, the die nudging
   else if(!stuck&&drawerAuto&&run.phase==='build'&&!busy)drawerTimer=setTimeout(()=>{if(drawerAuto)setDrawer(false)},700);
@@ -821,7 +890,8 @@ function weather(){ // a handful of petals, leaves, glints, snow or confetti for
   }
   $('weather').innerHTML=h;
 }
-function spot(i){const el=elOf(i);if(!el)return null;const r=el.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,w:r.width}}
+function mid(el){if(!el)return null;const r=el.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,w:r.width}}
+const spot=i=>mid(elOf(i));
 function bits(x,y,n,colors,spread,size){ // little pieces thrown out and falling
   if(REDUCED)return;
   for(let k=0;k<n;k++){
@@ -851,7 +921,7 @@ function breakToy(i,e){ // the beaten toy pops and flies apart
 function shake(power){if(!REDUCED)view.animate([{transform:'none'},{transform:`translate(${power}px,${-power/2}px)`},{transform:`translate(${-power}px,${power/2}px)`},{transform:`translate(${power/2}px,0)`},{transform:'none'}],{duration:230})}
 function bump(el){if(el&&!REDUCED)el.animate([{transform:'none'},{transform:'scale(1.3)'},{transform:'none'}],{duration:240,easing:'ease-out'})}
 function fly(i,art,target,delay){ // a coin, a heart, a sword or a shield flies up to its number
-  const a=spot(i);if(!a||!target)return;
+  const a=typeof i==='number'?spot(i):mid(i);if(!a||!target)return;
   if(REDUCED)return bump(target);
   const b=target.getBoundingClientRect(),ex=b.left+Math.min(b.width/2,14),ey=b.top+b.height/2;
   setTimeout(()=>{
@@ -874,12 +944,14 @@ function tileName(t){
 
 /* ---------- actions ---------- */
 function tapSlot(i){
+  if(aim){if(aim.kind!=='rock'&&targets(aim.kind).includes(i))useSkill(aim.k,i);else flashSlot(i);return}
   const t=run.hand[i];if(!t)return;
   if(sel!==i&&!anyFit(t,frontier()))return flashSlot(i);
   sel=sel===i?-1:i;
   renderHand();refreshMarks();setPreview(-1);
 }
 function tapCell(i){
+  if(aim){if(aim.kind==='rock'&&targets('rock').includes(i))useSkill(aim.k,i);else{aim=null;hideSay();render()}return}
   if(sel<0){if(frontier().has(i))hop();return}
   place(i,sel);
 }
@@ -913,6 +985,7 @@ async function stepTo(i){
   const up=rowOf(i)>rowOf(run.at);
   run.at=i;placeHero(i);if(up)slide(true);
   await sleep(STEP);
+  tickSkills();
   if(rowOf(i)>run.top)reach(rowOf(i));
   if(resolve(i)){renderStats();hero.classList.remove('walk');await sleep(STEP*2)}
   hero.classList.remove('walk');
@@ -930,7 +1003,7 @@ function reach(r){ // a new row: every 10 a reward, every 20 a new land
 }
 async function battle(e,at,i){
   const hEl=elOf(at),eEl=elOf(i);
-  const back=Math.max(0,e.atk-run.def),rounds=roundsOf(e);
+  const back=FX().guard?0:Math.max(0,e.atk-run.def),rounds=roundsOf(e);
   const gap=REDUCED?80:rounds<=4?340:Math.max(170,1400/rounds);
   const dx=(eEl.offsetLeft-hEl.offsetLeft)*.3,dy=(eEl.offsetTop-hEl.offsetTop)*.3;
   await sleep(REDUCED?0:140);
@@ -940,9 +1013,10 @@ async function battle(e,at,i){
     renderStats();
     if(run.hp<=0)return false;
     await sleep(gap/2);
-    lunge(dx,dy);setTimeout(()=>{struck(eEl);spark(i)},80);pop(i,`-${run.atk}`,'p-deal'); // the knight hits
+    lunge(dx,dy);setTimeout(()=>{struck(eEl);spark(i)},80);pop(i,`-${atkNow()}`,'p-deal'); // the knight hits
     await sleep(gap/2+(REDUCED?0:60));
   }
+  if(FX().guard)run.fx.guard=0; // the shield took this one fight
   breakToy(i,e);if(e.boss)shake(8);
   pop(i,`+${addGold(e.gold)}`,'p-gold');fly(i,SPR.coin,$('i-gold'),120);renderStats();
   await sleep(REDUCED?0:320);
@@ -964,6 +1038,7 @@ function resolve(i){
       }
     }}
   }
+  if(c.coin&&run.hp>0){const v=c.coin;c.coin=0;pop(i,`+${addGold(v)}`,'p-gold',e?420:0);fly(i,SPR.coin,$('i-gold'),e?420:0);hit=true}
   if(c.gem&&run.hp>0){const v=c.gem;c.gem=0;pop(i,`+${addGold(v)}`,'p-gold',e?420:0);fly(i,SPR.gem,$('i-gold'),e?420:0);hit=true}
   if(hit)updateCell(i);
   return hit;
@@ -972,7 +1047,7 @@ function reroll(){
   if(busy||!run||run.phase!=='build'||run.rolls<=0)return;
   const lv=lvOf(rowOf(run.at));
   run.hand=run.hand.map(()=>makeTile(lv));
-  run.rolls--;sel=-1;render();
+  run.rolls--;sel=-1;aim=null;hideSay();render();
   [...handEl.children].forEach(s=>s.classList.add('deal'));
   if(!REDUCED)$('rollicon').firstElementChild.animate([{transform:'rotate(0) scale(1)'},{transform:'rotate(200deg) scale(.8)'},{transform:'rotate(360deg) scale(1)'}],{duration:380,easing:'ease-out'});
   afterAction();
@@ -980,11 +1055,118 @@ function reroll(){
 async function afterAction(){
   const F=frontier();
   let why='';
-  if(!F.size){why='dead';flashCell(run.at)}
-  else if(run.rolls<=0&&!run.hand.some(t=>anyFit(t,F))){why='nofit';run.hand.forEach((t,i)=>{if(t)flashSlot(i)})}
+  if(!F.size){if(!rescue(F)){why='dead';flashCell(run.at)}}
+  else if(run.rolls<=0&&!run.hand.some(t=>anyFit(t,F))&&!rescue(F)){why='nofit';run.hand.forEach((t,i)=>{if(t)flashSlot(i)})}
   markStuck(F);
   if(!why)return save();
   busy=true;renderStats();await sleep(1200);busy=false;gameOver(why);
+}
+
+/* ---------- skills in the climb ---------- */
+let sayT=0;
+function say(t,stay){const el=$('say');clearTimeout(sayT);el.textContent=t;el.hidden=false;if(!stay)sayT=setTimeout(()=>{el.hidden=true},1700)}
+function hideSay(){clearTimeout(sayT);$('say').hidden=true}
+function renderSkills(){
+  skillEls.forEach((b,k)=>{
+    const s=run.sk&&run.sk[k],d=s&&SKILL_ID[s.id];
+    if(!d){b.className='skill none';b.innerHTML='';b.setAttribute('aria-label','スキル枠（強化のスキルでセット）');return}
+    const rest=s.cd>0;
+    b.className='skill'+(rest?' rest':aim&&aim.k===k?' aim':'');
+    b.innerHTML=svg(SK_ART[d.id])+(rest?`<b>${s.cd}</b>`:'');
+    b.setAttribute('aria-label',`${d.n}：${d.d}`+(rest?`（あと${s.cd}マスで使える）`:''));
+  });
+  hero.classList.toggle('pow',FX().wind>0);hero.classList.toggle('guard',!!FX().guard);
+}
+function tickSkills(){ // one step walked
+  for(const s of run.sk||[])if(s&&s.cd>0)s.cd--;
+  if(FX().wind>0)run.fx.wind--;
+  renderSkills();
+}
+const ready=id=>(run.sk||[]).some(s=>s&&s.id===id&&s.cd<=0);
+function rescue(F){ // a ready skill that can open the way again
+  if(F.size){
+    if(ready('box')||(ready('cross')&&run.hand.some(Boolean)))return true;
+    if(ready('turn')&&run.hand.some(t=>t&&anyFit({m:rot(t.m)},F)))return true;
+  }
+  if(ready('clear')){const m=exitsOf(run.at)&~DOWN;for(const b of BITS)if(m&b){const j=nbr(run.at,b),c=j>=0&&cellAt(j);if(c&&c.rock===1)return true}}
+  return false;
+}
+function targets(kind){ // the hand blocks (or the cells) a skill can be pointed at
+  if(kind==='rock'){const a=[];for(let r=rowOf(run.at);r<=win.hi;r++)for(let c=0;c<W;c++){const x=cellAt(idOf(r,c));if(x&&x.rock===1)a.push(idOf(r,c))}return a}
+  return run.hand.map((t,i)=>{const foe=!!(t&&t.e&&t.e.k==='foe');return t&&(kind==='tile'||(kind==='foe')===foe)?i:-1}).filter(i=>i>=0);
+}
+const AIM_SAY={turn:'回す積み木をタップ',cross:'十字にする積み木をタップ',clear:'どかす物をタップ',bugle:'敵を追い出す積み木をタップ',treasure:'装備をのせる積み木をタップ'};
+const NO_AIM={rock:'近くに どかせる物がない',foe:'手持ちに敵がいない',free:'敵のいない積み木がない',tile:'積み木がない'};
+function tapSkill(k){
+  if(busy||!run||run.phase!=='build')return;
+  const s=run.sk&&run.sk[k],d=s&&SKILL_ID[s.id];if(!d)return;
+  if(s.cd>0){bump(skillEls[k]);return say(`${d.n}は あと${s.cd}マス歩くと使える`)}
+  if(aim&&aim.k===k){aim=null;hideSay();return render()} // a second tap: never mind
+  if(d.aim){
+    if(!targets(d.aim).length){aim=null;render();return say(NO_AIM[d.aim])}
+    aim={k,kind:d.aim};sel=-1;render();return say(AIM_SAY[d.id]+'（もう一度押すとやめる）',true);
+  }
+  useSkill(k,-1);
+}
+const dealFx=x=>()=>{const el=handEl.children[x],a=mid(el);if(!el)return;el.classList.add('deal');if(a)bits(a.x,a.y-a.w*.1,6,['#fff','#ffe58a'],a.w*.4,4)};
+function visible(f){for(let r=Math.max(win.lo,rowOf(run.at));r<=win.hi;r++)for(let c=0;c<W;c++){const i=idOf(r,c),x=cellAt(i);if(x)f(i,x)}}
+const SK_DO={ // each changes the climb and gives back what to show once it is drawn, or words when it cannot be used now
+  turn:x=>{run.hand[x].m=rot(run.hand[x].m);return dealFx(x)},
+  cross:x=>{run.hand[x].m=15;return dealFx(x)},
+  bugle:x=>{run.hand[x].e=null;return dealFx(x)},
+  treasure:(x,lv)=>{run.hand[x].e=makeGear(SLOTS[rnd(3)].k,lv);return dealFx(x)},
+  clear:x=>{cellAt(x).rock=0;return ()=>{puff(x);spark(x)}},
+  box:(x,lv)=>{
+    const F=frontier();if(!F.size)return '積み木を置ける所がない';
+    run.hand=run.hand.map(()=>{let t;for(let n=0;n<60;n++){t=makeTile(lv);if(anyFit(t,F))break}return t});
+    return ()=>[...handEl.children].forEach(el=>el.classList.add('deal'));
+  },
+  candy:()=>{const h=Math.min(3,run.maxHp-run.hp);if(h<=0)return 'HPは まんたん';run.hp+=h;return ()=>{pop(run.at,`+${h}`,'p-heal');fly(run.at,SPR.heart,$('hp'))}},
+  wind:()=>{run.fx.wind=3;return ()=>{pop(run.at,'攻撃2倍','p-deal');spark(run.at)}},
+  guard:()=>{run.fx.guard=1;return ()=>pop(run.at,'ガード','p-gear')},
+  rain:lv=>{
+    const r0=rowOf(run.at),a=[];
+    for(let r=r0+1;r<=Math.min(win.hi-1,r0+5);r++)for(let c=0;c<W;c++){const i=idOf(r,c),x=cellAt(i);if(x&&!x.rock&&!x.tile&&!x.start&&!x.gem&&!x.coin)a.push(i)}
+    if(!a.length)return '金貨をふらせる空き地がない';
+    const got=shuffle(a.slice(0,9)).slice(0,3),v=3+Math.floor(lv/2);got.forEach(i=>{cellAt(i).coin=v});
+    return ()=>got.forEach((i,n)=>setTimeout(()=>{spark(i);bump(elOf(i))},n*130));
+  },
+  magnet:()=>{
+    const got=[],hand=[];
+    visible((i,x)=>{if(!x.tile&&(x.gem||x.coin)){got.push({i,g:addGold((x.gem|0)+(x.coin|0)),art:x.gem?SPR.gem:SPR.coin});x.gem=0;x.coin=0}});
+    run.hand.forEach((t,k)=>{if(t&&t.e&&t.e.k==='coin'){hand.push({k,g:addGold(t.e.v)});t.e=null}});
+    if(!got.length&&!hand.length)return '画面に 金貨もビー玉もない';
+    return ()=>{
+      got.forEach((x,n)=>{pop(x.i,`+${x.g}`,'p-gold',n*90);fly(x.i,x.art,$('i-gold'),n*90)});
+      hand.forEach((x,n)=>fly(handEl.children[x.k],SPR.coin,$('i-gold'),(got.length+n)*90));
+    };
+  },
+  cannon:()=>{
+    const dmg=atkNow(),hits=[];
+    visible((i,x)=>{if(x.tile&&x.tile.e&&x.tile.e.k==='foe')hits.push({i,e:x.tile.e,on:x.tile})});
+    run.hand.forEach((t,k)=>{if(t&&t.e&&t.e.k==='foe')hits.push({k,e:t.e,on:t})});
+    if(!hits.length)return '画面に 敵がいない';
+    for(const h of hits){h.e.hp-=dmg;if(h.e.hp<=0){h.dead=true;h.g=addGold(h.e.gold);h.on.e=null}}
+    return ()=>{shake(7);hits.forEach((h,n)=>setTimeout(()=>{
+      if(h.i!=null){
+        if(h.dead){breakToy(h.i,h.e);pop(h.i,`+${h.g}`,'p-gold');fly(h.i,SPR.coin,$('i-gold'))}
+        else{pop(h.i,`-${dmg}`,'p-deal');struck(elOf(h.i));spark(h.i)}
+      }else{
+        const el=handEl.children[h.k],a=mid(el);
+        if(h.dead&&a){bits(a.x,a.y,10,TOYBITS[h.e.t]||TOYBITS.soldier,a.w*.7,4);fly(el,SPR.coin,$('i-gold'),120)}
+        else bump(el);
+      }
+    },n*90))};
+  }
+};
+function useSkill(k,x){
+  const s=run.sk[k],d=SKILL_ID[s.id],lv=lvOf(rowOf(run.at));
+  aim=null;
+  const shown=SK_DO[d.id](x>=0?x:lv,lv);
+  if(typeof shown==='string'){render();return say(shown)}
+  s.cd=d.ct;sel=-1;save();render();say(d.n+'！');
+  if(shown)shown();
+  afterAction();
 }
 
 /* ---------- rewards: every 10 rows ---------- */
@@ -1027,7 +1209,7 @@ function gameOver(why){
   $('o-head').textContent=head[why]||head.quit;
   lastFound=(run.found||[]).length;
   $('o-text').textContent=`${note[why]||''}持ち帰った金貨 ${run.gold}\nいちばん遠く ${meta.far}段`+(lastFound?`\nあたらしい装備 ${lastFound}こ（強化で着がえられる）`:'');
-  store.del(SAVE);run=null;busy=false;
+  store.del(SAVE);run=null;busy=false;aim=null;hideSay();
   hideSheets();show('s-over');
 }
 
@@ -1046,8 +1228,8 @@ function showTitle(){
   $('t-best').textContent=meta.far?`いちばん遠く ${meta.far}段`:'';
   show('s-title');
 }
-function showShop(tab){
-  if(tab)shopTab=tab;gearMsg='';renderGear();setShopTab(shopTab);
+function showShop(tab,keep){
+  if(tab)shopTab=tab;gearMsg='';if(!keep)skillMsg='';renderGear();renderSkillShop();setShopTab(shopTab);
   $('sh-bank').textContent=meta.bank;
   $('sh-list').innerHTML=UPS.map(u=>{
     const l=meta.up[u.k],maxed=l>=u.max,c=u.cost(l);
@@ -1056,7 +1238,7 @@ function showShop(tab){
   }).join('');
   show('s-shop');
 }
-let shopTab='up',gearMsg='',lastFound=0;
+let shopTab='up',gearMsg='',skillMsg='',lastFound=0;
 function renderGear(){
   const eq=meta.gear.eq,n=meta.gear.own.length;
   $('gear-n').textContent=` ${n}/${GEAR.length}`;
@@ -1081,10 +1263,36 @@ function tapGear(id){
   saveMeta();renderGear();
 }
 function setShopTab(t){
-  shopTab=t;const up=t==='up';
-  $('tab-up').classList.toggle('on',up);$('tab-up').setAttribute('aria-selected',up);
-  $('tab-gear').classList.toggle('on',!up);$('tab-gear').setAttribute('aria-selected',!up);
-  $('sh-list').hidden=!up;$('sh-gear').hidden=up;
+  shopTab=t;
+  for(const [k,tab,panel] of [['up','tab-up','sh-list'],['gear','tab-gear','sh-gear'],['skill','tab-skill','sh-skill']]){
+    const on=k===t;$(tab).classList.toggle('on',on);$(tab).setAttribute('aria-selected',on);$(panel).hidden=!on;
+  }
+}
+function renderSkillShop(){
+  const own=meta.sk.own,eq=meta.sk.eq;
+  $('skill-n').textContent=` ${own.length}/${SKILLS.length}`;
+  let h=`<div class="skbar"><span>セット中</span>${eq.map(id=>id?`<i>${svg(SK_ART[id])}</i>`:'<i class="none"></i>').join('')}</div>`;
+  h+=`<p class="ginfo" aria-live="polite">${skillMsg||'おぼえたスキルをタップして セット・はずす（3つまで）'}</p><p class="gnote">セットは つぎの冒険から。使うと、書いてあるマスを歩くまで休む</p><div class="choices">`;
+  h+=SKILLS.map(k=>{
+    const has=own.includes(k.id),on=eq.includes(k.id);
+    const right=on?'<span class="cost set">セット中</span>':has?'<span class="cost own">セット</span>':`<span class="cost">金${k.cost}</span>`;
+    return `<button class="choice${on?' on':''}" type="button" data-s="${k.id}"${!has&&meta.bank<k.cost?' disabled':''}>${svg(SK_ART[k.id])}<span><b>${k.n}</b><small>${k.d}（${k.ct}マス）</small></span>${right}</button>`;
+  }).join('');
+  $('sh-skill').innerHTML=h+'</div>';
+}
+function tapSkillShop(id){
+  const k=SKILL_ID[id];if(!k)return;
+  const own=meta.sk.own,eq=meta.sk.eq,j=eq.indexOf(id),free=eq.indexOf(null);
+  if(!own.includes(id)){
+    if(meta.bank<k.cost)return;
+    meta.bank-=k.cost;own.push(id);
+    if(free>=0){eq[free]=id;skillMsg=`${k.n}をおぼえて セットした`}else skillMsg=`${k.n}をおぼえた。セットするには ほかをはずしてね`;
+    saveMeta();return showShop('skill',true);
+  }
+  if(j>=0){eq[j]=null;skillMsg=`${k.n}をはずした`}
+  else if(free<0)skillMsg='枠がいっぱい。セット中のスキルをタップして はずしてね';
+  else{eq[free]=id;skillMsg=`${k.n}をセットした`}
+  saveMeta();renderSkillShop();
 }
 function buy(k){
   const u=UPS.find(x=>x.k===k);if(!u)return;
@@ -1122,7 +1330,7 @@ document.addEventListener('pointerdown',e=>{
   drag={id:e.pointerId,x:e.clientX,y:e.clientY,slot:s?+s.dataset.i:-1,cell:!s?+c.dataset.i:-1,moving:false};
 },{passive:false});
 document.addEventListener('pointermove',e=>{
-  if(!drag||e.pointerId!==drag.id||drag.slot<0)return;
+  if(!drag||e.pointerId!==drag.id||drag.slot<0||aim)return; // no dragging while a skill waits for its block
   if(!drag.moving){
     if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<8)return;
     if(!run.hand[drag.slot]){drag=null;return}
@@ -1192,6 +1400,9 @@ $('sh-go').addEventListener('click',()=>{if(run)resume();else newRun()});
 $('sh-back').addEventListener('click',showTitle);
 $('tab-up').addEventListener('click',()=>setShopTab('up'));
 $('tab-gear').addEventListener('click',()=>{gearMsg='';renderGear();setShopTab('gear')});
+$('tab-skill').addEventListener('click',()=>{skillMsg='';renderSkillShop();setShopTab('skill')});
+$('sh-skill').addEventListener('click',e=>{const b=e.target.closest('.choice');if(b&&!b.disabled)tapSkillShop(b.dataset.s)});
+drawerIn.addEventListener('click',e=>{const b=e.target.closest('.skill');if(b)tapSkill(+b.dataset.k)});
 $('sh-gear').addEventListener('click',e=>{const b=e.target.closest('.gi');if(b)tapGear(b.dataset.g)});
 window.addEventListener('resize',()=>{if(run)renderBoard()});
 
