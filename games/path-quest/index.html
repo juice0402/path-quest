@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-/* layout: a toy-block land seen from above, scrolled upward as the wind-up knight walks to the flag. the status and the reroll die float over the field, the tray of blocks sits under it. one column at every width */
+/* layout: a toy-block land seen from above, scrolled upward as the wind-up knight walks to the flag. the status floats over the field; under it one tray holds the blocks and a row of wide buttons. one column at every width */
 :root{
   color-scheme:light;
   --page:#fbeaf0;
@@ -46,13 +46,13 @@ body{font-family:var(--round);font-weight:500;-webkit-tap-highlight-color:transp
 button{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
-.app{box-sizing:border-box;height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:12px;padding-block:8px 12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{--slot:min(76px,calc((min(100vw,520px) - 82px)/6));box-sizing:border-box;height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:10px;padding-block:6px 10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
-/* the field: the status and the die float on it */
+/* the field: the status floats on it */
 .field{position:relative;flex:1;min-height:220px;display:flex;border-radius:18px;overflow:hidden;background:var(--line);box-shadow:0 4px 0 rgba(74,53,65,.12)}
 .view{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:none}
 .view::-webkit-scrollbar{display:none}
-.track{padding:48px 0 84px}
+.track{padding:52px 0 12px}
 .board{--w:5;--h:9;position:relative;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));grid-template-rows:repeat(var(--h),minmax(0,1fr));gap:3px;padding:4px;margin:0 auto;width:min(100%,460px);aspect-ratio:var(--w)/var(--h);max-width:100%;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .cell{position:relative;min-width:0;min-height:0;background:var(--ground);border-radius:5px}
 .cell svg{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -92,36 +92,22 @@ button{font:inherit;color:inherit}
 @keyframes rise{from{transform:translate(-50%,4px) scale(.7)}20%{transform:translate(-50%,-6px) scale(1.15)}to{transform:translate(-50%,-32px);opacity:0}}
 
 /* status floating over the field */
-.hud{position:absolute;top:8px;left:8px;right:8px;z-index:6;display:flex;align-items:flex-start;gap:6px;pointer-events:none}
-.hud-l{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:6px}
-.pill{display:flex;align-items:center;gap:6px;height:30px;box-sizing:border-box;padding:0 10px;border:0;border-radius:15px;background:rgba(255,250,246,.94);box-shadow:0 3px 0 rgba(74,53,65,.16);font:800 14px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap}
-.pill svg{width:18px;height:18px;flex:none;display:block}
-.hpbar{position:relative;width:clamp(30px,9vw,64px);height:9px;border-radius:5px;background:#f6d3dc;overflow:hidden}
-.hpbar i{position:absolute;inset:0 auto 0 0;width:100%;border-radius:5px;background:var(--hp);transition:width .25s}
-.gear{gap:9px}
+.hud{position:absolute;top:8px;left:8px;right:8px;z-index:6;display:flex;gap:6px;pointer-events:none}
+.pill{display:flex;align-items:center;gap:7px;height:36px;box-sizing:border-box;padding:0 12px;border-radius:18px;background:rgba(255,250,246,.95);box-shadow:0 3px 0 rgba(74,53,65,.16);font:800 16px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill svg{width:21px;height:21px;flex:none;display:block}
+.hp{flex:1;min-width:0}
+.hpbar{position:relative;flex:1;min-width:28px;height:12px;border-radius:6px;background:#f6d3dc;overflow:hidden}
+.hpbar i{position:absolute;inset:0 auto 0 0;width:100%;border-radius:6px;background:var(--hp);transition:width .25s}
+.gear{flex:none;gap:10px}
 .gear span{display:flex;align-items:center;gap:3px}
 .gear .g b{color:var(--gold)}
-.menu{flex:none;pointer-events:auto;cursor:pointer;color:var(--dim);font-size:13px}
-.menu:disabled{opacity:.5;cursor:default}
 
-/* the reroll die */
-.roll{position:absolute;right:10px;bottom:10px;z-index:6;width:60px;height:60px;padding:0;border:0;border-radius:18px;background:var(--card);box-shadow:0 4px 0 rgba(74,53,65,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer}
-.roll svg{width:34px;height:34px;display:block}
-.roll span{font:800 10px/1 var(--round);color:var(--dim)}
-.roll b{position:absolute;right:-5px;top:-5px;min-width:22px;height:22px;box-sizing:border-box;padding:0 5px;border-radius:11px;background:var(--accent);font:800 13px/22px var(--round);color:#fff;text-align:center}
-.roll:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(74,53,65,.2)}
-.roll:disabled{cursor:default;transform:none}
-.roll:disabled svg,.roll:disabled span{opacity:.4}
-.roll:disabled b{background:#c9b3bd}
-.roll.hint{animation:nudge .8s ease-in-out infinite}
-@keyframes nudge{50%{transform:scale(1.1) rotate(-6deg)}}
-
-/* the tray of blocks */
-.tray{position:relative;padding:12px 10px 10px;border-radius:18px;background:var(--card);box-shadow:0 4px 0 var(--edge);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.hand{--hs:4;display:grid;grid-template-columns:repeat(var(--hs),minmax(0,84px));justify-content:center;gap:7px}
+/* the tray: blocks keep one size whether there are 4 or 6, wide buttons under them */
+.tray{position:relative;display:flex;flex-direction:column;gap:9px;padding:12px 10px 10px;border-radius:18px;background:var(--card);box-shadow:0 4px 0 var(--edge);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.hand{--hs:4;display:grid;grid-template-columns:repeat(var(--hs),var(--slot));justify-content:center;gap:6px}
 .slot{position:relative;aspect-ratio:1;max-width:100%;border-radius:13px;cursor:grab;transition:transform .1s}
 .slot svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.slot .badge{right:3px;bottom:6px;font-size:12px}
+.slot .badge{right:2px;bottom:5px;font-size:11px}
 .slot.sel{transform:translateY(-8px)}
 .slot.sel::before{content:"";position:absolute;inset:-4px;border:3px solid var(--accent);border-radius:16px}
 .slot.dull{opacity:.45;filter:saturate(.4)}
@@ -131,6 +117,16 @@ button{font:inherit;color:inherit}
 @keyframes deal{from{transform:translateY(40%) scale(.7);opacity:0}}
 .decktag{position:absolute;left:14px;top:-11px;padding:4px 9px;border-radius:10px;background:#fff;box-shadow:0 2px 0 var(--edge);font:800 12px/1 var(--round);color:var(--dim)}
 .decktag b{margin-left:3px;font-size:13px;color:var(--ink)}
+.bar{display:flex;gap:10px}
+.bar .btn{height:42px;padding:0 12px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px}
+.bar .roll{flex:2;background:#fbe2a0;box-shadow:0 4px 0 #e5bf63}
+.bar .roll:active{box-shadow:0 1px 0 #e5bf63}
+.roll svg{width:24px;height:24px;display:block}
+.roll b{min-width:22px;height:22px;box-sizing:border-box;padding:0 6px;border-radius:11px;background:var(--accent);font:800 13px/22px var(--round);color:#fff}
+.bar .roll.hint{background:var(--accent);color:#fff;box-shadow:0 4px 0 var(--accent-deep);animation:nudge .9s ease-in-out infinite}
+.bar .roll.hint b{background:#fff;color:var(--accent)}
+.quit{flex:1}
+@keyframes nudge{50%{transform:scale(1.04)}}
 
 .ghost-tile{position:fixed;left:0;top:0;z-index:30;width:66px;height:66px;margin:-86px 0 0 -33px;pointer-events:none;filter:drop-shadow(0 10px 8px rgba(74,53,65,.3))}
 .ghost-tile svg{width:100%;height:100%;display:block}
@@ -187,16 +183,13 @@ button{font:inherit;color:inherit}
   <div class="field">
     <div class="view" id="view"><div class="track"><div class="board" id="board" aria-label="積み木の国の地図"></div></div></div>
     <div class="hud">
-      <div class="hud-l">
-        <div class="pill hp" aria-label="体力"><span id="hpicon"></span><span class="hpbar"><i id="hpfill"></i></span><b id="hptext">10/10</b></div>
-        <div class="pill gear"><span id="i-atk" aria-label="攻撃"></span><span id="i-def" aria-label="守り"></span><span class="g" id="i-gold" aria-label="金貨"></span></div>
-      </div>
-      <button class="pill menu" id="quit" type="button">帰還</button>
+      <div class="pill hp" aria-label="体力"><span id="hpicon"></span><span class="hpbar"><i id="hpfill"></i></span><b id="hptext">10/10</b></div>
+      <div class="pill gear"><span id="i-atk" aria-label="攻撃"></span><span id="i-def" aria-label="守り"></span><span class="g" id="i-gold" aria-label="金貨"></span></div>
     </div>
-    <button class="roll" id="roll" type="button" aria-label="リロール。積み木を全部まぜて引き直す"><span id="rollicon"></span><span>リロール</span><b id="rolln">3</b></button>
   </div>
   <div class="tray">
     <div class="hand" id="hand"></div>
+    <div class="bar"><button class="btn roll" id="roll" type="button" aria-label="リロール。積み木を全部まぜて引き直す"><span id="rollicon"></span>リロール<b id="rolln">3</b></button><button class="btn quit" id="quit" type="button">帰還</button></div>
     <div class="decktag" aria-label="のこりの積み木">のこり<b id="deckn">0</b></div>
   </div>
 </div>
