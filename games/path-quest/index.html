@@ -1264,7 +1264,6 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
   <div class="stars" id="t-stars" aria-hidden="true"></div>
   <div class="title">
     <h1 class="logo" aria-label="PATH QUEST"><span><i class="c0">P</i><i class="c1">A</i><i class="c2">T</i><i class="c3">H</i></span><span><i class="c4">Q</i><i class="c0">U</i><i class="c1">E</i><i class="c2">S</i><i class="c3">T</i></span></h1>
-    <div class="t-best pill" id="t-best" aria-label="いちばん遠く"></div>
     <p class="lead">光るマスに積み木を置いて、<br>どこまでものぼろう</p>
     <div class="demo" id="demo"></div>
     <div class="t-foot">
@@ -2806,7 +2805,6 @@ function showTitle(){
   const demo=['',SPR.ob.grass,B(3,5,''), SPR.gem,B(0,6,SPR.soldier),B(2,9,SPR.sword), '',B(1,5,SPR.coin),'', '',SPR.start+SPR.hero,''];
   const laid=[4,5,7];
   $('demo').innerHTML=demo.map((s,i)=>`<div class="cell${laid.includes(i)?' laid':''}">${s?svg(s):''}</div>`).join('');
-  $('t-best').innerHTML=meta.far?`${ico(SPR.flag)}<b>${meta.far}</b>`:'';
   const st=$('t-stars');if(!st.children.length)st.innerHTML=[[18,30],[78,24],[64,44],[30,52],[86,58],[12,66],[52,34]].map(([x,y],k)=>`<i style="left:${x}%;top:${y}%;animation-delay:${(k*.37).toFixed(2)}s"></i>`).join('');
   show('s-title');
 }
@@ -2991,7 +2989,13 @@ function setOver(i){
   const e=elOf(i);if(e&&sel>=0&&fits(run.hand[sel],i,frontier()))e.classList.add('over');
   setPreview(i);
 }
+function dropGhost(){ // a drag that lost its finger: nothing may stay floating (11/4)
+  if(ghost){ghost.remove();ghost=null}
+  if(drag&&drag.moving)setOver(-1);
+  drag=null;
+}
 document.addEventListener('pointerdown',e=>{
+  if(ghost||drag)dropGhost(); // an old drag whose finger went missing ends here
   if(!run||run.phase!=='build'||busy||(e.pointerType==='mouse'&&e.button!==0))return;
   const s=e.target.closest('.slot'),c=e.target.closest('.cell');
   if(!(s&&handEl.contains(s))&&!(c&&board.contains(c)))return;
@@ -3006,13 +3010,16 @@ document.addEventListener('pointermove',e=>{
     drag.moving=true;sel=drag.slot;renderHand();refreshMarks();
     ghost=document.createElement('div');ghost.className='ghost-tile';ghost.innerHTML=svg(tileArt(run.hand[sel],true));
     document.body.appendChild(ghost);
+    try{document.body.setPointerCapture(e.pointerId)}catch(err){} // the hand is drawn again under the finger: the body keeps the finger, so the lift-off is never lost
   }
+  if(e.pointerType==='mouse'&&!e.buttons)return endPointer(e,false); // the button came up outside the page
   e.preventDefault();
   ghost.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;
   setOver(dropCell(e.clientX,e.clientY));
 },{passive:false});
 function endPointer(e,cancel){
-  if(!drag||e.pointerId!==drag.id)return;
+  if(!drag){if(ghost)dropGhost();return}
+  if(e.pointerId!==drag.id)return;
   const d=drag;drag=null;
   if(ghost){ghost.remove();ghost=null}
   setOver(-1);
@@ -3027,6 +3034,9 @@ function endPointer(e,cancel){
 }
 document.addEventListener('pointerup',e=>endPointer(e,false));
 document.addEventListener('pointercancel',e=>endPointer(e,true));
+document.addEventListener('lostpointercapture',e=>{if(e.target===document.body&&drag&&e.pointerId===drag.id)endPointer(e,true)});
+addEventListener('blur',()=>{if(drag||ghost)dropGhost()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&(drag||ghost))dropGhost()});
 document.addEventListener('contextmenu',e=>{if(e.target.closest('.board,.tray,.drawer'))e.preventDefault()});
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter'&&e.key!==' ')return;
