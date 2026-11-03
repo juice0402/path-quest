@@ -52,11 +52,12 @@ button{font:inherit;color:inherit}
 
 /* the field */
 .field{grid-area:field;position:relative;min-height:220px;display:flex;overflow:hidden;background:var(--line)}
-.view{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:none}
-.view::-webkit-scrollbar{display:none}
-.track{padding:calc(var(--hudh) + 4px) 0 10px}
-.board{--w:5;--h:9;position:relative;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));grid-template-rows:repeat(var(--h),minmax(0,1fr));gap:3px;padding:4px;margin:0 auto;width:100%;aspect-ratio:var(--w)/var(--h);touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.view{position:relative;flex:1;min-height:0;overflow:hidden}
+/* the board holds only the rows near the knight and slides down a row each time the knight climbs, so the knight stays second from the bottom */
+.board{--w:6;position:absolute;left:0;right:0;bottom:0;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));grid-auto-rows:var(--cell,60px);gap:3px;padding:4px;transition:transform .17s linear;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .cell{position:relative;min-width:0;min-height:0;background:var(--ground);border-radius:5px}
+.cell.a-grass{--ground:#cdeab3}.cell.a-forest{--ground:#b9dca6}.cell.a-lake{--ground:#f3e6c8}.cell.a-snow{--ground:#eef3fb}.cell.a-castle{--ground:#f6dfe9}
+.cell.fence svg{overflow:visible}
 .cell svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cell.laid{background:transparent}
 .cell.laid svg{overflow:visible}
@@ -185,7 +186,6 @@ button{font:inherit;color:inherit}
 @media (min-width:1100px){
   .app{--slot:96px;max-width:1080px;padding:24px 32px;column-gap:28px;grid-template-columns:minmax(0,1fr) 360px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"field hud" "field tray" "field ."}
   .field{border-radius:22px;box-shadow:inset 0 0 0 5px rgba(74,53,65,.07)}
-  .track{padding:10px 6px 14px}
   .hud{grid-area:hud;position:static;height:auto;flex-wrap:wrap;gap:16px;padding:22px 22px 12px;border-radius:24px 24px 0 0;background:var(--card);text-shadow:none;pointer-events:auto;font-size:22px}
   .hud svg{width:28px;height:28px}
   .gear svg,.hp>span>svg{filter:none}
@@ -220,7 +220,7 @@ button{font:inherit;color:inherit}
     <button class="quit" id="quit" type="button" aria-label="帰還（長押しですぐ帰る）"><svg class="ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17"/></svg><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M13.5 29V18a6.5 6.5 0 0 1 13 0v11z" fill="#e6b98e" stroke="#b08968" stroke-width="2" stroke-linejoin="round"/><path d="M20 12v17" stroke="#b08968" stroke-width="1.5"/><circle cx="23" cy="22" r="1.6" fill="#f2c14e"/><path d="M10.5 29.5h19" stroke="#b08968" stroke-width="2.5" stroke-linecap="round"/></svg></button>
   </div>
   <div class="field">
-    <div class="view" id="view"><div class="track"><div class="board" id="board" aria-label="積み木の国の地図"></div></div></div>
+    <div class="view" id="view"><div class="board" id="board" aria-label="積み木の国の地図"></div></div>
   </div>
   <div class="tray">
     <div class="hand" id="hand"></div>
@@ -231,7 +231,7 @@ button{font:inherit;color:inherit}
 <div class="sheet solid" id="s-title">
   <div class="title">
     <h1 class="logo" aria-label="PATH QUEST"><span><i class="c0">P</i><i class="c1">A</i><i class="c2">T</i><i class="c3">H</i></span><span><i class="c4">Q</i><i class="c0">U</i><i class="c1">E</i><i class="c2">S</i><i class="c3">T</i></span></h1>
-    <p class="lead">光るマスに積み木を置いて、<br>旗まで道をつなごう</p>
+    <p class="lead">光るマスに積み木を置いて、<br>どこまでものぼろう</p>
     <div class="demo" id="demo"></div>
     <button class="btn main" id="t-new" type="button">冒険に出る</button>
     <button class="btn" id="t-cont" type="button" hidden>つづきから</button>
@@ -278,18 +278,21 @@ button{font:inherit;color:inherit}
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const SAVE='pathquest.run.v2', META='pathquest.meta.v1';
+const SAVE='pathquest.run.v3', META='pathquest.meta.v1';
+try{localStorage.removeItem('pathquest.run.v2')}catch(e){} // runs from the flag version can't continue
 const store={
   get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
   del(k){try{localStorage.removeItem(k)}catch(e){}}
 };
 
-/* ---------- geometry ---------- */
-const W=5;
-const DIRS=[[-1,0,1],[0,1,2],[1,0,4],[0,-1,8]]; // N E S W as bits 1 2 4 8
-const BITS=[1,2,4,8];
+/* ---------- geometry: rows count up the screen, row 1 is the toy box ---------- */
+const W=6;
+const BITS=[1,2,4,8]; // N E S W as bits 1 2 4 8; N is up the screen
 const OPP={1:4,2:8,4:1,8:2};
+const DOWN=4;
+const rowOf=i=>Math.floor(i/W),colOf=i=>i%W,idOf=(r,c)=>r*W+c;
+function nbr(i,b){const r=rowOf(i)+(b===1?1:b===4?-1:0),c=colOf(i)+(b===2?1:b===8?-1:0);return r<0||c<0||c>=W?-1:idOf(r,c)}
 const SHAPES=[[5,22],[10,8],[3,9],[6,9],[12,9],[9,9],[11,4],[7,6],[14,4],[13,6],[15,6]]; // tilted toward N-S because the knight walks upward
 const SHAPE_NAME=m=>({5:'まっすぐ',10:'まっすぐ',15:'十字'})[m]||([3,6,12,9].includes(m)?'カーブ':'T字');
 const rnd=n=>Math.floor(Math.random()*n);
@@ -299,7 +302,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const STEP=REDUCED?60:170;
 
-/* ---------- the land: five areas of five stages, the 5th has the captain ---------- */
+/* ---------- the land: one road climbing forever. every 20 rows the land changes and the captain bars the way ---------- */
 const AREAS=[
   {k:'grass',n:'草原'},
   {k:'forest',n:'森'},
@@ -307,10 +310,13 @@ const AREAS=[
   {k:'snow',n:'雪原'},
   {k:'castle',n:'おもちゃの城'}
 ];
-const areaOf=f=>AREAS[Math.floor((Math.max(1,f)-1)/5)%AREAS.length];
-const stepOf=f=>(Math.max(1,f)-1)%5+1;
-const lapOf=f=>Math.floor((Math.max(1,f)-1)/(5*AREAS.length))+1;
-const placeName=f=>`${areaOf(f).n} ${stepOf(f)}`+(lapOf(f)>1?`（${lapOf(f)}周め）`:'');
+const SPAN=20;
+const stepOf=r=>Math.max(0,r-1); // rows climbed
+const areaNo=r=>Math.floor(stepOf(r)/SPAN);
+const areaOf=r=>AREAS[areaNo(r)%AREAS.length];
+const lapOf=r=>Math.floor(areaNo(r)/AREAS.length)+1;
+const lvOf=r=>1+Math.floor(stepOf(r)/8); // how strong the toys are
+const placeName=r=>`${areaOf(r).n} ${stepOf(r)}段`+(lapOf(r)>1?`（${lapOf(r)}周め）`:'');
 
 /* ---------- sprites (100x100) ---------- */
 const svg=s=>`<svg viewBox="0 0 100 100" aria-hidden="true">${s}</svg>`;
@@ -323,7 +329,6 @@ const soldier=(coat,extra)=>SHADOW(15)+
   '<path d="M41 47 59 67M59 47 41 67" stroke="#fffaf6" stroke-width="3"/>'+
   '<circle cx="50" cy="38" r="8" fill="#ffd9c2"/><circle cx="47" cy="38.5" r="1.4" fill="#4a3541"/><circle cx="53" cy="38.5" r="1.4" fill="#4a3541"/><circle cx="45" cy="41.5" r="1.8" fill="#f4a6b8"/><circle cx="55" cy="41.5" r="1.8" fill="#f4a6b8"/>'+
   '<rect x="42" y="13" width="16" height="22" rx="7" fill="#3d4170"/><path d="M42 33h16" stroke="#f2c14e" stroke-width="2.5"/>'+extra;
-const FLAG='<rect x="30" y="73" width="40" height="13" rx="4" fill="#e5bf63"/><rect x="30" y="70" width="40" height="11" rx="4" fill="#fbe2a0"/><path d="M42 72V18" stroke="#b08968" stroke-width="4" stroke-linecap="round"/><path d="M44 19 72 28 44 38z" fill="#ee88ac"/><circle cx="53" cy="28" r="3.2" fill="#fffaf6"/>';
 const SPR={
   start:'<rect x="20" y="50" width="60" height="34" rx="6" fill="#e889ad"/><rect x="20" y="50" width="60" height="8" fill="#d4689a"/><path d="M18 50 26 34h56l-2 16z" fill="#f7c3d4"/><path d="M50 61l3.5 7 7.5 1-5.5 5 1.5 7.5-7-3.8-7 3.8 1.5-7.5-5.5-5 7.5-1z" fill="#ffe08a"/>',
   ob:{
@@ -343,6 +348,7 @@ const SPR={
   potion:'<path d="M37 52 24 42v20z" fill="#f7c3d4"/><path d="M63 52 76 42v20z" fill="#f7c3d4"/><circle cx="50" cy="52" r="14" fill="#ee88ac"/><path d="M43 52a7 7 0 1 1 7 7" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".85"/>',
   sword:'<path d="M64 26 70 32 47 58 41 52z" fill="#eef2f9" stroke="#9aa8c8" stroke-width="2" stroke-linejoin="round"/><path d="M36 50 52 66" stroke="#ee88ac" stroke-width="6" stroke-linecap="round"/><path d="M42 60 34 68" stroke="#b4a3e8" stroke-width="7" stroke-linecap="round"/><circle cx="31" cy="71" r="4" fill="#ffd95e"/>',
   shield:'<path d="M50 28 69 35V51q0 15-19 23-19-8-19-23V35z" fill="#93c3e4" stroke="#fff" stroke-width="3"/><path d="M50 41l3 6 6.6.9-4.8 4.6 1.2 6.5L50 56l-6 3 1.2-6.5-4.8-4.6 6.6-.9z" fill="#fff"/>',
+  fence:'<path d="M-4 55h108M-4 74h108" stroke="#c99b6e" stroke-width="7" stroke-linecap="round"/><path d="M14 88V44l9-11 9 11v44zM41 88V44l9-11 9 11v44zM68 88V44l9-11 9 11v44z" fill="#f6dcb6" stroke="#c99b6e" stroke-width="2.5" stroke-linejoin="round"/>',
   heart:'<path d="M50 74 28 52a12 12 0 0 1 22-14 12 12 0 0 1 22 14z" fill="#e8607e"/>',
   bag:'<path d="M36 42q14-8 28 0l6 28q-20 10-40 0z" fill="#b4a3e8"/><path d="M40 39h20" stroke="#9f8fd6" stroke-width="5" stroke-linecap="round"/><rect x="44" y="52" width="12" height="12" rx="2" fill="#fbe2a0"/>',
   dice:'<rect x="27" y="31" width="46" height="46" rx="11" fill="#e5bf63"/><rect x="27" y="27" width="46" height="44" rx="11" fill="#fbe2a0"/><circle cx="39" cy="38" r="4.5" fill="#c4467a"/><circle cx="50" cy="49" r="4.5" fill="#c4467a"/><circle cx="61" cy="60" r="4.5" fill="#c4467a"/>',
@@ -379,7 +385,7 @@ function evSVG(e){
   return SPR[e.k]||'';
 }
 function deco(i){
-  const h=((i+1)*2654435761+run.floor*40503)>>>0,r=h%9,set=DECO[areaOf(run.floor).k];
+  const h=((i+7)*2654435761)>>>0,r=h%9,set=DECO[areaOf(rowOf(i)).k];
   return r<3?set[r]:'';
 }
 
@@ -390,13 +396,12 @@ const FOES=[
   {t:'cannon',name:'おもちゃの大砲',from:6,hp:1,atk:0},
   {t:'robot',name:'ブリキのロボ',from:10,hp:4,atk:0}
 ];
-const OLD_FOE={slime:'soldier',bat:'bugle',bone:'cannon',golem:'robot'};
 function makeFoe(f){
   const pool=FOES.filter(x=>x.from<=f);
   const t=pool.length>1&&Math.random()<.55?pool[pool.length-1]:pool[rnd(pool.length)];
   return {k:'foe',t:t.t,name:t.name,hp:Math.max(2,2+f+t.hp),atk:Math.max(1,1+Math.floor((f-1)/2)+t.atk),gold:3+Math.floor(f*.8)};
 }
-function makeBoss(f){return {k:'foe',t:'boss',name:'兵隊長',hp:4+Math.round(f*1.6),atk:1+Math.ceil(f/2),gold:10+2*f,boss:true}}
+function makeBoss(f){return {k:'foe',t:'boss',name:'兵隊長',hp:4+Math.round(f*1.2),atk:1+Math.floor(f/2),gold:10+2*f,boss:true}}
 function makeEvent(f){
   const x=Math.random(),fp=Math.min(.3,.16+.012*f);
   if(x<fp)return makeFoe(f);
@@ -416,123 +421,83 @@ const UPS=[
   {k:'hp',name:'体力',desc:'はじめの最大HP+2',icon:'heart',max:10,cost:l=>12+8*l},
   {k:'atk',name:'剣のうで',desc:'はじめの攻撃+1',icon:'sword',max:5,cost:l=>25+20*l},
   {k:'def',name:'盾のうで',desc:'はじめの守り+1',icon:'shield',max:5,cost:l=>25+20*l},
-  {k:'bag',name:'おもちゃ袋',desc:'どのステージも積み木+2',icon:'bag',max:5,cost:l=>18+12*l},
-  {k:'roll',name:'サイコロ',desc:'リロールがステージごとに+1',icon:'dice',max:3,cost:l=>30+25*l},
+  {k:'bag',name:'キャンディ袋',desc:'場所が変わるたびHP+2',icon:'bag',max:5,cost:l=>18+12*l},
+  {k:'roll',name:'サイコロ',desc:'リロールが場所ごとに+1',icon:'dice',max:3,cost:l=>30+25*l},
   {k:'hand',name:'広い手',desc:'えらべる積み木+1（最大6こ）',icon:'hand',max:2,cost:l=>90+70*l}
 ];
 let meta=store.get(META)||{};
 {
   const u=meta.up||{};
   if(u.roll==null&&u.undo!=null)u.roll=u.undo; // the old "undo" upgrade becomes the reroll upgrade
-  meta={bank:meta.bank|0,best:meta.best|0,up:{hp:u.hp|0,atk:u.atk|0,def:u.def|0,bag:u.bag|0,roll:u.roll|0,hand:u.hand|0}};
+  meta={bank:meta.bank|0,best:meta.best|0,far:meta.far|0,up:{hp:u.hp|0,atk:u.atk|0,def:u.def|0,bag:u.bag|0,roll:u.roll|0,hand:u.hand|0}};
 }
 const saveMeta=()=>store.set(META,meta);
 
 /* ---------- run state ---------- */
 let run=store.get(SAVE);
-if(run&&!(run.cells&&run.hand&&run.h))run=null;
-if(run){ // saves from earlier versions
-  const fix=e=>{if(e&&e.k==='foe'&&OLD_FOE[e.t]){e.t=OLD_FOE[e.t];e.name=FOES.find(x=>x.t===e.t).name}};
-  [...run.hand,...run.deck,...run.cells.map(c=>c.tile)].forEach(t=>t&&fix(t.e));
-  if(run.boss)run.boss.name='兵隊長';
-  if(run.rolls==null)run.rolls=3+meta.up.roll;
-  delete run.hist;delete run.undo;
-}
+if(run&&!(run.rows&&run.hand&&run.at>=0))run=null;
 let sel=-1,busy=false,justPlaced=-1;
 const save=()=>{if(run)store.set(SAVE,run)};
+const cellAt=i=>{const row=run.rows[rowOf(i)];return row?row[colOf(i)]:null};
 
 function newRun(){
   const u=meta.up;
-  run={floor:0,maxHp:10+2*u.hp,hp:10+2*u.hp,atk:2+u.atk,def:u.def,gold:0,handSize:4+u.hand,extra:0,phase:'build'};
-  nextFloor();
+  run={maxHp:10+2*u.hp,hp:10+2*u.hp,atk:2+u.atk,def:u.def,gold:0,handSize:4+u.hand,rolls:3+u.roll,rows:{},made:-1,spine:2,at:idOf(1,2),top:1,target:-1,reward:false,phase:'build'};
+  grow();
+  run.hand=Array.from({length:run.handSize},()=>makeTile(1));
+  sel=-1;save();hideSheets();render();afterAction();
 }
-function nextFloor(){
-  run.floor++;
-  genFloor();
-  if(run.floor>meta.best){meta.best=run.floor;saveMeta()}
-  run.phase='build';save();
-  hideSheets();render();follow(run.at,false);
-}
-const heightFor=f=>f<=2?7:f<=5?9:f<=9?11:13;
-function nbr(i,b,h){const r=i/W|0,c=i%W,d=DIRS[BITS.indexOf(b)],rr=r+d[0],cc=c+d[1];return rr<0||rr>=h||cc<0||cc>=W?-1:rr*W+cc}
-function dirBit(a,b){return b===a-W?1:b===a+1?2:b===a+W?4:8}
-function findPath(cells,h,s,g){
-  const N=W*h,wt=Array.from({length:N},()=>1+Math.random()*1.6),dist=new Array(N).fill(Infinity),prev=new Array(N).fill(-1),done=new Array(N).fill(false);
-  dist[s]=0;
-  for(;;){
-    let u=-1,best=Infinity;
-    for(let i=0;i<N;i++)if(!done[i]&&dist[i]<best){best=dist[i];u=i}
-    if(u<0||u===g)break;
-    done[u]=true;
-    for(const b of BITS){const v=nbr(u,b,h);if(v<0||done[v]||cells[v].rock)continue;const nd=dist[u]+wt[v];if(nd<dist[v]){dist[v]=nd;prev[v]=u}}
+function newRow(r){ // a free "spine" runs through every row, so the way up is never walled off
+  const row=Array.from({length:W},()=>({rock:0,gem:0,tile:null}));
+  run.rows[r]=row;
+  if(r<=1){if(r===1)row[2].start=1;run.spine=2;return}
+  const s=stepOf(r),prev=run.rows[r-1],a=run.spine;
+  const b=prev.some(c=>c.tile&&c.tile.gate)?a:Math.min(W-1,Math.max(0,a+rnd(3)-1));
+  if(s%SPAN===0){ // the captain's fence: one gap, and the captain stands in it
+    row.forEach((c,k)=>{if(k!==b)c.rock=2});
+    row[b].tile={m:15,e:makeBoss(lvOf(r)),c:rnd(BLOCKS.length),gate:1};
+  }else{
+    const p=Math.min(.3,.13+s*.002);
+    row.forEach(c=>{if(Math.random()<p)c.rock=1;else if(Math.random()<.035)c.gem=5+2*lvOf(r)});
+    for(let k=0,free=row.filter(c=>!c.rock).length;free<3&&k<30;k++){const c=row[rnd(W)];if(c.rock){c.rock=0;free++}}
+    row[b].rock=0;
   }
-  if(dist[g]===Infinity)return null;
-  const p=[];for(let v=g;v!==-1;v=prev[v])p.push(v);return p.reverse();
+  if(prev[b].rock===1)prev[b].rock=0;
+  run.spine=b;
 }
-function genFloor(){
-  const f=run.floor,h=heightFor(f);
-  let cells,s,g,path;
-  for(let tries=0;tries<60;tries++){
-    cells=Array.from({length:W*h},()=>({rock:0,gem:0,tile:null}));
-    s=(h-1)*W+2;g=rnd(W);
-    const rocks=Math.floor(W*h*.08)+Math.floor(f/4);
-    for(let k=0,guard=0;k<rocks&&guard<300;guard++){const i=rnd(W*h);if(i===s||i===g||i===s-W||cells[i].rock)continue;cells[i].rock=1;k++}
-    path=findPath(cells,h,s,g);
-    if(path)break;
-  }
-  if(!path){cells.forEach(c=>{c.rock=0});path=findPath(cells,h,s,g)}
-  const free=[];cells.forEach((c,i)=>{if(!c.rock&&i!==s&&i!==g&&i!==s-W)free.push(i)});
-  shuffle(free).slice(0,f>=6?2:1).forEach(i=>{cells[i].gem=5+2*f});
-  const deck=[];
-  for(let k=1;k<path.length-1;k++)deck.push(makeTile(f,dirBit(path[k],path[k-1])|dirBit(path[k],path[k+1])));
-  const total=deck.length+18+2*meta.up.bag+run.extra;
-  while(deck.length<total)deck.push(makeTile(f));
-  shuffle(deck);
-  Object.assign(run,{h,cells,s,g,at:s,boss:f%5===0?makeBoss(f):null,hand:deck.splice(0,run.handSize),deck,rolls:3+meta.up.roll,target:-1});
-  sel=-1;
+function grow(){ // rows are made well ahead of the knight and dropped once they are behind
+  const r=rowOf(run.at);
+  for(let k=run.made+1;k<=r+40;k++){newRow(k);run.made=k}
+  for(const k in run.rows)if(+k<r-3)delete run.rows[k];
 }
 
-/* ---------- connections ---------- */
-const maskOf=i=>i===run.s||i===run.g?15:(run.cells[i].tile?run.cells[i].tile.m:0);
-function bfs(from){
-  const prev=new Map([[from,-1]]),q=[from];
-  while(q.length){
-    const i=q.shift();
-    if(i===run.g&&i!==from)continue;
-    const m=maskOf(i);
-    for(const b of BITS){
-      if(!(m&b))continue;
-      const j=nbr(i,b,run.h);if(j<0||prev.has(j))continue;
-      if(!(maskOf(j)&OPP[b]))continue;
-      prev.set(j,i);q.push(j);
-    }
-  }
-  return prev;
-}
-function pathTo(a,b){
-  const prev=bfs(a);if(!prev.has(b))return null;
-  const p=[];for(let v=b;v!==-1;v=prev.get(v))p.push(v);return p.reverse();
-}
+/* ---------- connections: only the open sides of the block the knight stands on, never downward ---------- */
+const exitsOf=i=>{const c=cellAt(i);return !c?0:c.start?11:c.tile?c.tile.m:0};
 function frontier(){
-  const net=bfs(run.s),map=new Map();
-  for(const i of net.keys()){
-    if(i===run.g)continue;
-    const m=maskOf(i);
-    for(const b of BITS){
-      if(!(m&b))continue;
-      const j=nbr(i,b,run.h);
-      if(j<0||j===run.g||j===run.s)continue;
-      const c=run.cells[j];if(c.rock||c.tile)continue;
-      map.set(j,(map.get(j)||0)|OPP[b]);
-    }
+  const map=new Map(),m=exitsOf(run.at)&~DOWN;
+  for(const b of BITS){
+    if(!(m&b))continue;
+    const j=nbr(run.at,b),c=j>=0&&cellAt(j);
+    if(!c||c.rock||c.tile||c.start)continue;
+    map.set(j,OPP[b]);
   }
   return map;
+}
+function gateFrom(i,m){ // the captain's gap that an open side of this block leads into
+  for(const b of BITS){
+    if(b===DOWN||!(m&b))continue;
+    const j=nbr(i,b),c=j>=0&&cellAt(j);
+    if(c&&c.tile&&c.tile.gate&&c.tile.e)return j;
+  }
+  return -1;
 }
 const fits=(t,j,F)=>!!t&&F.has(j)&&!!(t.m&F.get(j));
 const anyFit=(t,F)=>{if(!t)return false;for(const j of F.keys())if(t.m&F.get(j))return true;return false};
 
 /* ---------- rendering ---------- */
 const app=$('app'),view=$('view'),board=$('board'),handEl=$('hand'),rollBtn=$('roll');
+let win={lo:0,hi:0,pitch:60}; // the rows on the board right now
+const elOf=i=>{const r=rowOf(i);return i<0||r<win.lo||r>win.hi?null:board.children[(win.hi-r)*W+colOf(i)]};
 const hero=document.createElement('div');hero.className='hero';hero.innerHTML=svg(SPR.hero);
 $('hpicon').innerHTML=ico(SPR.heart);
 $('rollicon').innerHTML=svg('<path d="M20 12h60" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".45"/>'+[[31,31],[69,31],[50,50],[31,69],[69,69]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="8.5" fill="#fff"/>`).join(''));
@@ -546,10 +511,11 @@ function badge(e){
   return '';
 }
 function cellHTML(i,F){
-  const c=run.cells[i];let cls='cell',inner='',tab='';
-  if(i===run.s){cls+=' start';inner=svg(SPR.start)}
-  else if(i===run.g){cls+=' goal';inner=run.boss?svg(`<g transform="translate(36 -4) scale(.6)">${FLAG}</g>`+SPR.boss)+badge(run.boss):svg(FLAG)}
-  else if(c.rock){cls+=' rock';inner=svg(SPR.ob[areaOf(run.floor).k])}
+  const c=cellAt(i),a=areaOf(rowOf(i)).k;let cls='cell a-'+a,inner='',tab='';
+  if(!c){}
+  else if(c.start){cls+=' start';inner=svg(SPR.start)}
+  else if(c.rock===2){cls+=' fence';inner=svg(SPR.fence)}
+  else if(c.rock){cls+=' rock';inner=svg(SPR.ob[a])}
   else if(c.tile){cls+=' laid'+(i===justPlaced?' new':'');inner=svg(tileArt(c.tile))+badge(c.tile.e)}
   else{
     inner=svg(deco(i)+(c.gem?SPR.gem:''));
@@ -559,16 +525,24 @@ function cellHTML(i,F){
 }
 function renderBoard(F){
   F=F||frontier();
-  board.style.setProperty('--h',run.h);
-  let h='';for(let i=0;i<W*run.h;i++)h+=cellHTML(i,F);
+  const cell=(view.clientWidth-8-3*(W-1))/W,pitch=cell+3,r=rowOf(run.at);
+  const lo=Math.max(0,r-2),hi=lo+Math.ceil(view.clientHeight/pitch)+4;
+  win={lo,hi,pitch};
+  board.style.setProperty('--cell',cell+'px');
+  let h='';for(let rr=hi;rr>=lo;rr--)for(let c=0;c<W;c++)h+=cellHTML(idOf(rr,c),F);
   board.innerHTML=h;board.appendChild(hero);justPlaced=-1;
-  placeHero(run.at,true);
+  slide(false);placeHero(run.at,true);
+}
+function slide(smooth){ // the knight's row sits second from the bottom
+  const y=(rowOf(run.at)-1-win.lo)*win.pitch;
+  if(smooth&&!REDUCED){board.style.transform=`translateY(${y}px)`;return}
+  board.style.transition='none';board.style.transform=`translateY(${y}px)`;void board.offsetWidth;board.style.transition='';
 }
 function refreshMarks(){
   const F=frontier();
-  for(const [j] of F){const el=board.children[j];if(el)el.classList.toggle('fit',sel>=0&&fits(run.hand[sel],j,F))}
+  for(const [j] of F){const el=elOf(j);if(el)el.classList.toggle('fit',sel>=0&&fits(run.hand[sel],j,F))}
 }
-function updateCell(i){const el=board.children[i];if(el&&el!==hero)el.outerHTML=cellHTML(i,null)}
+function updateCell(i){const el=elOf(i);if(el)el.outerHTML=cellHTML(i,null)}
 function renderHand(F){
   F=F||frontier();
   handEl.style.setProperty('--hs',run.hand.length);
@@ -583,16 +557,16 @@ function renderHp(){
   $('hptext').textContent=`${hp}/${m}`;
   $('hp').classList.toggle('dying',preview>0&&preview>=hp);
 }
-function previewFor(hi,j){ // the toy on the block, plus the captain when this block finishes the road to the flag
+function previewFor(hi,j){ // the toy on the block, plus the captain when this block opens onto his gap
   const t=run.hand[hi];if(!t)return 0;
   let d=t.e&&t.e.k==='foe'?dmgFor(t.e):0;
-  if(j>=0&&run.boss&&fits(t,j,frontier())){run.cells[j].tile=t;const done=bfs(run.s).has(run.g);run.cells[j].tile=null;if(done)d+=dmgFor(run.boss)}
+  if(j>=0&&fits(t,j,frontier())){const g=gateFrom(j,t.m);if(g>=0)d+=dmgFor(cellAt(g).tile.e)}
   return d;
 }
 function setPreview(j){const d=sel>=0&&run&&run.phase==='build'?previewFor(sel,j):0;if(d!==preview){preview=d;renderHp()}}
 function renderStats(){
   if(sel<0)preview=0;
-  app.dataset.area=areaOf(run.floor).k;
+  app.dataset.area=areaOf(rowOf(run.at)).k;
   renderHp();
   $('i-atk').innerHTML=ico(SPR.sword)+`<b>${run.atk}</b>`;
   $('i-def').innerHTML=ico(SPR.shield)+`<b>${run.def}</b>`;
@@ -604,27 +578,22 @@ function renderStats(){
 function markStuck(F){rollBtn.classList.toggle('hint',run.phase==='build'&&!busy&&run.rolls>0&&!run.hand.some(t=>anyFit(t,F)))}
 function render(){const F=frontier();renderStats();renderBoard(F);renderHand(F);markStuck(F)}
 function placeHero(i,instant){
-  const el=board.children[i];if(!el||el===hero)return;
+  const el=elOf(i);if(!el)return;
   if(instant)hero.style.transition='none';
   hero.style.width=el.offsetWidth+'px';hero.style.height=el.offsetHeight+'px';
   hero.style.transform=`translate(${el.offsetLeft}px,${el.offsetTop}px)`;
   if(instant){void hero.offsetWidth;hero.style.transition=''}
 }
-function follow(i,smooth){
-  const el=board.children[i];if(!el)return;
-  const top=board.offsetTop+el.offsetTop+el.offsetHeight/2-view.clientHeight*.62;
-  view.scrollTo({top:Math.max(0,top),behavior:smooth&&!REDUCED?'smooth':'auto'});
-}
 function pop(i,text,cls,delay){ // a number over a cell's head
   setTimeout(()=>{
-    const el=board.children[i];if(!el)return;
+    const el=elOf(i);if(!el)return;
     const p=document.createElement('span');p.className='pop '+cls;p.textContent=text;
     p.style.left=(el.offsetLeft+el.offsetWidth/2+(Math.random()*16-8))+'px';p.style.top=(el.offsetTop-4)+'px';
     board.appendChild(p);setTimeout(()=>p.remove(),1000);
   },delay||0);
 }
 function flash(el){if(!el)return;el.classList.remove('bad');void el.offsetWidth;el.classList.add('bad');setTimeout(()=>el.classList.remove('bad'),1150)}
-const flashCell=i=>{if(i>=0)flash(board.children[i])};
+const flashCell=i=>flash(elOf(i));
 const flashSlot=i=>{if(i>=0)flash(handEl.children[i])};
 function hop(){if(REDUCED)return;[...handEl.children].forEach((s,k)=>s.animate([{transform:'none'},{transform:'translateY(-10px)'},{transform:'none'}],{duration:280,delay:k*35}))}
 function lunge(dx,dy){if(!REDUCED)hero.firstElementChild.animate([{transform:'none'},{transform:`translate(${dx}px,${dy}px)`},{transform:'none'}],{duration:200,easing:'ease-out'})}
@@ -652,45 +621,51 @@ function place(j,hi){
   const t=run.hand[hi];
   if(!t)return;
   if(!fits(t,j,frontier())){flashCell(j);flashSlot(hi);return}
-  run.cells[j].tile=t;run.hand[hi]=run.deck.length?run.deck.shift():null;sel=-1;justPlaced=j;
+  cellAt(j).tile=t;run.hand[hi]=makeTile(lvOf(rowOf(run.at)));sel=-1;justPlaced=j;
   run.phase='walk';run.target=j;save(); // saved before the walk, so reloading mid-walk replays it instead of undoing it
   proceed();
 }
 async function proceed(){
   busy=true;render();
-  if(!await walkTo(run.target))return;
-  if(bfs(run.s).has(run.g)){
-    if(!await walkTo(run.g))return;
-    await sleep(350);busy=false;
-    run.phase='reward';run.rewards=pickRewards();save();return showReward();
-  }
-  busy=false;run.phase='build';render();afterAction();
+  if(run.at!==run.target&&!await stepTo(run.target))return;
+  const g=gateFrom(run.at,exitsOf(run.at)); // the road touches the captain's gap: walk in and face him
+  if(g>=0&&!await stepTo(g))return;
+  busy=false;grow();
+  if(run.reward){run.reward=false;run.phase='reward';run.rewards=pickRewards();save();render();return showReward()}
+  run.phase='build';render();afterAction();
 }
-async function walkTo(target){
-  const path=pathTo(run.at,target)||[run.at,target];
-  for(let k=1;k<path.length;k++){
-    const i=path[k],c=run.cells[i];
-    const foe=i===run.g?run.boss:(c.tile&&c.tile.e&&c.tile.e.k==='foe'?c.tile.e:null);
-    if(foe){ // fight from the cell in front of the toy
-      hero.classList.remove('walk');
-      if(!await battle(foe,run.at,i)){await sleep(800);busy=false;gameOver('hp');return false}
-      if(i===run.g)run.boss=null;else c.tile.e=null;
-      updateCell(i);await sleep(STEP);
-    }
-    hero.classList.add('walk');
-    run.at=i;placeHero(i);follow(i,true);
-    await sleep(STEP);
-    if(resolve(i)){renderStats();hero.classList.remove('walk');await sleep(STEP*2)}
+async function stepTo(i){
+  const c=cellAt(i),foe=c.tile&&c.tile.e&&c.tile.e.k==='foe'?c.tile.e:null;
+  if(foe){ // fight from the cell in front of the toy
+    hero.classList.remove('walk');
+    if(!await battle(foe,run.at,i)){await sleep(800);busy=false;gameOver('hp');return false}
+    c.tile.e=null;updateCell(i);await sleep(STEP);
   }
+  hero.classList.add('walk');
+  const up=rowOf(i)>rowOf(run.at);
+  run.at=i;placeHero(i);if(up)slide(true);
+  await sleep(STEP);
+  if(rowOf(i)>run.top)reach(rowOf(i));
+  if(resolve(i)){renderStats();hero.classList.remove('walk');await sleep(STEP*2)}
   hero.classList.remove('walk');
   return true;
 }
+function reach(r){ // a new row: every 10 a reward, every 20 a new land
+  run.top=r;const s=stepOf(r);
+  if(s>meta.far){meta.far=s;saveMeta()}
+  if(s>0&&s%SPAN===0){
+    run.rolls=3+meta.up.roll;
+    const h=Math.min(2*meta.up.bag,run.maxHp-run.hp);if(h>0){run.hp+=h;pop(run.at,`+${h}`,'p-heal')}
+    renderStats();
+  }
+  if(s>0&&s%10===0)run.reward=true;
+}
 async function battle(e,at,i){
-  const hEl=board.children[at],eEl=board.children[i];
+  const hEl=elOf(at),eEl=elOf(i);
   const back=Math.max(0,e.atk-run.def),rounds=roundsOf(e);
   const gap=REDUCED?80:rounds<=4?340:Math.max(170,1400/rounds);
   const dx=(eEl.offsetLeft-hEl.offsetLeft)*.3,dy=(eEl.offsetTop-hEl.offsetTop)*.3;
-  follow(at,true);await sleep(REDUCED?0:140);
+  await sleep(REDUCED?0:140);
   for(let r=0;r<rounds;r++){
     run.hp-=back; // the toy hits
     pop(at,back?`-${back}`:'0',back?'p-hurt':'p-guard');if(back)hurt();
@@ -705,7 +680,7 @@ async function battle(e,at,i){
   return true;
 }
 function resolve(i){
-  const c=run.cells[i];if(!c||!c.tile)return false;
+  const c=cellAt(i);if(!c||!c.tile)return false;
   let hit=false;const e=c.tile.e;
   if(e&&e.k!=='foe'){
     c.tile.e=null;hit=true;
@@ -720,8 +695,8 @@ function resolve(i){
 }
 function reroll(){
   if(busy||!run||run.phase!=='build'||run.rolls<=0)return;
-  run.deck.push(...run.hand.filter(Boolean));shuffle(run.deck);
-  run.hand=run.hand.map(()=>run.deck.length?run.deck.shift():null);
+  const lv=lvOf(rowOf(run.at));
+  run.hand=run.hand.map(()=>makeTile(lv));
   run.rolls--;sel=-1;render();
   [...handEl.children].forEach(s=>s.classList.add('deal'));
   afterAction();
@@ -730,29 +705,28 @@ async function afterAction(){
   const F=frontier();
   let why='';
   if(!F.size){why='dead';flashCell(run.at)}
-  else if(run.hand.every(x=>!x))why='empty';
   else if(run.rolls<=0&&!run.hand.some(t=>anyFit(t,F))){why='nofit';run.hand.forEach((t,i)=>{if(t)flashSlot(i)})}
   markStuck(F);
   if(!why)return save();
   busy=true;renderStats();await sleep(1200);busy=false;gameOver(why);
 }
 
-/* ---------- rewards ---------- */
+/* ---------- rewards: every 10 rows ---------- */
 function pickRewards(){
-  const f=run.floor,heal=5+Math.floor(f/2),g=6+2*f;
+  const lv=lvOf(rowOf(run.at)),heal=5+Math.floor(lv/2),g=6+2*lv;
   let pool=[
     {k:'heal',icon:'potion',t:`HPを${heal}回復`,s:`いま ${Math.max(0,run.hp)}/${run.maxHp}`,v:heal},
     {k:'maxhp',icon:'heart',t:'最大HP+3',s:'HPも3ふえる',v:3},
     {k:'atk',icon:'sword',t:'攻撃+1',s:`いま ${run.atk}`},
     {k:'def',icon:'shield',t:'守り+1',s:`いま ${run.def}`},
-    {k:'deck',icon:'bag',t:'積み木+3',s:'次のステージから'},
+    {k:'roll',icon:'dice',t:'リロール+2',s:`いま ${run.rolls}`},
     {k:'gold',icon:'coin',t:`金貨+${g}`,s:'持ち帰って強化に使える',v:g}
   ];
   if(run.hp>=run.maxHp)pool=pool.filter(x=>x.k!=='heal');
   return shuffle(pool).slice(0,3);
 }
 function showReward(){
-  $('r-head').textContent=`${placeName(run.floor)} クリア`;
+  $('r-head').textContent=`${stepOf(run.top)}段 のぼった`;
   $('r-list').innerHTML=run.rewards.map((x,i)=>`<button class="choice" type="button" data-i="${i}">${svg(SPR[x.icon])}<span><b>${x.t}</b><small>${x.s}</small></span><span></span></button>`).join('');
   renderStats();show('s-reward');
 }
@@ -762,20 +736,20 @@ function takeReward(i){
   if(x.k==='maxhp'){run.maxHp+=3;run.hp+=3}
   if(x.k==='atk')run.atk++;
   if(x.k==='def')run.def++;
-  if(x.k==='deck')run.extra+=3;
+  if(x.k==='roll')run.rolls+=2;
   if(x.k==='gold')run.gold+=x.v;
-  run.rewards=null;nextFloor();
+  run.rewards=null;run.phase='build';hideSheets();render();afterAction();
 }
 
-/* ---------- end of run ---------- */
+/* ---------- end of run: the gold comes home, the upgrades stay, and the next climb starts from the toy box ---------- */
 function gameOver(why){
   if(!run)return;
-  meta.bank+=run.gold;meta.best=Math.max(meta.best,run.floor);saveMeta();
-  const p=placeName(run.floor);
-  const head={hp:`${p}で力つきた`,dead:`${p}で行き止まり`,nofit:`${p}で道がとぎれた`,empty:`${p}で積み木がなくなった`,quit:`${p}から帰還した`};
-  const note={dead:'道の先に置ける所がなくなった。\n',nofit:'つながる積み木がなく、リロールものこっていなかった。\n',empty:'積み木を使いきった。\n'};
+  meta.bank+=run.gold;meta.far=Math.max(meta.far,stepOf(run.top));saveMeta();
+  const p=placeName(rowOf(run.at));
+  const head={hp:`${p}で力つきた`,dead:`${p}で行き止まり`,nofit:`${p}で道がとぎれた`,quit:`${p}から帰還した`};
+  const note={dead:'道の先に置ける所がなくなった。\n',nofit:'つながる積み木がなく、リロールものこっていなかった。\n'};
   $('o-head').textContent=head[why]||head.quit;
-  $('o-text').textContent=`${note[why]||''}持ち帰った金貨 ${run.gold}\nいちばん遠く ${placeName(meta.best)}`;
+  $('o-text').textContent=`${note[why]||''}持ち帰った金貨 ${run.gold}\nいちばん遠く ${meta.far}段`;
   store.del(SAVE);run=null;busy=false;
   hideSheets();show('s-over');
 }
@@ -786,13 +760,13 @@ function hideSheets(){SHEETS.forEach(id=>$(id).hidden=true)}
 function show(id){hideSheets();$(id).hidden=false;const b=$(id).querySelector('button:not([hidden])');if(b&&matchMedia('(hover:hover)').matches)b.focus({preventScroll:true})}
 function showTitle(){
   const B=(c,m,e)=>blockSVG(c)+roadSVG(m,BLOCKS[c][1])+e;
-  const demo=['',SPR.ob.grass,FLAG, SPR.gem,B(0,6,SPR.soldier),B(2,9,SPR.sword), '',B(1,5,SPR.coin),'', '',SPR.start+SPR.hero,''];
+  const demo=['',SPR.ob.grass,B(3,5,''), SPR.gem,B(0,6,SPR.soldier),B(2,9,SPR.sword), '',B(1,5,SPR.coin),'', '',SPR.start+SPR.hero,''];
   const laid=[4,5,7];
   $('demo').innerHTML=demo.map((s,i)=>`<div class="cell${laid.includes(i)?' laid':''}">${s?svg(s):''}</div>`).join('');
   $('t-cont').hidden=!run;
-  if(run)$('t-cont').textContent=`つづきから　${placeName(run.floor)}`;
+  if(run)$('t-cont').textContent=`つづきから　${placeName(rowOf(run.at))}`;
   $('t-shop').textContent=`強化する　金${meta.bank}`;
-  $('t-best').textContent=meta.best?`いちばん遠く ${placeName(meta.best)}`:'';
+  $('t-best').textContent=meta.far?`いちばん遠く ${meta.far}段`:'';
   show('s-title');
 }
 function showShop(){
@@ -812,9 +786,9 @@ function buy(k){
 }
 function resume(){
   hideSheets();
-  if(run.phase==='reward'&&run.rewards){render();follow(run.at,false);return showReward()}
-  if(run.phase==='walk'&&run.target>=0){follow(run.at,false);return proceed()}
-  run.phase='build';busy=false;render();follow(run.at,false);afterAction();
+  if(run.phase==='reward'&&run.rewards){render();return showReward()}
+  if(run.phase==='walk'&&run.target>=0)return proceed();
+  run.phase='build';busy=false;render();afterAction();
 }
 
 /* ---------- input: one pointer path for tap and drag (touch, pen, mouse) ---------- */
@@ -827,9 +801,9 @@ function dropCell(x,y){ // the cell under the floating block wins; the cell unde
 }
 function setOver(i){
   if(overCell===i)return;
-  if(overCell>=0&&board.children[overCell])board.children[overCell].classList.remove('over');
+  const o=elOf(overCell);if(o)o.classList.remove('over');
   overCell=i;
-  if(i>=0&&sel>=0&&fits(run.hand[sel],i,frontier()))board.children[i].classList.add('over');
+  const e=elOf(i);if(e&&sel>=0&&fits(run.hand[sel],i,frontier()))e.classList.add('over');
   setPreview(i);
 }
 document.addEventListener('pointerdown',e=>{
@@ -907,7 +881,7 @@ $('o-title').addEventListener('click',showTitle);
 $('sh-list').addEventListener('click',e=>{const b=e.target.closest('.choice');if(b&&!b.disabled)buy(b.dataset.k)});
 $('sh-go').addEventListener('click',()=>{if(run)resume();else newRun()});
 $('sh-back').addEventListener('click',showTitle);
-window.addEventListener('resize',()=>{if(run)placeHero(run.at,true)});
+window.addEventListener('resize',()=>{if(run)renderBoard()});
 
 showTitle();
 })();
