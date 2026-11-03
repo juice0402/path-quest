@@ -1287,7 +1287,7 @@ function cellHTML(i,F){
     if(F&&F.has(i)){cls+=' front'+(sel>=0&&fits(run.hand[sel],i,F)?' fit':'');tab=' tabindex="0" role="button" aria-label="道の先"'}
   }
   const tn=tintOf(rowOf(i));if(tn)tab=tab?tab.replace('style="','style="'+tn+';'):` style="${tn}"`;
-  const fx=FXH.cell(i,c);cls+=fx.cls;inner=fx.pre+inner+fx.post;
+  const fx=FXH.cell(i,c);cls+=fx.cls;inner=fx.pre+inner+fx.post; // the cell's own <svg> is found with :scope>svg, so pre may go before it
   return `<div class="${cls}" data-i="${i}"${tab}>${inner}</div>`;
 }
 function renderBoard(F){
@@ -1395,7 +1395,7 @@ const flashCell=i=>flash(elOf(i));
 const flashSlot=i=>{if(i>=0)flash(handEl.children[i])};
 function hop(){if(REDUCED)return;[...handEl.children].forEach((s,k)=>s.animate([{transform:'none'},{transform:'translateY(-10px)'},{transform:'none'}],{duration:280,delay:k*35}))}
 function lunge(dx,dy){if(!REDUCED)hero.firstElementChild.animate([{transform:'none'},{transform:`translate(${dx}px,${dy}px)`,offset:.35},{transform:`translate(${dx}px,${dy}px)`,offset:.6},{transform:'none'}],{duration:240,easing:'ease-out'})} // the hold at the front is the hit-stop
-function struck(el){const s=el&&el.firstElementChild;if(s&&!REDUCED)s.animate([{transform:'none'},{transform:'translateX(7%)',filter:'brightness(1.35)'},{transform:'translateX(-7%)'},{transform:'none'}],{duration:220})}
+function struck(el){const s=el&&(el.querySelector(':scope>svg')||el.firstElementChild);if(s&&!REDUCED)s.animate([{transform:'none'},{transform:'translateX(7%)',filter:'brightness(1.35)'},{transform:'translateX(-7%)'},{transform:'none'}],{duration:220})}
 function hurt(){hero.classList.remove('hurt');void hero.offsetWidth;hero.classList.add('hurt')}
 
 /* ---------- effects ---------- */
