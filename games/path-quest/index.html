@@ -691,6 +691,11 @@ function resume(){
 /* ---------- input: one pointer path for tap and drag (touch, pen, mouse) ---------- */
 let drag=null,ghost=null,overCell=-1;
 function cellUnder(x,y){const el=document.elementFromPoint(x,y),c=el&&el.closest('.cell');return c&&board.contains(c)?+c.dataset.i:-1}
+const LIFT=53; // the ghost tile floats this far above the finger (.ghost-tile margin-top -86px, height 66px)
+function dropCell(x,y){ // the cell under the floating tile wins; the cell under the finger is the fallback
+  const F=frontier(),t=run.hand[sel],up=cellUnder(x,y-LIFT),at=cellUnder(x,y);
+  if(fits(t,up,F))return up;if(fits(t,at,F))return at;return up>=0?up:at;
+}
 function setOver(i){
   if(overCell===i)return;
   if(overCell>=0&&board.children[overCell])board.children[overCell].classList.remove('over');
@@ -715,7 +720,7 @@ document.addEventListener('pointermove',e=>{
   }
   e.preventDefault();
   ghost.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;
-  setOver(cellUnder(e.clientX,e.clientY));
+  setOver(dropCell(e.clientX,e.clientY));
 },{passive:false});
 function endPointer(e,cancel){
   if(!drag||e.pointerId!==drag.id)return;
@@ -724,7 +729,7 @@ function endPointer(e,cancel){
   setOver(-1);
   if(cancel)return;
   if(d.moving){
-    const t=cellUnder(e.clientX,e.clientY);
+    const t=dropCell(e.clientX,e.clientY);
     if(t>=0)place(t,d.slot);else say('光るマスの上で指をはなす');
     return;
   }
