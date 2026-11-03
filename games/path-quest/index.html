@@ -606,7 +606,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .sh-tabs button.on{background:var(--paper);color:var(--frame);outline:2px solid var(--frame);outline-offset:-2px}
 /* ===== fx css A: panels ===== */
 /* the tray the panels sit in: --rim shows in the gaps, --tray is the socket under a panel (seen when one hops up) */
-:root{--tray:#4f7a3e;--rim:#8bb672;--st:rgba(255,255,255,.55)}
+:root{--tray:#4f7a3e;--rim:#8bb672;--st:rgba(255,255,255,.36)}
 .app[data-area=forest]{--tray:#3f6331;--rim:#789f60}
 .app[data-area=lake]{--tray:#93744c;--rim:#d0b68c}
 .app[data-area=snow]{--tray:#7486a6;--rim:#b6c6de}
@@ -626,15 +626,15 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .cell.wear{border-radius:4px 4px 4px 9px}.cell.wear.t3{border-radius:9px 4px 4px 4px}
 /* the panel's own trim, under its picture: stitches on felt, nails and moss on boards, a bevel on stone and ice, gold inlay on marble */
 .cell::before{content:"";position:absolute;inset:4px 4px calc(var(--th) + 4px);border-radius:3px;pointer-events:none}
-.a-grass::before,.a-forest::before,.cell.a-castle.odd::before{border:1.5px dashed var(--st)}
+.a-grass::before,.a-forest::before,.cell.a-castle.odd::before{border:1.2px dashed var(--st)}
 .cell.a-forest{--st:rgba(40,78,26,.28)}
 .cell.a-castle{--st:rgba(214,150,70,.55)}
 .cell.front::before{border-color:transparent}
 /* grass: now and then a felt of another dye lot, sewn with a running stitch */
-.cell.a-grass.alt{--tone:rgba(255,246,170,.16);--st:rgba(255,255,255,.75)}
+.cell.a-grass.alt{--tone:rgba(255,246,170,.16);--st:rgba(255,255,255,.52)}
 .a-grass.alt::before{border-style:dotted;border-width:2px}
 /* forest: mossy wooden boards among the moss */
-.cell.a-forest.alt{--side:rgba(84,44,16,.42);--mat:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22 preserveAspectRatio=%22none%22%3E%3Cg fill=%22none%22 stroke=%22%238a5530%22 stroke-opacity=%22.22%22 stroke-width=%221%22%3E%3Cpath d=%22M0 12q30-3 50 1t50-1M0 22q25 2 52-1t48 2%22/%3E%3Cpath d=%22M0 45q28-3 55 0t45-1M0 55q30 3 60 0t40 1%22/%3E%3Cpath d=%22M0 78q26-3 50 0t50 0M0 89q30 2 52-1t48 1%22/%3E%3C/g%3E%3Cellipse cx=%2270%22 cy=%2250%22 rx=%225%22 ry=%222.4%22 fill=%22none%22 stroke=%22%238a5530%22 stroke-opacity=%22.35%22 stroke-width=%221%22/%3E%3Cellipse cx=%2270%22 cy=%2250%22 rx=%222%22 ry=%221%22 fill=%22%238a5530%22 fill-opacity=%22.3%22/%3E%3Cellipse cx=%2222%22 cy=%2284%22 rx=%224%22 ry=%222%22 fill=%22none%22 stroke=%22%238a5530%22 stroke-opacity=%22.3%22 stroke-width=%221%22/%3E%3C/svg%3E"),linear-gradient(170deg,#d6aa78,#c2915c);--chk:linear-gradient(rgba(84,44,16,0) 32%,rgba(84,44,16,.36) 32% 34.5%,rgba(255,255,255,.16) 34.5% 36%,rgba(84,44,16,0) 36% 64%,rgba(84,44,16,.36) 64% 66.5%,rgba(255,255,255,.16) 66.5% 68%,rgba(84,44,16,0) 68%);--tex:none}
+.cell.a-forest.alt{--side:rgba(84,44,16,.42);--mat:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22 preserveAspectRatio=%22none%22%3E%3Cg fill=%22none%22 stroke=%22%238a5530%22 stroke-opacity=%22.22%22 stroke-width=%221%22%3E%3Cpath d=%22M0 12q30-3 50 1t50-1M0 22q25 2 52-1t48 2%22/%3E%3Cpath d=%22M0 45q28-3 55 0t45-1M0 55q30 3 60 0t40 1%22/%3E%3Cpath d=%22M0 78q26-3 50 0t50 0M0 89q30 2 52-1t48 1%22/%3E%3C/g%3E%3Cellipse cx=%2270%22 cy=%2250%22 rx=%225%22 ry=%222.4%22 fill=%22none%22 stroke=%22%238a5530%22 stroke-opacity=%22.35%22 stroke-width=%221%22/%3E%3Cellipse cx=%2270%22 cy=%2250%22 rx=%222%22 ry=%221%22 fill=%22%238a5530%22 fill-opacity=%22.3%22/%3E%3Cellipse cx=%2222%22 cy=%2284%22 rx=%224%22 ry=%222%22 fill=%22none%22 stroke=%22%238a5530%22 stroke-opacity=%22.3%22 stroke-width=%221%22/%3E%3C/svg%3E"),linear-gradient(170deg,#d3bd96,#c0a77f);--chk:linear-gradient(rgba(84,44,16,0) 32%,rgba(84,44,16,.24) 32% 34.5%,rgba(255,255,255,.14) 34.5% 36%,rgba(84,44,16,0) 36% 64%,rgba(84,44,16,.24) 64% 66.5%,rgba(255,255,255,.14) 66.5% 68%,rgba(84,44,16,0) 68%);--tex:none}
 .a-forest.alt::before{inset:0 0 var(--th);border:0;border-radius:4px;background:radial-gradient(circle at 9% 17%,#6e4526 0 1.4px,rgba(0,0,0,0) 2px),radial-gradient(circle at 91% 17%,#6e4526 0 1.4px,rgba(0,0,0,0) 2px),radial-gradient(circle at 9% 83%,#6e4526 0 1.4px,rgba(0,0,0,0) 2px),radial-gradient(circle at 91% 50%,#6e4526 0 1.4px,rgba(0,0,0,0) 2px),radial-gradient(ellipse 42% 30% at 0 100%,rgba(116,170,84,.95),rgba(116,170,84,.6) 55%,rgba(116,170,84,0) 72%),radial-gradient(ellipse 26% 18% at 100% 0,rgba(116,170,84,.85),rgba(116,170,84,0) 70%)}
 .a-forest.alt.t1::before{background-position:0 0,0 0,0 0,0 0,100% 100%,0 0}
 .cell.a-forest.alt.t1{--chk:linear-gradient(rgba(84,44,16,0) 48.5%,rgba(84,44,16,.36) 48.5% 51%,rgba(255,255,255,.16) 51% 52.5%,rgba(84,44,16,0) 52.5%)}
@@ -761,8 +761,8 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .cell.lf-sway>svg{transform-origin:50% 88%;animation:lfSway 5s ease-in-out calc(var(--lfT,0s) + var(--lfd,0s)) infinite}
 .cell.lf-wob>svg{transform-origin:50% 88%;animation:lfWob 7s ease-in-out calc(var(--lfT,0s) + var(--lfd,0s)) infinite}
 .lf-d1{--lfd:-.9s}.lf-d2{--lfd:-1.8s}.lf-d3{--lfd:-2.7s}.lf-d4{--lfd:-3.6s}.lf-d5{--lfd:-4.5s}.lf-d6{--lfd:-5.4s}.lf-d7{--lfd:-6.3s}
-@keyframes lfSway{0%,100%{rotate:-1.4deg}50%{rotate:1.4deg}}
-@keyframes lfWob{0%,80%,100%{rotate:0deg}83%{rotate:3.5deg}86%{rotate:-3deg}89%{rotate:2deg}92%{rotate:-1deg}95%{rotate:.4deg}}
+@keyframes lfSway{0%,100%{transform:rotate(-1.4deg)}50%{transform:rotate(1.4deg)}}
+@keyframes lfWob{0%,80%,100%{transform:rotate(0deg)}83%{transform:rotate(3.5deg)}86%{transform:rotate(-3deg)}89%{transform:rotate(2deg)}92%{transform:rotate(-1deg)}95%{transform:rotate(.4deg)}}
 .lf-chim{width:12%;aspect-ratio:20/24;translate:-50% -50%}
 .lf-blk{width:calc(20.6% * var(--k,1));aspect-ratio:3;translate:-50% -50%;opacity:0;animation:lfBlink 5.2s linear calc(var(--lfT,0s) + var(--sd,0s)) infinite}
 @keyframes lfBlink{0%,93%{opacity:0}93.6%,96.4%{opacity:1}97%,100%{opacity:0}}
@@ -956,7 +956,7 @@ const STEP=REDUCED?60:170;
 const FXH={on:{},cells:[],
   add(n,f){(this.on[n]=this.on[n]||[]).push(f)},
   emit(n,d){const a=this.on[n];if(a)for(const f of a){try{f(d||{})}catch(err){console.error('fx',n,err)}}},
-  cell(i,c,F){let cls='',pre='',post='';for(const f of this.cells){let r=null;try{r=f(i,c,F)}catch(err){console.error('fx cell',err)}if(r){if(r.cls)cls+=' '+r.cls;if(r.pre)pre+=r.pre;if(r.post)post+=r.post}}return {cls,pre,post}}
+  cell(i,c,F){let cls='',pre='',post='',sty='';for(const f of this.cells){let r=null;try{r=f(i,c,F)}catch(err){console.error('fx cell',err)}if(r){if(r.cls)cls+=' '+r.cls;if(r.pre)pre+=r.pre;if(r.post)post+=r.post;if(r.sty)sty+=r.sty+';'}}return {cls,pre,post,sty}}
 };
 
 /* ---------- the land: one road climbing forever. every 20 rows the land changes and the captain bars the way ---------- */
@@ -1502,7 +1502,7 @@ function cellHTML(i,F){
     if(F&&F.has(i)){cls+=' front'+(sel>=0&&fits(run.hand[sel],i,F)?' fit':'');tab=' tabindex="0" role="button" aria-label="道の先"'}
   }
   const tn=tintOf(rowOf(i));if(tn)tab=tab?tab.replace('style="','style="'+tn+';'):` style="${tn}"`;
-  const fx=FXH.cell(i,c,F);cls+=fx.cls;inner=fx.pre+inner+fx.post; // the cell's own <svg> is found with :scope>svg, so pre may go before it
+  const fx=FXH.cell(i,c,F);cls+=fx.cls;inner=fx.pre+inner+fx.post;if(fx.sty)tab=tab.includes('style="')?tab.replace('style="','style="'+fx.sty):tab+` style="${fx.sty}"`; // the cell's own <svg> is found with :scope>svg, so pre may go before it
   return `<div class="${cls}" data-i="${i}"${tab}>${inner}</div>`;
 }
 const GAP=4; // the tray between the panels (.board gap)
@@ -2547,7 +2547,7 @@ if(/fxtest/.test(location.hash))window.PQ={get run(){return run},FXH,render,rend
 /* every ground panel gets its own cut of felt, tone and trim (classes v*, t*, wear, alt = the land's second material, odd = the castle checker);
    obstacles get a soft contact shadow, a little base of their land and their own pose; the tray takes the dimension's colour */
 const A_H=(i,s)=>{let h=Math.imul(((i|0)+0x9e3779b9)^s,0x85ebca6b);h^=h>>>13;h=Math.imul(h,0xc2b2ae35);h^=h>>>16;return h>>>0};
-const A_ALT={grass:5,forest:4,lake:4,snow:4};
+const A_ALT={grass:5,forest:7,lake:4,snow:4};
 FXH.cells.push((i,c)=>{
   const h=A_H(i,1),r=rowOf(i),a=areaOf(r).k;
   let cls='v'+(h&15)+' t'+((h>>>4)&3);
@@ -2916,7 +2916,7 @@ const LF=(()=>{
   }
   function pass(F){ // the first cell of a full redraw: start the clock, see what is on screen, and let critters that can't stay run off
     S.F=F;const fresh=run!==S.run;if(fresh)reset();
-    board.style.setProperty('--lfT',(-now()/1000).toFixed(3)+'s');
+    S.T=(-now()/1000).toFixed(3)+'s'; // the clock goes on each cell that has a life, not on the board: a new value on the board would restyle every panel
     const r=rowOf(run.at);S.vlo=r-1;S.vhi=win.hi-3;S.dim=dimOf(r); // renderBoard keeps 4 rows past the screen; no layout is read here
     S.boss=bossCells();
     for(const p of S.plant.keys())if(rowOf(p)<r-3)S.plant.delete(p);
@@ -2960,12 +2960,12 @@ const LF=(()=>{
       else if((h>>>5)%3===1)o.pre+=`<i class="lf-pk lf-1 lf-s-cat" style="${at(26,58)}${dir(-1)}${sd(9)}"></i>`;
       if(night)o.post+=`<i class="lf-door" style="${at(47,72)}${sd(11)}"></i>`;
     }else if(a==='forest'){
-      o.cls=' lf-sway lf-d'+(h%8);
-      if(h%10<6)o.post+=`<i class="lf-leaf lf-1 lf-s-leaf" style="${at(32,40)}${sd(3)}"></i>`;
-      if((h>>>5)%3===0)o.pre+=`<i class="lf-pk lf-pk2 lf-1 lf-s-sqh" style="${at(66,30)}${dir(1)}${sd(9)}"></i>`;
+      if(h%5<2)o.cls=' lf-sway lf-d'+(h%8);
+      if(h%20<7)o.post+=`<i class="lf-leaf lf-1 lf-s-leaf" style="${at(32,40)}${sd(3)}"></i>`;
+      if((h>>>5)%4===0)o.pre+=`<i class="lf-pk lf-pk2 lf-1 lf-s-sqh" style="${at(66,30)}${dir(1)}${sd(9)}"></i>`;
     }else if(a==='lake'){
-      o.post+=`<i class="lf-rip" style="${at(30,64)}${sd(3)}"></i>`;
-      if(h%10<5)o.post+=`<i class="lf-fish lf-1 lf-s-fish" style="${at(24,64)}${fx}${sd(7)}"></i>`;
+      if(h%5<3)o.post+=`<i class="lf-rip" style="${at(30,64)}${sd(3)}"></i>`;
+      if(h%10<3)o.post+=`<i class="lf-fish lf-1 lf-s-fish" style="${at(24,64)}${fx}${sd(7)}"></i>`;
     }else if(a==='snow'){
       if((h>>>3)%3===0)o.cls=' lf-wob lf-d'+(h%8);
       o.post+=`<i class="lf-blk lf-1 lf-s-blink" style="${at(47.3,40)};rotate:${p.ro}deg;--k:${p.s.toFixed(3)}${sd(5)}"></i>`;
@@ -2990,30 +2990,32 @@ const LF=(()=>{
       const k=!S.off.has('crit')&&critterKind(i,c);if(k)post+=critterHTML(i,k);
       const p=S.plant.get(i);if(p)post+=`<i class="lf-sp lf-st lf-1 lf-s-${p.k}" style="left:${p.x}%;top:${p.y}%"></i>`;
     }else if(c.rock===1&&!c.foe&&vis&&!S.off.has('ob')){const o=obLife(i,areaOf(r).k,r);pre+=o.pre;post+=o.post;cls+=o.cls}
-    return {cls,pre,post};
+    return {cls,pre,post,sty:(cls||pre||post)?'--lfT:'+S.T:''};
   });
   FXH.add('update',({i})=>{const el=elOf(i);if(el)el.style.setProperty('--lfT',(-now()/1000).toFixed(3)+'s')});
 
   /* the layer over the panels: a trim where the land changes, bunting on every 10th row (on the captain's row once he is down) */
   function layer(){
     let L=S.layer;if(!L){L=document.createElement('div');L.className='lf-l';L.setAttribute('aria-hidden','true');S.layer=L}
-    let h='';const c0=elOf(idOf(win.hi,0));if(!c0){L.remove();return}
-    const ch=c0.offsetHeight,gap=Math.max(0,win.pitch-ch),bw=board.clientWidth,tOf=r=>{const e=elOf(idOf(r,0));return e?e.offsetTop:null};
+    let h='';if(!elOf(idOf(win.hi,0))){L.remove();return}
+    // the grid is regular (4px padding, rows from win.hi down), so positions are worked out instead of read: no forced layout
+    const ch=win.pitch-GAP,gap=GAP,bw=W*ch+(W-1)*GAP+8,tOf=r=>r<win.lo||r>win.hi?null:4+(win.hi-r)*win.pitch,lOf=b=>4+b*win.pitch;
     for(let r=Math.max(2,win.lo);r<=win.hi;r++){
       const s=stepOf(r),t=tOf(r);if(t==null)continue;
       if(s%SPAN===0){ // the captain's row is the new land's first row: its lower edge gets the new land's trim
         const k=areaOf(r).k;
-        for(let b=0;b<W;b++){if(S.boss.has(idOf(r,b)))continue;const e=elOf(idOf(r,b)),l=b?e.offsetLeft-gap/2:0,w=b===W-1?bw-l:e.offsetLeft+e.offsetWidth+gap/2-l;
+        for(let b=0;b<W;b++){if(S.boss.has(idOf(r,b)))continue;const l=b?lOf(b)-gap/2:0,w=b===W-1?bw-l:lOf(b)+ch+gap/2-l;
           h+=`<i class="lf-seam lf-s-${k}" style="top:${(t+ch+gap/2).toFixed(1)}px;left:${l.toFixed(1)}px;width:${w.toFixed(1)}px"></i>`}
       }
       if(s%10===0&&!Array.from({length:W},(_,b)=>bossLive(r,b)).some(Boolean)){
         const el=now()-(S.cheer&&S.cheer.r===r?S.cheer.t:-1e9),N=8,P=PAL.map((_,k)=>PAL[(k+S.seed)%PAL.length]);
-        let pn='';for(let k=0;k<N;k++){const u=(k+.5)/N,v=(u*2)%1,[c1,c2]=P[k%P.length];
+        let pn='';const rr=s%SPAN?r-1:r;for(let k=0;k<N;k++){const u=(k+.5)/N,v=(u*2)%1,[c1,c2]=P[k%P.length];
+          {const j=idOf(rr,Math.min(W-1,Math.floor(u*W))),cc=cellAt(j);if(j===run.at||(S.F&&S.F.has(j))||cc&&(cc.foe||cc.tile&&cc.tile.e&&cc.tile.e.k==='foe'))continue} // no flag over the knight, a toy or a place to build
           pn+=`<i class="lf-pn" style="left:${(u*100).toFixed(2)}%;top:${(3.6*v*(1-v)*ch*.16).toFixed(1)}px;--c:${c1};--e:${c2};--k:${k};--sd:-${(k*.37).toFixed(2)}s"></i>`}
         h+=`<div class="lf-bun${el<1600?' lf-ch':''}" style="top:${(s%SPAN?t+ch+gap/2:t-gap/2).toFixed(1)}px;--cd:${(-el/1000).toFixed(3)}s"><svg viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 0Q25 18 50 0Q75 18 100 0" stroke="#b08968" stroke-width="1.4" fill="none" vector-effect="non-scaling-stroke"/></svg>${pn}</div>`;
       }
     }
-    L.innerHTML=h;board.appendChild(L);
+    L.style.setProperty('--lfT',S.T||'0s');L.innerHTML=h;board.appendChild(L);
   }
   function sky(){ // the sky over the field: two or three soft cloud shadows drift across, never restarted
     if(REDUCED)return;
@@ -3028,8 +3030,8 @@ const LF=(()=>{
   function placeTrain(){
     const t=S.tr;if(!t)return;const e=elOf(idOf(t.r,0));
     if(!e){t.a.cancel();t.el.remove();S.tr=null;return}
-    if(t.el.parentNode!==board)board.appendChild(t.el);
-    t.el.style.top=(e.offsetTop+e.offsetHeight-t.el.offsetHeight*.94).toFixed(1)+'px';
+    if(t.el.parentNode!==board){t.el.style.setProperty('--lfT',S.T||'0s');board.appendChild(t.el)}
+    t.h=t.h||t.el.offsetHeight;t.el.style.top=(4+(win.hi-t.r)*win.pitch+win.pitch-GAP-t.h*.94).toFixed(1)+'px';
   }
   FXH.add('render',()=>{if(!run||S.off.has('layer'))return;sky();layer();placeTrain()});
 
