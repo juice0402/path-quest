@@ -66,7 +66,7 @@ CSS = f'''/* ===== Canva UI 11/4 ===== */
 /* planks: the nail ends keep their shape and the middle stretches */
 .btn.main,.dt-btn,.rw-go,.skn .sb-go,.sh-nav .go{{--capw:32px;box-sizing:border-box;clip-path:none;border-radius:0;background:none;box-shadow:none;
   border-style:solid;border-color:transparent;border-width:0 var(--capw);border-image-source:var(--ui-plank);border-image-slice:0 {CAP} fill;border-image-width:0 var(--capw);border-image-repeat:stretch;
-  filter:drop-shadow(0 3px 0 rgba(58,28,8,.45))}}
+  filter:drop-shadow(0 4px 0 rgba(58,28,8,.5))}}
 .btn.main:active,.dt-btn:active,.rw-go:active,.skn .sb-go:active,.sh-nav .go:active{{transform:translateY(2px);box-shadow:none;filter:drop-shadow(0 1px 0 rgba(58,28,8,.45))}}
 .btn.play::after{{display:none}}
 .dt-btn,.rw-go,.skn .sb-go{{border-image-source:var(--ui-plank-green);color:#fff;text-shadow:0 2px 0 #1e5233,0 0 1px #1e5233}}
@@ -89,6 +89,11 @@ CSS = f'''/* ===== Canva UI 11/4 ===== */
 .sh-det::before,.sh-det::after{{display:none}}
 .say{{border-width:11px;border-image-width:11px;padding:2px 6px;filter:drop-shadow(0 3px 0 rgba(48,22,6,.4))}}
 .skn{{border-width:12px;border-image-width:12px;padding:0 2px 0 0;filter:drop-shadow(0 4px 0 rgba(48,22,6,.4))}}
+/* side by side in one row: one height and one depth (the paper's dark edge and the plank's shadow are both 4px) */
+.sh-top .pill.bank{{box-sizing:border-box;height:44px;padding:0 14px 0 8px;box-shadow:0 4px 0 var(--frame)}}
+.sh-top .pill.bank svg{{width:28px;height:28px}}
+.dt-sub{{height:52px;box-shadow:0 4px 0 var(--frame)}}
+.skn .sb-x{{box-shadow:0 4px 0 var(--frame)}}
 /* the wooden wall behind the shop and under the field */
 .sheet.shop{{background:#4a250d}}
 .sh{{background:var(--ui-wall) center/cover,#b57336}}
