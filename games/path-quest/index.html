@@ -46,14 +46,18 @@ body{font-family:var(--round);font-weight:500;-webkit-tap-highlight-color:transp
 button{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
-.app{--slot:min(76px,calc((min(100vw,520px) - 82px)/6));box-sizing:border-box;height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:10px;padding-block:6px 10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+/* phone: a thin status row, the field edge to edge, the toy box's front board stuck to the bottom.
+   hud-a lays the status over the field instead of above it. 1100px and wider: the field on the left, the box lid on the right */
+.app{--slot:min(64px,calc((min(100vw,520px) - 40px)/7));--hudh:44px;position:relative;box-sizing:border-box;height:100%;max-width:520px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hud" "field" "tray";padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.app.hud-a{grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"field" "tray"}
 
-/* the field: the status floats on it */
-.field{position:relative;flex:1;min-height:220px;display:flex;border-radius:18px;overflow:hidden;background:var(--line);box-shadow:0 4px 0 rgba(74,53,65,.12)}
+/* the field */
+.field{grid-area:field;position:relative;min-height:220px;display:flex;overflow:hidden;background:var(--line)}
 .view{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:none}
 .view::-webkit-scrollbar{display:none}
-.track{padding:52px 0 12px}
-.board{--w:5;--h:9;position:relative;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));grid-template-rows:repeat(var(--h),minmax(0,1fr));gap:3px;padding:4px;margin:0 auto;width:min(100%,460px);aspect-ratio:var(--w)/var(--h);max-width:100%;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.track{padding:4px 0 10px}
+.app.hud-a .track{padding-top:calc(var(--hudh) + 4px)}
+.board{--w:5;--h:9;position:relative;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));grid-template-rows:repeat(var(--h),minmax(0,1fr));gap:3px;padding:4px;margin:0 auto;width:100%;aspect-ratio:var(--w)/var(--h);touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .cell{position:relative;min-width:0;min-height:0;background:var(--ground);border-radius:5px}
 .cell svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cell.laid{background:transparent}
@@ -91,20 +95,35 @@ button{font:inherit;color:inherit}
 .p-deal{color:var(--deal)}.p-hurt{color:var(--foe)}.p-guard{color:var(--dim)}.p-gold{color:var(--gold)}.p-heal{color:var(--heal)}.p-gear{color:var(--gear)}
 @keyframes rise{from{transform:translate(-50%,4px) scale(.7)}20%{transform:translate(-50%,-6px) scale(1.15)}to{transform:translate(-50%,-32px);opacity:0}}
 
-/* status floating over the field */
-.hud{position:absolute;top:8px;left:8px;right:8px;z-index:6;display:flex;gap:6px;pointer-events:none}
-.pill{display:flex;align-items:center;gap:7px;height:36px;box-sizing:border-box;padding:0 12px;border-radius:18px;background:rgba(255,250,246,.95);box-shadow:0 3px 0 rgba(74,53,65,.16);font:800 16px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap}
-.pill svg{width:21px;height:21px;flex:none;display:block}
-.hp{flex:1;min-width:0}
-.hpbar{position:relative;flex:1;min-width:28px;height:12px;border-radius:6px;background:#f6d3dc;overflow:hidden}
-.hpbar i{position:absolute;inset:0 auto 0 0;width:100%;border-radius:6px;background:var(--hp);transition:width .25s}
-.gear{flex:none;gap:10px}
-.gear span{display:flex;align-items:center;gap:3px}
+/* status: one thin row. hp is a row of ten little blocks; while a block is held, the part it would cost blinks pale */
+.hud{grid-area:hud;box-sizing:border-box;height:var(--hudh);display:flex;align-items:center;gap:10px;padding:0 6px 0 10px;font:800 15px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hud svg{width:20px;height:20px;flex:none;display:block}
+.hp{display:flex;align-items:center;gap:5px;min-width:0}
+.hp.dying b{color:var(--foe)}
+.blocks{display:flex;gap:2px}
+.blocks i{position:relative;width:10px;height:15px;border-radius:3px;background:#f6d3dc;overflow:hidden}
+.blocks u,.blocks s{position:absolute;top:0;bottom:0;left:0}
+.blocks u{background:var(--hp)}
+.blocks s{background:#fff;animation:lose .45s ease-in-out infinite alternate}
+@keyframes lose{from{opacity:.2}to{opacity:.8}}
+.gear{display:flex;align-items:center;gap:9px;margin-left:auto}
+.gear span{display:flex;align-items:center;gap:2px}
 .gear .g b{color:var(--gold)}
+.quit{position:relative;flex:none;width:38px;height:38px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 2px 0 var(--edge);cursor:pointer}
+.hud .quit svg{position:absolute;inset:0;width:100%;height:100%}
+.quit .ring circle{fill:none;stroke:var(--accent);stroke-width:3.5;stroke-linecap:round;stroke-dasharray:107;stroke-dashoffset:107;transform:rotate(-90deg);transform-origin:50% 50%}
+.quit.hold .ring circle{animation:hold .65s linear forwards}
+.quit:active{transform:translateY(2px);box-shadow:0 0 0 var(--edge)}
+.quit:disabled{opacity:.4;cursor:default}
+@keyframes hold{to{stroke-dashoffset:0}}
+.app.hud-a .hud{position:absolute;top:0;left:0;right:0;z-index:6;pointer-events:none;text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 4px #fff}
+.app.hud-a .quit{pointer-events:auto}
+.app.hud-a .blocks i{box-shadow:0 0 0 1.5px #fff}
+.app.hud-a .gear svg,.app.hud-a .hp>span>svg{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1px #fff)}
 
-/* the tray: blocks keep one size whether there are 4 or 6, wide buttons under them */
-.tray{position:relative;display:flex;flex-direction:column;gap:9px;padding:12px 10px 10px;border-radius:18px;background:var(--card);box-shadow:0 4px 0 var(--edge);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.hand{--hs:4;display:grid;grid-template-columns:repeat(var(--hs),var(--slot));justify-content:center;gap:6px}
+/* the tray: the front board of the toy box. blocks keep one size whether there are 4 or 6; the die sits at the right end and is the one loud thing */
+.tray{grid-area:tray;position:relative;display:flex;align-items:center;gap:8px;padding:12px 6px 10px;background:var(--card);border-top:7px solid var(--edge);box-shadow:inset 0 2px 0 #fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.hand{--hs:4;flex:1;display:grid;grid-template-columns:repeat(var(--hs),var(--slot));justify-content:center;gap:4px}
 .slot{position:relative;aspect-ratio:1;max-width:100%;border-radius:13px;cursor:grab;transition:transform .1s}
 .slot svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .slot .badge{right:2px;bottom:5px;font-size:11px}
@@ -115,18 +134,14 @@ button{font:inherit;color:inherit}
 .slot.deal{animation:deal .3s ease-out backwards}
 .slot.deal:nth-child(2){animation-delay:.04s}.slot.deal:nth-child(3){animation-delay:.08s}.slot.deal:nth-child(4){animation-delay:.12s}.slot.deal:nth-child(5){animation-delay:.16s}.slot.deal:nth-child(6){animation-delay:.2s}
 @keyframes deal{from{transform:translateY(40%) scale(.7);opacity:0}}
-.decktag{position:absolute;left:14px;top:-11px;padding:4px 9px;border-radius:10px;background:#fff;box-shadow:0 2px 0 var(--edge);font:800 12px/1 var(--round);color:var(--dim)}
-.decktag b{margin-left:3px;font-size:13px;color:var(--ink)}
-.bar{display:flex;gap:10px}
-.bar .btn{height:42px;padding:0 12px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px}
-.bar .roll{flex:2;background:#fbe2a0;box-shadow:0 4px 0 #e5bf63}
-.bar .roll:active{box-shadow:0 1px 0 #e5bf63}
-.roll svg{width:24px;height:24px;display:block}
-.roll b{min-width:22px;height:22px;box-sizing:border-box;padding:0 6px;border-radius:11px;background:var(--accent);font:800 13px/22px var(--round);color:#fff}
-.bar .roll.hint{background:var(--accent);color:#fff;box-shadow:0 4px 0 var(--accent-deep);animation:nudge .9s ease-in-out infinite}
-.bar .roll.hint b{background:#fff;color:var(--accent)}
-.quit{flex:1}
-@keyframes nudge{50%{transform:scale(1.04)}}
+.dice{position:relative;flex:none;width:var(--slot);height:var(--slot);padding:0;border:0;border-radius:14px;background:var(--accent);box-shadow:0 4px 0 var(--accent-deep);cursor:pointer}
+.dice svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.dice b{position:absolute;top:-8px;right:-4px;min-width:22px;height:22px;box-sizing:border-box;padding:0 6px;border-radius:11px;background:#fff;box-shadow:0 2px 0 var(--edge);font:800 13px/22px var(--round);font-variant-numeric:tabular-nums;color:var(--accent)}
+.dice:active{transform:translateY(3px);box-shadow:0 1px 0 var(--accent-deep)}
+.dice:disabled{background:#dccbd2;box-shadow:none;transform:translateY(3px);cursor:default}
+.dice:disabled b{color:var(--dim)}
+.dice.hint{animation:nudge .9s ease-in-out infinite}
+@keyframes nudge{50%{transform:scale(1.08)}}
 
 .ghost-tile{position:fixed;left:0;top:0;z-index:30;width:66px;height:66px;margin:-86px 0 0 -33px;pointer-events:none;filter:drop-shadow(0 10px 8px rgba(74,53,65,.3))}
 .ghost-tile svg{width:100%;height:100%;display:block}
@@ -171,26 +186,51 @@ button{font:inherit;color:inherit}
 .title .btn{width:100%}
 .record{min-height:14px;font-size:14px;color:var(--dim)}
 
+/* wide screens: the field fills the left, the box lid on the right holds the status, the blocks in rows of three and the die */
+@media (min-width:1100px){
+  .app,.app.hud-a{--slot:96px;max-width:1080px;padding:24px 32px;column-gap:28px;grid-template-columns:minmax(0,1fr) 360px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"field hud" "field tray" "field ."}
+  .field{border-radius:22px;box-shadow:inset 0 0 0 5px rgba(74,53,65,.07)}
+  .track,.app.hud-a .track{padding:10px 6px 14px}
+  .app .hud,.app.hud-a .hud{position:static;height:auto;flex-wrap:wrap;gap:16px;padding:22px 22px 12px;border-radius:24px 24px 0 0;background:var(--card);text-shadow:none;pointer-events:auto;font-size:22px}
+  .hud svg{width:28px;height:28px}
+  .app.hud-a .gear svg,.app.hud-a .hp>span>svg{filter:none}
+  .app.hud-a .blocks i{box-shadow:none}
+  .hp{flex:1 0 100%;gap:8px}
+  .blocks{gap:4px}
+  .blocks i{width:18px;height:26px;border-radius:5px}
+  .gear{margin-left:0;gap:20px}
+  .gear span{gap:5px}
+  .quit{margin-left:auto;width:48px;height:48px}
+  .tray{flex-direction:column;gap:18px;padding:14px 22px 24px;border-top:0;border-radius:0 0 24px 24px;box-shadow:0 8px 0 var(--edge)}
+  .hand{flex:none;grid-template-columns:repeat(3,var(--slot));gap:12px}
+  .slot .badge{font-size:14px}
+  .dice{width:84px;height:84px;border-radius:20px;box-shadow:0 6px 0 var(--accent-deep)}
+  .dice b{min-width:28px;height:28px;border-radius:14px;font-size:16px;line-height:28px}
+  .badge{font-size:15px}
+  .pop{font-size:28px}
+}
+
 @media (prefers-reduced-motion:reduce){
   .hero,.slot{transition:none}
-  .hero.walk svg,.hero.walk .key,.cell.fit::after,.roll.hint,.slot.deal{animation:none}
+  .hero.walk svg,.hero.walk .key,.cell.fit::after,.dice.hint,.slot.deal{animation:none}
+  .blocks s{animation:none;opacity:.6}
   .cell.new svg,.pop,.hero.hurt svg{animation-duration:.01s}
 }
 </style>
 </head>
 <body>
 <div class="app look-a" id="app" data-area="grass">
+  <div class="hud">
+    <div class="hp" id="hp" aria-label="体力"><span id="hpicon"></span><span class="blocks" id="hpblocks"></span><b id="hptext">10/10</b></div>
+    <div class="gear"><span id="i-atk" aria-label="攻撃"></span><span id="i-def" aria-label="守り"></span><span class="g" id="i-gold" aria-label="金貨"></span></div>
+    <button class="quit" id="quit" type="button" aria-label="帰還（長押しですぐ帰る）"><svg class="ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17"/></svg><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M13.5 29V18a6.5 6.5 0 0 1 13 0v11z" fill="#e6b98e" stroke="#b08968" stroke-width="2" stroke-linejoin="round"/><path d="M20 12v17" stroke="#b08968" stroke-width="1.5"/><circle cx="23" cy="22" r="1.6" fill="#f2c14e"/><path d="M10.5 29.5h19" stroke="#b08968" stroke-width="2.5" stroke-linecap="round"/></svg></button>
+  </div>
   <div class="field">
     <div class="view" id="view"><div class="track"><div class="board" id="board" aria-label="積み木の国の地図"></div></div></div>
-    <div class="hud">
-      <div class="pill hp" aria-label="体力"><span id="hpicon"></span><span class="hpbar"><i id="hpfill"></i></span><b id="hptext">10/10</b></div>
-      <div class="pill gear"><span id="i-atk" aria-label="攻撃"></span><span id="i-def" aria-label="守り"></span><span class="g" id="i-gold" aria-label="金貨"></span></div>
-    </div>
   </div>
   <div class="tray">
     <div class="hand" id="hand"></div>
-    <div class="bar"><button class="btn roll" id="roll" type="button" aria-label="リロール。積み木を全部まぜて引き直す"><span id="rollicon"></span>リロール<b id="rolln">3</b></button><button class="btn quit" id="quit" type="button">帰還</button></div>
-    <div class="decktag" aria-label="のこりの積み木">のこり<b id="deckn">0</b></div>
+    <button class="dice" id="roll" type="button" aria-label="リロール。積み木を全部まぜて引き直す"><span id="rollicon"></span><b id="rolln">3</b></button>
   </div>
 </div>
 
@@ -203,6 +243,7 @@ button{font:inherit;color:inherit}
     <button class="btn" id="t-cont" type="button" hidden>つづきから</button>
     <button class="btn" id="t-shop" type="button">強化する</button>
     <div class="record" id="t-best"></div>
+    <button class="btn link" id="t-look" type="button"></button>
   </div>
 </div>
 
@@ -501,7 +542,7 @@ const anyFit=(t,F)=>{if(!t)return false;for(const j of F.keys())if(t.m&F.get(j))
 const app=$('app'),view=$('view'),board=$('board'),handEl=$('hand'),rollBtn=$('roll');
 const hero=document.createElement('div');hero.className='hero';hero.innerHTML=svg(SPR.hero);
 $('hpicon').innerHTML=ico(SPR.heart);
-$('rollicon').innerHTML=ico(SPR.dice);
+$('rollicon').innerHTML=svg('<path d="M20 12h60" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".45"/>'+[[31,31],[69,31],[50,50],[31,69],[69,69]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="8.5" fill="#fff"/>`).join(''));
 function badge(e){
   if(!e)return '';
   if(e.k==='foe'){const d=dmgFor(e);return `<span class="badge ${d?'b-foe':'b-zero'}">-${d}</span>`}
@@ -539,13 +580,27 @@ function renderHand(F){
   F=F||frontier();
   handEl.style.setProperty('--hs',run.hand.length);
   handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${anyFit(t,F)?'':' dull'}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}">${svg(tileArt(t,true))}${badge(t.e)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('');
-  $('deckn').textContent=run.deck.length;
 }
+let preview=0; // the hp the held block would cost
+function renderHp(){
+  const hp=Math.max(0,run.hp),m=run.maxHp,after=Math.max(0,hp-preview),part=(v,k)=>Math.min(1,Math.max(0,v/m*10-k));
+  let h='';
+  for(let k=0;k<10;k++){const f=part(hp,k),a=part(after,k);h+=`<i><u style="width:${f*100}%"></u>${f>a?`<s style="left:${a*100}%;width:${(f-a)*100}%"></s>`:''}</i>`}
+  $('hpblocks').innerHTML=h;
+  $('hptext').textContent=`${hp}/${m}`;
+  $('hp').classList.toggle('dying',preview>0&&preview>=hp);
+}
+function previewFor(hi,j){ // the toy on the block, plus the captain when this block finishes the road to the flag
+  const t=run.hand[hi];if(!t)return 0;
+  let d=t.e&&t.e.k==='foe'?dmgFor(t.e):0;
+  if(j>=0&&run.boss&&fits(t,j,frontier())){run.cells[j].tile=t;const done=bfs(run.s).has(run.g);run.cells[j].tile=null;if(done)d+=dmgFor(run.boss)}
+  return d;
+}
+function setPreview(j){const d=sel>=0&&run&&run.phase==='build'?previewFor(sel,j):0;if(d!==preview){preview=d;renderHp()}}
 function renderStats(){
-  const hp=Math.max(0,run.hp);
+  if(sel<0)preview=0;
   app.dataset.area=areaOf(run.floor).k;
-  $('hptext').textContent=`${hp}/${run.maxHp}`;
-  $('hpfill').style.width=(hp/run.maxHp*100)+'%';
+  renderHp();
   $('i-atk').innerHTML=ico(SPR.sword)+`<b>${run.atk}</b>`;
   $('i-def').innerHTML=ico(SPR.shield)+`<b>${run.def}</b>`;
   $('i-gold').innerHTML=ico(SPR.coin)+`<b>${run.gold}</b>`;
@@ -593,7 +648,7 @@ function tapSlot(i){
   const t=run.hand[i];if(!t)return;
   if(sel!==i&&!anyFit(t,frontier()))return flashSlot(i);
   sel=sel===i?-1:i;
-  renderHand();refreshMarks();
+  renderHand();refreshMarks();setPreview(-1);
 }
 function tapCell(i){
   if(sel<0){if(frontier().has(i))hop();return}
@@ -782,6 +837,7 @@ function setOver(i){
   if(overCell>=0&&board.children[overCell])board.children[overCell].classList.remove('over');
   overCell=i;
   if(i>=0&&sel>=0&&fits(run.hand[sel],i,frontier()))board.children[i].classList.add('over');
+  setPreview(i);
 }
 document.addEventListener('pointerdown',e=>{
   if(!run||run.phase!=='build'||busy||(e.pointerType==='mouse'&&e.button!==0))return;
@@ -830,7 +886,28 @@ document.addEventListener('keydown',e=>{
 
 /* ---------- buttons ---------- */
 rollBtn.addEventListener('click',reroll);
-$('quit').addEventListener('click',()=>{if(!run||busy)return;$('q-text').textContent=`ここまでの金貨 ${run.gold} を持ち帰って、強化に使える。`;show('s-quit')});
+{ // a tap asks first; holding until the ring fills goes home at once
+  const q=$('quit');let t=0,held=false;
+  const stop=()=>{clearTimeout(t);q.classList.remove('hold')};
+  q.addEventListener('pointerdown',e=>{
+    if(!run||busy||(e.pointerType==='mouse'&&e.button!==0))return;
+    held=false;q.classList.add('hold');
+    t=setTimeout(()=>{held=true;stop();if(run&&!busy)gameOver('quit')},650);
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(k=>q.addEventListener(k,stop));
+  q.addEventListener('contextmenu',e=>e.preventDefault());
+  q.addEventListener('click',()=>{
+    if(held){held=false;return}
+    if(!run||busy)return;
+    $('q-text').textContent=`ここまでの金貨 ${run.gold} を持ち帰って、強化に使える。`;show('s-quit');
+  });
+}
+{ // trial only: switch between the two status layouts on the title screen
+  const LOOK='pathquest.look.v1',b=$('t-look');
+  const apply=()=>{const a=store.get(LOOK)==='a';app.classList.toggle('hud-a',a);b.textContent=`画面の見本：${a?'案A':'案B'}（タップで${a?'案B':'案A'}）`};
+  b.addEventListener('click',()=>{store.set(LOOK,store.get(LOOK)==='a'?'b':'a');apply()});
+  apply();
+}
 $('q-no').addEventListener('click',hideSheets);
 $('q-yes').addEventListener('click',()=>gameOver('quit'));
 $('r-list').addEventListener('click',e=>{const b=e.target.closest('.choice');if(b)takeReward(+b.dataset.i)});
