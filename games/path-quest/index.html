@@ -734,14 +734,14 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const STEP=REDUCED?60:170;
-/* ---------- field effects: the modules at the end hook in with FXH.add(event,fn); FXH.cells adds classes and inner html to every cell.
+/* ---------- field effects: the modules at the end hook in with FXH.add(event,fn); FXH.cells (fn(i,c,F) → {cls,pre,post}; F = the open cells, null when one cell is redrawn) adds classes and inner html to every cell.
    events: render {lo,hi,pitch,cell} · update {i} (one cell redrawn) · place {j} (a block lands) · step {from,to,up} ·
    strike {i,at,d,crit,atk,foeHp,boss,king} (the knight hits) · hurt {at,b,boss} · kill {i,e} (a toy breaks) · toyhit {i,d,cls} ·
    boom {at,R} (marble bomb) · skill {id} · reach {r,s} (a new row) · tap {i} · over {at} (the knight falls) ---------- */
 const FXH={on:{},cells:[],
   add(n,f){(this.on[n]=this.on[n]||[]).push(f)},
   emit(n,d){const a=this.on[n];if(a)for(const f of a){try{f(d||{})}catch(err){console.error('fx',n,err)}}},
-  cell(i,c){let cls='',pre='',post='';for(const f of this.cells){let r=null;try{r=f(i,c)}catch(err){console.error('fx cell',err)}if(r){if(r.cls)cls+=' '+r.cls;if(r.pre)pre+=r.pre;if(r.post)post+=r.post}}return {cls,pre,post}}
+  cell(i,c,F){let cls='',pre='',post='';for(const f of this.cells){let r=null;try{r=f(i,c,F)}catch(err){console.error('fx cell',err)}if(r){if(r.cls)cls+=' '+r.cls;if(r.pre)pre+=r.pre;if(r.post)post+=r.post}}return {cls,pre,post}}
 };
 
 /* ---------- the land: one road climbing forever. every 20 rows the land changes and the captain bars the way ---------- */
@@ -1287,7 +1287,7 @@ function cellHTML(i,F){
     if(F&&F.has(i)){cls+=' front'+(sel>=0&&fits(run.hand[sel],i,F)?' fit':'');tab=' tabindex="0" role="button" aria-label="道の先"'}
   }
   const tn=tintOf(rowOf(i));if(tn)tab=tab?tab.replace('style="','style="'+tn+';'):` style="${tn}"`;
-  const fx=FXH.cell(i,c);cls+=fx.cls;inner=fx.pre+inner+fx.post; // the cell's own <svg> is found with :scope>svg, so pre may go before it
+  const fx=FXH.cell(i,c,F);cls+=fx.cls;inner=fx.pre+inner+fx.post; // the cell's own <svg> is found with :scope>svg, so pre may go before it
   return `<div class="${cls}" data-i="${i}"${tab}>${inner}</div>`;
 }
 function renderBoard(F){
