@@ -778,7 +778,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .lf-ch .lf-pn{animation:lfCheer 1.1s cubic-bezier(.3,1.5,.5,1) calc(var(--cd,0s) + var(--k,0) * .07s) 1 backwards,lfPn 1.7s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite alternate}
 @keyframes lfCheer{0%{translate:0 0;scale:1}35%{translate:0 -50%;scale:1.3}100%{translate:0 0;scale:1}}
 @keyframes lfPn{from{transform:rotate(calc(var(--a,0deg) - 6deg))}to{transform:rotate(calc(var(--a,0deg) + 6deg))}}
-.lf-train,.lf-band{position:absolute;left:0;top:0}
+.lf-train,.lf-band{position:absolute;left:0;top:0;z-index:2} /* over the obstacles and the laid blocks (they come later than the cells), under the knight (11/4) */
 .lf-train{width:calc(var(--cell,60px) * 2.1);aspect-ratio:3}
 .lf-band{width:calc(var(--cell,60px) * 1.5);aspect-ratio:2.25}
 .lf-train>b,.lf-band>b{position:absolute;inset:0;background:center/contain no-repeat}
@@ -1878,8 +1878,10 @@ function newRow(r){ // a free "spine" runs through every row, so the way up is n
   const s=stepOf(r),prev=run.rows[r-1],a=run.spine;
   const b=prev.some(c=>c.tile&&c.tile.gate)?a:Math.min(W-1,Math.max(0,a+rnd(3)-1));
   if(s%SPAN===0||s%DIM_LEN===0){ // the captain's fence (the king's, every 50): one gap, and he stands in it
-    row.forEach((c,k)=>{if(k!==b)c.rock=2});
-    row[b].tile={m:15,e:s%DIM_LEN===0?makeKing(lvOf(r),r):makeBoss(lvOf(r),r),c:rnd(BLOCKS.length),gate:1,kg:s%DIM_LEN===0?1:0}; // kg: the king's gap opens into a portal once he falls
+    const nb=b<=2?b+1:b-1,pz=[idOf(r,b),idOf(r,nb),idOf(r+1,b),idOf(r+1,nb)]; // a square of four cross panels: this row and the next (11/4)
+    row.forEach((c,k)=>{if(k!==b&&k!==nb)c.rock=2});
+    row[b].tile={m:15,e:s%DIM_LEN===0?makeKing(lvOf(r),r):makeBoss(lvOf(r),r),c:0,gate:1,anc:1,pz,bi:pz[0],kg:s%DIM_LEN===0?1:0}; // kg: the king's gap opens into a portal once he falls
+    Object.assign(row[nb],{rock:0,gem:0,foe:null,tile:{m:15,e:null,c:0,gate:1,pz,bi:pz[0]}});
   }else{
     const p=Math.min(.3,.13+s*.002);
     row.forEach(c=>{if(Math.random()<p)c.rock=1;else if(Math.random()<.035)c.gem=5+2*lvOf(r)});
@@ -1890,6 +1892,8 @@ function newRow(r){ // a free "spine" runs through every row, so the way up is n
   }
   if(prev[b].rock===1)prev[b].rock=0;
   prev[b].foe=null;
+  const sq=prev.find(c=>c.tile&&c.tile.anc); // the top half of the captain's square
+  if(sq)for(const id of sq.tile.pz)if(rowOf(id)===r)Object.assign(row[colOf(id)],{rock:0,gem:0,foe:null,tile:{m:15,e:null,c:0,gate:2,pz:sq.tile.pz,bi:sq.tile.bi}});
   run.spine=b;
 }
 function grow(){ // rows are made well ahead of the knight and dropped once they are behind
@@ -1903,6 +1907,17 @@ const exitsOf=i=>{const c=cellAt(i);return !c?0:c.start?11:c.tile?c.tile.m:0};
 function frontier(){
   const map=new Map(),m=exitsOf(run.at)&~DOWN,here=cellAt(run.at),jump=!!(here&&here.tile&&here.tile.sp==='spring');
   map.rock=new Map(); // obstacles next in line: only a ghost block goes there
+  map.via=new Map(); // in the captain's square: which of its panels the knight walks to first
+  const pz=here&&here.tile&&here.tile.pz;
+  if(pz&&!sqBoss(pz)){
+    for(const p of pz)for(const b of BITS){
+      if(b===DOWN)continue;const j=nbr(p,b);if(j<0||pz.includes(j))continue;const c=cellAt(j);if(!c)continue;
+      if((c.rock===1||c.rock===3)&&!c.foe&&!c.tile&&!c.start){if(!map.rock.has(j)){map.rock.set(j,OPP[b]);map.via.set(j,p)}continue}
+      if(c.rock||c.foe||c.tile||c.start||map.has(j))continue;
+      map.set(j,OPP[b]);map.via.set(j,p);
+    }
+    return map;
+  }
   for(const b of BITS){
     if(!(m&b))continue;
     let j=nbr(run.at,b);
@@ -1915,12 +1930,14 @@ function frontier(){
   }
   return map;
 }
+const sqBoss=pz=>{const a=cellAt(pz[0]);return !!(a&&a.tile&&a.tile.e&&a.tile.e.k==='foe')}; // the captain still stands in his square
+const sqPath=(a,b)=>Math.abs(rowOf(a)-rowOf(b))+Math.abs(colOf(a)-colOf(b))===1?[b]:[idOf(rowOf(b),colOf(a)),b];
 const openF=F=>F.size>0||(!!F.rock&&F.rock.size>0&&(meta.up.sg|0)>0); // somewhere a block could still go
 function gateFrom(i,m){ // the captain's gap that an open side of this block leads into
   for(const b of BITS){
     if(b===DOWN||!(m&b))continue;
     const j=nbr(i,b),c=j>=0&&cellAt(j);
-    if(c&&c.tile&&c.tile.gate)return j; // even once the cannon has cleared it
+    if(c&&c.tile&&c.tile.gate===1)return j; // even once the cannon has cleared it
   }
   return -1;
 }
@@ -2035,7 +2052,7 @@ function renderHp(){
 function previewFor(hi,j){ // the toy on the block, plus the captain when this block opens onto his gap
   const t=run.hand[hi];if(!t)return 0;
   let d=t.e&&t.e.k==='foe'?dmgFor(t.e):0;
-  if(j>=0&&fits(t,j,frontier())){const g=gateFrom(j,t.m),ge=g>=0&&cellAt(g).tile.e;if(ge)d+=dmgFor(ge)}
+  if(j>=0&&fits(t,j,frontier())){const g=gateFrom(j,t.m),gc=g>=0&&cellAt(g),gh=gc&&gc.tile.bi!=null?cellAt(gc.tile.bi):gc,ge=gh&&gh.tile&&gh.tile.e;if(ge&&ge.k==='foe')d+=dmgFor(ge)}
   return d;
 }
 function setPreview(j){const d=sel>=0&&run&&run.phase==='build'?previewFor(sel,j):0;if(d!==preview){preview=d;renderHp()}}
@@ -2180,7 +2197,8 @@ function place(j,hi){
   if(busy||!run||run.phase!=='build')return;
   const t=run.hand[hi];
   if(!t)return;
-  if(!fits(t,j,frontier())){flashCell(j);flashSlot(hi);return}
+  const F=frontier();if(!fits(t,j,F)){flashCell(j);flashSlot(hi);return}
+  run.via=F.via&&F.via.has(j)?F.via.get(j):-1;
   {const o=cellAt(j);if(o.rock){t.over=o.rock;o.rock=0;note('障害物をすりぬけた','good')}}
   if(t.sp==='hammer')hammerHit(j);
   cellAt(j).tile=t;run.hand[hi]=makeTile(lvOf(rowOf(run.at)));if(run.hand[hi].m===15)aceNew=[hi];sel=-1;justPlaced=j;
@@ -2202,6 +2220,8 @@ function spStep(i,t){ // a special block does its thing the first time the knigh
 async function proceed(){
   busy=true;render();
   if(run.at!==run.target){const j=run.target;setTimeout(()=>{puff(j);FXH.emit('place',{j})},110);await sleep(REDUCED?0:140)}
+  if(run.at!==run.target&&run.via>=0&&run.via!==run.at)for(const p of sqPath(run.at,run.via))if(!await stepTo(p))return; // across the captain's square first
+  run.via=-1;
   if(run.at!==run.target&&!await stepTo(run.target))return;
   const g=gateFrom(run.at,exitsOf(run.at)); // the road touches the captain's gap: walk in and face him
   if(g>=0&&!await stepTo(g))return;
@@ -2220,10 +2240,11 @@ function openReward(){ // the dimension power first, then the reward for every 1
   run.phase='reward';save();render();showReward();
 }
 async function stepTo(i){
-  const c=cellAt(i),foe=c.tile&&c.tile.e&&c.tile.e.k==='foe'?c.tile.e:null;
+  const c=cellAt(i),hi=c.tile&&c.tile.bi!=null?c.tile.bi:i,h=cellAt(hi)||c,foe=h.tile&&h.tile.e&&h.tile.e.k==='foe'?h.tile.e:null; // the captain stands in the middle of his square
   if(foe){ // fight from the cell in front of the toy
     hero.classList.remove('walk');
-    if(!await battle(foe,run.at,i)){await knockOut();busy=false;gameOver('hp');return false}
+    if(!await battle(foe,run.at,hi)){await knockOut();busy=false;gameOver('hp');return false}
+    if(hi!==i){h.tile.e=null;updateCell(hi)}
     c.tile.e=foe.king?{k:'gear',g:pickGear(SLOTS[rnd(3)].k,Math.min(4,dimOf(rowOf(i))+2),true).id}:null; // the king leaves a piece of the next dimension's rarest gear
     updateCell(i);castHand();await sleep(STEP);
   }
@@ -3046,7 +3067,18 @@ function resume(){
 
 /* ---------- input: one pointer path for tap and drag (touch, pen, mouse) ---------- */
 let drag=null,ghost=null,overCell=-1;
-function cellUnder(x,y){const el=document.elementFromPoint(x,y),c=el&&el.closest('.cell');return c&&board.contains(c)?+c.dataset.i:-1}
+function cellAtPoint(x,y){ // the panel under a point by the grid itself: a tall obstacle's head, a number or a critter over it never gets in the way (11/4)
+  const v=view.getBoundingClientRect();if(!win.pitch||x<v.left||x>v.right||y<v.top||y>v.bottom)return -1;
+  const r=board.getBoundingClientRect(),lx=x-r.left-4,ly=y-r.top-4;if(lx<0||ly<0)return -1;
+  const c=Math.floor(lx/win.pitch),rr=win.hi-Math.floor(ly/win.pitch);
+  return c<0||c>=W||rr<win.lo||rr>win.hi?-1:idOf(rr,c);
+}
+function cellUnder(x,y){return cellAtPoint(x,y)}
+function pickCellAt(e,c){ // a tap: the grid's panel when the held block can go there, else the panel that was touched
+  const g=view.contains(e.target)?cellAtPoint(e.clientX,e.clientY):-1,el=c&&board.contains(c)?+c.dataset.i:-1;
+  if(sel>=0&&run.hand[sel]&&!aim){const F=frontier(),t=run.hand[sel];if(g>=0&&fits(t,g,F))return g;if(el>=0&&fits(t,el,F))return el}
+  return el>=0?el:g;
+}
 const LIFT=53; // the ghost block floats this far above the finger (.ghost-tile margin-top -86px, height 66px)
 function dropCell(x,y){ // the cell under the floating block wins; the cell under the finger is the fallback
   const F=frontier(),t=run.hand[sel],up=cellUnder(x,y-LIFT),at=cellUnder(x,y);
@@ -3067,10 +3099,10 @@ function dropGhost(){ // a drag that lost its finger: nothing may stay floating 
 document.addEventListener('pointerdown',e=>{
   if(ghost||drag)dropGhost(); // an old drag whose finger went missing ends here
   if(!run||run.phase!=='build'||busy||(e.pointerType==='mouse'&&e.button!==0))return;
-  const s=e.target.closest('.slot'),c=e.target.closest('.cell');
-  if(!(s&&handEl.contains(s))&&!(c&&board.contains(c)))return;
+  const s=e.target.closest('.slot'),c=e.target.closest('.cell'),ci=s&&handEl.contains(s)?-1:pickCellAt(e,c);
+  if(!(s&&handEl.contains(s))&&ci<0)return;
   if(s)e.preventDefault();
-  drag={id:e.pointerId,x:e.clientX,y:e.clientY,slot:s?+s.dataset.i:-1,cell:!s?+c.dataset.i:-1,moving:false};
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY,slot:s&&handEl.contains(s)?+s.dataset.i:-1,cell:ci,moving:false};
 },{passive:false});
 document.addEventListener('pointermove',e=>{
   if(!drag||e.pointerId!==drag.id||drag.slot<0||aim)return; // no dragging while a skill waits for its block
@@ -3355,26 +3387,26 @@ const MO=(()=>{
   newRow=function(r){
     _newRow(r);
     const prev=run.rows[r-1],row=run.rows[r];if(!prev||!row)return;
-    const b=prev.findIndex(c=>c.tile&&c.tile.gate);if(b<0)return;
+    const b=prev.findIndex(x=>x.tile&&x.tile.gate===1&&(x.tile.anc||!x.tile.pz));if(b<0)return;
     for(const k of [b,nbOf(b)]){const c=row[k];if(c.rock===1)c.rock=0;c.foe=null;c.gem=0}
   };
   FXH.cells.push((i,c)=>{
     if(!c||!run)return null;
     const t=c.tile;if(t&&t.gate&&t.e&&t.e.k==='foe'&&t.e.boss&&!dead.has(t.e))return {cls:'bb-host'}; // the small one hides: the big one drops in when his row comes into view
-    if(c.rock===2){const row=run.rows[rowOf(i)],b=row?row.findIndex(x=>x.tile&&x.tile.gate):-1;
+    if(c.rock===2){const row=run.rows[rowOf(i)],b=row?row.findIndex(x=>x.tile&&x.tile.gate===1&&(x.tile.anc||!x.tile.pz)):-1;
       if(b>=0&&nbOf(b)===colOf(i)){const g=row[b].tile;if(g.e&&g.e.k==='foe'&&!dead.has(g.e)&&landed(g))return {cls:'bb-crush'}}}
     return null;
   });
   function draw(en,t,key){
     const g=elOf(en.i),nc=elOf(idOf(en.r,en.nb));if(!g||!nc)return;
     const L=Math.min(g.offsetLeft,nc.offsetLeft),w=Math.max(g.offsetLeft,nc.offsetLeft)+g.offsetWidth-L,top=g.offsetTop-win.pitch,h=g.offsetTop+g.offsetHeight-top;
-    const cx=en.b<en.nb?86:114,k=en.king?1.75:1.8,kingArt=en.king&&HAS_ART&&!!document.getElementById('a-king');
+    const cx=100,k=en.king?1.4:1.55,kingArt=en.king&&HAS_ART&&!!document.getElementById('a-king');
     const A=kingArt?['king',-2,-30,104,124]:['boss',4,-20,92,110],foot=A[2]+A[4],art=HAS_ART?U(...A):(SPR[en.king?'king':'boss']||'');
     const o=document.createElement('div');o.className='bboss';o.dataset.i=en.i;o.dataset.k=key;o.style.cssText=`left:${L}px;top:${top}px;width:${w}px;height:${h}px`;
     const org=`transform-origin:${cx/2}% 86%`;
     o.innerHTML=`<svg class="bb-art bb-g" viewBox="0 0 200 200" style="${org}" aria-hidden="true"><ellipse cx="${cx}" cy="171" rx="${en.king?64:58}" ry="14" fill="rgba(214,51,79,.28)"/><ellipse cx="${cx}" cy="171" rx="${en.king?50:44}" ry="8.5" fill="rgba(90,20,40,.4)"/>${typeof SHAD==='function'?`<g transform="matrix(1 0 .5 .5 -86.5 86.5)"><g transform="translate(${(cx-50*k).toFixed(1)} ${(173-foot*k).toFixed(1)}) scale(${k})">${SHAD(art)}</g></g>`:''}</svg>`+
       `<div class="bb-drop" style="${org}"><svg class="bb-art bb-b" viewBox="0 0 200 200" aria-hidden="true"><g class="bb-body" style="--d:-${(en.i*7%23)/10}s"><g transform="translate(${(cx-50*k).toFixed(1)} ${(173-foot*k).toFixed(1)}) scale(${k})">${art}</g></g></svg>`+
-      (en.dieT!=null?'':`<div class="bb-tag" style="left:${g.offsetLeft-L}px;bottom:0;width:${g.offsetWidth}px;height:${g.offsetHeight}px">${badge(en.e)}</div>`)+'</div>';
+      (en.dieT!=null?'':`<div class="bb-tag" style="left:${(w-g.offsetWidth)/2}px;bottom:0;width:${g.offsetWidth}px;height:${g.offsetHeight}px">${badge(en.e)}</div>`)+'</div>';
     board.appendChild(o); // after the cells, never before them (elOf counts the board's children)
     if(REDUCED)return;
     const dr=o.querySelector('.bb-drop'),gr=o.firstElementChild;
@@ -3403,7 +3435,7 @@ const MO=(()=>{
     if(!live())return;
     const t=now(),have=new Map();board.querySelectorAll(':scope>.bboss').forEach(x=>have.set(+x.dataset.i,x));
     for(let r=win.lo;r<=win.hi;r++){
-      const row=run.rows[r];if(!row)continue;const b=row.findIndex(x=>x.tile&&x.tile.gate);if(b<0)continue;
+      const row=run.rows[r];if(!row)continue;const b=row.findIndex(x=>x.tile&&x.tile.gate===1&&(x.tile.anc||!x.tile.pz));if(b<0)continue;
       const e=row[b].tile.e;if(!e||e.k!=='foe'||!e.boss||dead.has(e))continue;
       const i=idOf(r,b),en=ents.get(i);if(!en||en.e!==e)ents.set(i,{i,r,b,nb:nbOf(b),tile:row[b].tile,e,king:!!e.king});
     }
