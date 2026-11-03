@@ -83,20 +83,16 @@ button{font:inherit;color:inherit}
 .badge{position:absolute;right:2px;bottom:3px;padding:1px 5px;border-radius:7px;background:rgba(255,255,255,.94);box-shadow:0 1px 0 rgba(74,53,65,.18);font:800 clamp(10px,2.9vw,12px)/1.25 var(--round);font-variant-numeric:tabular-nums;pointer-events:none}
 .b-foe{color:var(--foe)}.b-zero{color:var(--dim)}.b-coin{color:var(--gold)}.b-heal{color:var(--heal)}.b-gear{color:var(--gear)}
 
+.art-defs{position:absolute;width:0;height:0;overflow:hidden}
 .hero{position:absolute;left:0;top:0;z-index:3;pointer-events:none;transition:transform .15s linear}
 .hero svg{width:100%;height:100%;display:block;overflow:visible}
-.hero .key{transform-box:fill-box;transform-origin:0% 50%}
 .hero svg{transform-origin:50% 86%}
 .hero:not(.walk) svg{animation:breathe 1.7s ease-in-out infinite alternate}
-.hero:not(.walk) .key{animation:wind 1.8s linear infinite}
 .hero.walk svg{animation:bob .17s ease-in-out infinite alternate}
-.hero.walk .key{animation:wind .34s linear infinite}
 .hero.hurt svg{animation:hurt .3s ease-out}
 .hero.down svg{animation:topple .55s cubic-bezier(.5,0,.8,.6) .95s forwards}
-.hero.down .key{animation:wind-down 1.1s ease-out forwards}
 @keyframes bob{to{transform:translateY(-5%)}}
 @keyframes breathe{to{transform:scale(1.03,.97)}}
-@keyframes wind-down{0%{transform:scaleX(1)}12%{transform:scaleX(.25)}30%{transform:scaleX(1)}52%{transform:scaleX(.35)}80%{transform:scaleX(.9)}100%{transform:scaleX(.7)}}
 @keyframes topple{0%{transform:none}30%{transform:rotate(7deg)}100%{transform:translate(-6%,14%) rotate(-90deg);filter:grayscale(.65)}}
 .app.ko .view{filter:saturate(.55) brightness(.96);transition:filter .8s}
 
@@ -128,7 +124,6 @@ button{font:inherit;color:inherit}
 .bit{position:fixed;left:0;top:0;z-index:15;pointer-events:none;border-radius:2px}
 .fly{position:fixed;left:0;top:0;z-index:16;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(74,53,65,.25))}
 .fly svg{width:100%;height:100%;display:block}
-@keyframes wind{50%{transform:scaleX(.25)}}
 @keyframes hurt{30%{transform:translateX(-7%);filter:drop-shadow(0 0 5px var(--bad))}70%{transform:translateX(7%);filter:drop-shadow(0 0 5px var(--bad))}}
 
 .pop{position:absolute;z-index:5;pointer-events:none;transform:translate(-50%,0);font:800 20px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 2px 0 #fff;animation:rise .95s ease-out forwards}
@@ -295,9 +290,9 @@ body.art #s-title .record:empty{display:none}
 @media (prefers-reduced-motion:reduce){
   .hero,.slot,.drawer,.pull svg{transition:none}
   .pull.hint{animation:none}
-  .hero.walk svg,.hero.walk .key,.cell.fit::after,.dice.hint,.slot.deal{animation:none}
+  .hero.walk svg,.cell.fit::after,.dice.hint,.slot.deal{animation:none}
   .blocks s{animation:none;opacity:.6}
-  .board .toy,.board .eye,.hero:not(.walk) svg,.hero:not(.walk) .key,.hero.down svg,.hero.down .key{animation:none}
+  .board .toy,.board .eye,.hero:not(.walk) svg,.hero.down svg{animation:none}
   .weather{display:none}
   .cell.new svg,.pop,.hero.hurt svg{animation-duration:.01s}
 }
@@ -461,7 +456,6 @@ const SPR={
   hand:'<rect x="24" y="38" width="16" height="16" rx="3" fill="#f7c3d4"/><rect x="42" y="38" width="16" height="16" rx="3" fill="#bfe6d6"/><rect x="60" y="38" width="16" height="16" rx="3" fill="#fbe2a0"/><rect x="33" y="57" width="16" height="16" rx="3" fill="#d8cdf6"/><rect x="51" y="57" width="16" height="16" rx="3" fill="#c4e2f5"/>',
   hero:SHADOW(19)+
     '<rect x="40" y="70" width="8" height="14" rx="3" fill="#8e9cc0"/><rect x="52" y="70" width="8" height="14" rx="3" fill="#8e9cc0"/>'+
-    '<g class="key"><path d="M66 60h10" stroke="#d99a1e" stroke-width="4" stroke-linecap="round"/><ellipse cx="80" cy="54" rx="5" ry="7" fill="#f2c14e" stroke="#d99a1e" stroke-width="2"/><ellipse cx="80" cy="66" rx="5" ry="7" fill="#f2c14e" stroke="#d99a1e" stroke-width="2"/></g>'+
     '<rect x="34" y="50" width="32" height="25" rx="9" fill="#b9c6e6"/><rect x="34" y="62" width="32" height="4" fill="#e8607e"/>'+
     '<circle cx="31" cy="62" r="8" fill="#ffe08a" stroke="#e8b84a" stroke-width="2"/>'+
     '<circle cx="50" cy="38" r="16" fill="#eef2f9" stroke="#9aa8c8" stroke-width="2.5"/><rect x="39" y="36" width="22" height="7" rx="3.5" fill="#4a3541"/>'+
@@ -488,7 +482,7 @@ if(HAS_ART){
     cannon:SHADOW(26)+U('cannon',10,12,80,76),
     robot:SHADOW(18)+U('robot',16,-2,68,90),
     boss:SHADOW(26)+U('boss',4,-20,92,110),
-    hero:SHADOW(20)+'<g class="key"><use href="#a-key" x="-102" y="33" width="27" height="27" transform="scale(-1 1)"/></g>'+U('hero',16,-6,68,94),
+    hero:SHADOW(20)+U('hero',16,-6,68,94),
     start:'<ellipse cx="50" cy="84" rx="34" ry="5" fill="rgba(74,53,65,.2)"/>'+U('box',12,24,76,64),
     fence:'<g transform="translate(-3 18) scale(1.32 1)">'+U('fence',0,0,80,70)+'</g>',
     coin:U('coin',29,31,42,42),
@@ -527,7 +521,7 @@ function roadSVG(m,sh,lo,hi){ // on the field the road runs past the block into 
 const tileArt=(t,inTray)=>{const c=t.c|0;return blockSVG(c)+(inTray?roadSVG(t.m,BLOCKS[c][1],4,96):roadSVG(t.m,BLOCKS[c][1]))+evSVG(t.e)};
 function evSVG(e){
   if(!e)return '';
-  if(e.k==='foe')return `<g class="toy">${SPR[e.t]||SPR.soldier}</g>`;
+  if(e.k==='foe')return `<g transform="translate(50 50) scale(.7) translate(-50 -50)"><g class="toy">${SPR[e.t]||SPR.soldier}</g></g>`; // smaller, so the road under the toy shows
   if(e.k==='gear')return (GEAR_ID[e.g]||{}).art||'';
   return SPR[e.k]||'';
 }
@@ -865,7 +859,7 @@ function fly(i,art,target,delay){ // a coin, a heart, a sword or a shield flies 
     f.animate([{transform:`translate(${a.x}px,${a.y}px) scale(.8)`},{transform:`translate(${a.x+(ex-a.x)*.3}px,${Math.min(a.y,ey)-50}px) scale(1.25)`,offset:.4},{transform:`translate(${ex}px,${ey}px) scale(.7)`}],{duration:560,easing:'cubic-bezier(.45,0,.55,1)'}).onfinish=()=>{f.remove();bump(target)};
   },delay||0);
 }
-async function knockOut(){ // the key winds down, the knight topples over
+async function knockOut(){ // the knight runs down and topples over
   hero.classList.remove('walk','hurt');hero.classList.add('down');app.classList.add('ko');
   if(REDUCED)return sleep(400);
   setTimeout(()=>puff(run.at,true),1400);
