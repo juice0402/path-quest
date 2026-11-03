@@ -666,6 +666,19 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 /* ===== end of fx css A ===== */
 
 /* ===== fx css B: motion ===== */
+/* the panels tip around a point a little below their middle; the 2×2 captain and king stand over their gap */
+.board>.cell{transform-origin:50% 62%}
+.bboss{position:absolute;z-index:2;pointer-events:none}
+.bboss .bb-drop{position:absolute;inset:0;transform-origin:50% 94%}
+.bboss .bb-art{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible;transform-origin:50% 90%}
+.bboss .bb-sh{position:absolute;left:12%;right:12%;bottom:2%;height:16%;border-radius:50%;background:radial-gradient(closest-side,rgba(74,53,65,.6),rgba(74,53,65,0));opacity:0}
+.bboss .bb-tag{position:absolute}
+.bb-body{transform-box:fill-box;transform-origin:50% 100%;animation:bbbreathe 2.4s ease-in-out var(--d,0s) infinite alternate}
+@keyframes bbbreathe{to{transform:scale(1.03,.97)}}
+.cell.bb-host .toy,.cell.bb-host>.badge{visibility:hidden}
+.cell.bb-crush>svg{transform:scale(1.04,.52);transform-origin:50% 86%;transition:transform .16s cubic-bezier(.3,1.7,.5,1)}
+.pop.p-thud{color:#9a6238;font-size:25px;letter-spacing:.04em}
+@media (prefers-reduced-motion:reduce){.bb-body{animation:none}.cell.bb-crush>svg{transition:none}}
 /* ===== end of fx css B ===== */
 
 /* ===== fx css C: life ===== */
@@ -2441,6 +2454,252 @@ FXH.add('render',()=>{ // the tray and the thread follow the dimension the knigh
 /* ===== end of fx module A ===== */
 
 /* ===== fx module B: motion — agent B writes only between these two lines ===== */
+/* whole panels move: hops from big hits, the 2×2 captain and king dropping in with a thud, footsteps, landings.
+   a panel's motion is the sum of the kicks it got (start, length, kind, size, direction). a panel with kicks gets one sampled
+   animation of their sum, so waves add up where they cross. the kicks live here, not on the elements: a render that rebuilds
+   the board re-attaches them and the motion carries on from where it was */
+const MO=(()=>{
+  const now=()=>document.timeline.currentTime??performance.now(); // the frame's time, the clock the animations run on
+  const recs=new Map(); // cell id → {k: kicks, a: its animation, f: riders' animations, tm, el}
+  const hsh=i=>((i*2654435761)>>>0)%2?1:-1;
+  const SH=(u,p)=>u<p?Math.sin(Math.PI/2*u/p):Math.cos(Math.PI*(u-p)/.3)*Math.exp(-4.4*(u-p)); // up to 1, back past 0, settle
+  const live=()=>!!run&&!!board.firstElementChild;
+  const slideY=()=>(rowOf(run.at)-1-win.lo)*win.pitch;
+  const topOf=i=>{const g=elOf(i);return g?board.offsetTop+slideY()+g.offsetTop:-1e9}; // where a cell's top will sit in the view
+  function visRows(){ // the rows actually on screen (the board keeps a few hidden rows above)
+    const vh=view.clientHeight,p=win.pitch,base=topOf(idOf(win.hi,0));
+    return [Math.max(win.lo,Math.floor(win.hi-(vh-base)/p)),Math.min(win.hi,Math.floor(win.hi+base/p+1))];
+  }
+  function kick(i,m){let r=recs.get(i);if(!r)recs.set(i,r={k:[],a:null,f:[],tm:0,el:null});const t=now();r.k=r.k.filter(x=>x.t0+x.dur>t);if(r.k.length>=6)r.k.shift();r.k.push(m)}
+  function stop(r){if(r.a){r.a.onfinish=null;r.a.cancel();r.a=null}clearTimeout(r.tm);r.f.forEach(a=>a.cancel());r.f=[];if(r.el)r.el.classList.remove('lift')}
+  function sum(r,t){ // where the panel is at time t
+    let x=0,y=0,ro=0,s=0,sy=0;
+    for(const m of r.k){
+      const u=(t-m.t0)/m.dur,a=m.a;if(u<=0||u>=1)continue;
+      if(m.kind==='hop'){const f=SH(u,.28);y-=a*f;x+=m.ux*a*.22*f;ro+=m.rs*a*.2*f;s+=a*.005*f}
+      else if(m.kind==='dip'){const f=SH(u,.16);y+=a*f;s-=a*.006*f;ro+=m.rs*a*.06*f}
+      else if(m.kind==='jolt'){const f=SH(u,.14);x+=m.ux*a*f;y+=m.uy*a*f;ro+=m.rs*a*.3*f}
+      else if(m.kind==='flip')sy+=a*(u<.42?-.9*Math.sin(Math.PI/2*u/.42):u<.7?-.9*Math.cos(Math.PI/2*(u-.42)/.28):.07*Math.sin(Math.PI*(u-.7)/.3));
+    }
+    return {x,y,ro,s,sy};
+  }
+  const riders=i=>{const a=[];if(run&&i===run.at&&hero.isConnected)a.push(hero);if(ents.has(i)){const o=board.querySelector(`:scope>.bboss[data-i="${i}"]`);if(o)a.push(o)}return a};
+  function apply(i){ // (re)build one panel's animation from its kicks, starting now
+    const r=recs.get(i);if(!r)return;stop(r);
+    const t=now();r.k=r.k.filter(m=>m.t0+m.dur>t);if(!r.k.length){recs.delete(i);return}
+    const el=elOf(i);r.el=el;if(!el)return; // off the board for now; a later render may bring it back
+    let T0=Infinity,T1=0;for(const m of r.k){T0=Math.min(T0,m.t0);T1=Math.max(T1,m.t0+m.dur)}T0=Math.max(T0,t);
+    const D=T1-T0,n=Math.max(4,Math.min(36,Math.ceil(D/24))),K=[],H=[];
+    for(let k=0;k<=n;k++){
+      const v=k===n?{x:0,y:0,ro:0,s:0,sy:0}:sum(r,T0+D*k/n),tr=`${v.x.toFixed(2)}px ${v.y.toFixed(2)}px`;
+      K.push({translate:tr,rotate:`${v.ro.toFixed(2)}deg`,scale:`${(1+v.s).toFixed(4)} ${(1+v.s+v.sy).toFixed(4)}`});H.push({translate:tr});
+    }
+    const o={duration:D,easing:'linear'},a=r.a=el.animate(K,o);a.startTime=T0; // pinned to the timeline, so a rebuild carries on exactly where it was
+    a.onfinish=()=>{if(r.a!==a)return;r.a=null;el.classList.remove('lift');if(!r.k.some(m=>m.t0+m.dur>now()+1))recs.delete(i)};
+    if(T0-t<17)el.classList.add('lift');else r.tm=setTimeout(()=>el.classList.add('lift'),T0-t);
+    for(const x of riders(i)){const f=x.animate(H,o);f.startTime=T0;r.f.push(f)} // the knight and the big boss ride the panel they stand on
+  }
+  /* a ring of kicks: i (or cx,cy in cells), amp px, R cells, spd ms per cell, decay cells, dur, kind hop|dip|jolt|flip,
+     center: what the middle panel does (dip|skip), under: panels that dip instead, inward: from the edge to the middle,
+     rows: by row only (a sweep), ux/uy: a fixed direction, delay */
+  function wave(o){
+    if(REDUCED||!live())return;
+    const t=now()+(o.delay||0),A=o.amp||6,R=o.R==null?2:o.R,spd=o.spd||60,dec=o.decay||3;
+    const cx=o.i!=null?colOf(o.i):o.cx,cy=o.i!=null?rowOf(o.i):o.cy,under=o.under?new Set(o.under):null,[v0,v1]=visRows(),hit=[];
+    for(let r=Math.max(v0,Math.ceil(cy-R));r<=Math.min(v1,Math.floor(cy+R));r++)for(let c=Math.max(0,Math.ceil(cx-R));c<=Math.min(W-1,Math.floor(cx+R));c++){
+      const dx=c-cx,dy=r-cy,d=o.rows?Math.abs(dy):Math.hypot(dx,dy);if(d>R+.01)continue;
+      const i=idOf(r,c);let kind=o.kind||'hop',a=A*Math.exp(-d/dec),dur=o.dur||440;
+      if(under&&under.has(i)){kind='dip';a=o.underAmp||A*.6;dur=420}
+      else if(d<.3&&o.center){if(o.center==='skip')continue;kind=o.center;a=A*(o.centerAmp||.5);dur=380}
+      if(a<.6)continue;
+      const L=Math.hypot(dx,dy)||1;let ux=dx/L,uy=-dy/L;if(o.inward){ux=-ux;uy=-uy}if(o.ux!=null){ux=o.ux;uy=o.uy}
+      const t0=t+(o.inward?(R-d)*spd:d*spd+(o.rows?c*14:0));kick(i,{t0,dur,kind,a,ux,uy,rs:dx?Math.sign(dx):hsh(i)});hit.push([t0,i]);
+    }
+    // the near panels start now; the far ones are set up a little before the ring reaches them, so a big ring never costs one heavy frame
+    const B=new Map();for(const [t0,i] of hit){const k=Math.max(0,Math.floor((t0-now()-40)/70));(B.get(k)||B.set(k,[]).get(k)).push(i)}
+    for(const [k,a] of B)if(!k)a.forEach(apply);else setTimeout(()=>a.forEach(i=>{const r=recs.get(i);if(r&&!r.a)apply(i)}),k*70);
+  }
+  const poke=(i,amp,kind)=>wave({i,R:0,amp:amp||4,kind:kind||'hop'});
+
+  /* hit-stop: everything holds for a few frames, then carries on. never while the knight walks */
+  let hsT=0;
+  function hitStop(ms,after){
+    if(REDUCED||hsT||hero.classList.contains('walk')){if(after)after();return}
+    const L=document.getAnimations().filter(a=>a.playState==='running'),p0=now();L.forEach(a=>{try{a.pause()}catch(e){}});
+    hsT=setTimeout(()=>{hsT=0;const dt=now()-p0;for(const [,r] of recs)for(const m of r.k)if(m.t0+m.dur>p0)m.t0+=dt; // the kicks wait as long as the panels did
+      L.forEach(a=>{try{if(a.playState==='paused')a.play()}catch(e){}});if(after)after()},ms);
+  }
+  /* the screen shake: fades over a few swings, a weaker one never cuts a stronger one short, vertical for a thud */
+  let shA=null,shP=0,shE=0;
+  shake=function(p,vert){
+    if(REDUCED)return;const t=now();p=Math.min(12,p*.95);
+    if(shA&&t<shE&&p<shP*.75)return;
+    if(shA)shA.cancel();
+    const n=7,K=[{translate:'0px 0px',rotate:'0deg'}];
+    for(let j=1;j<n;j++){const a=p*Math.pow(1-(j-1)/(n-1),1.5),s=j%2?1:-1;K.push(vert?{translate:`0px ${(s*a).toFixed(1)}px`,rotate:'0deg'}:{translate:`${(s*a).toFixed(1)}px ${(-s*a*.45).toFixed(1)}px`,rotate:`${(s*a*.06).toFixed(2)}deg`})}
+    K.push({translate:'0px 0px',rotate:'0deg'});
+    const dur=240+p*12;shP=p;shE=t+dur;shA=view.animate(K,{duration:dur,easing:'linear'});
+  };
+
+  /* ---- the captain and the king, drawn 2×2 over the gap + the fence beside it (toward the middle) + the two cells above ---- */
+  const nbOf=b=>b<=2?b+1:b-1;
+  const ents=new Map(),dropAt=new WeakMap(),dead=new WeakSet(),seen=new WeakSet();
+  const DROP=640,LAND=410,DIE=460;
+  const landed=t=>REDUCED||(dropAt.has(t)&&now()>=dropAt.get(t)+LAND);
+  const _newRow=newRow; // keep the two cells above the gap clear: the boss's head stands there (they can't be reached before he falls anyway)
+  newRow=function(r){
+    _newRow(r);
+    const prev=run.rows[r-1],row=run.rows[r];if(!prev||!row)return;
+    const b=prev.findIndex(c=>c.tile&&c.tile.gate);if(b<0)return;
+    for(const k of [b,nbOf(b)]){const c=row[k];if(c.rock===1)c.rock=0;c.foe=null;c.gem=0}
+  };
+  FXH.cells.push((i,c)=>{
+    if(!c||!run)return null;
+    const t=c.tile;if(t&&t.gate&&t.e&&t.e.k==='foe'&&t.e.boss&&!dead.has(t.e))return {cls:'bb-host'}; // the small one hides: the big one drops in when his row comes into view
+    if(c.rock===2){const row=run.rows[rowOf(i)],b=row?row.findIndex(x=>x.tile&&x.tile.gate):-1;
+      if(b>=0&&nbOf(b)===colOf(i)){const g=row[b].tile;if(g.e&&g.e.k==='foe'&&!dead.has(g.e)&&landed(g))return {cls:'bb-crush'}}}
+    return null;
+  });
+  function draw(en,t,key){
+    const g=elOf(en.i),nc=elOf(idOf(en.r,en.nb));if(!g||!nc)return;
+    const L=Math.min(g.offsetLeft,nc.offsetLeft),w=Math.max(g.offsetLeft,nc.offsetLeft)+g.offsetWidth-L,top=g.offsetTop-win.pitch,h=g.offsetTop+g.offsetHeight-top;
+    const cx=en.b<en.nb?86:114,k=en.king?1.75:1.8,kingArt=en.king&&HAS_ART&&!!document.getElementById('a-king');
+    const A=kingArt?['king',-2,-30,104,124]:['boss',4,-20,92,110],foot=A[2]+A[4],art=HAS_ART?U(...A):(SPR[en.king?'king':'boss']||'');
+    const o=document.createElement('div');o.className='bboss';o.dataset.i=en.i;o.dataset.k=key;o.style.cssText=`left:${L}px;top:${top}px;width:${w}px;height:${h}px`;
+    const org=`transform-origin:${cx/2}% 95%`;
+    o.innerHTML=`<svg class="bb-art bb-g" viewBox="0 0 200 200" style="${org}" aria-hidden="true"><ellipse cx="${cx}" cy="189" rx="${en.king?64:58}" ry="14" fill="rgba(214,51,79,.28)"/><ellipse cx="${cx}" cy="189" rx="${en.king?50:44}" ry="8.5" fill="rgba(90,20,40,.4)"/></svg>`+
+      `<div class="bb-drop" style="${org}"><svg class="bb-art bb-b" viewBox="0 0 200 200" aria-hidden="true"><g class="bb-body" style="--d:-${(en.i*7%23)/10}s"><g transform="translate(${(cx-50*k).toFixed(1)} ${(192-foot*k).toFixed(1)}) scale(${k})">${art}</g></g></svg>`+
+      (en.dieT!=null?'':`<div class="bb-tag" style="left:${g.offsetLeft-L}px;bottom:0;width:${g.offsetWidth}px;height:${g.offsetHeight}px">${badge(en.e)}</div>`)+'</div>';
+    board.appendChild(o); // after the cells, never before them (elOf counts the board's children)
+    if(REDUCED)return;
+    const dr=o.querySelector('.bb-drop'),gr=o.firstElementChild;
+    if(en.dieT!=null){ // he totters, swells and pops
+      const op={duration:DIE,delay:en.dieT-t,fill:'forwards',easing:'ease-in'};
+      dr.animate([{translate:'0px 0px',rotate:'0deg',scale:'1',opacity:1},{translate:'0px -4px',rotate:'-8deg',scale:'1.1 1.14',opacity:1,offset:.32},{translate:'0px 6px',rotate:'16deg',scale:'.25',opacity:0}],op);
+      gr.animate([{opacity:1,scale:'1'},{opacity:0,scale:'.4'}],op);return;
+    }
+    const t0=dropAt.get(en.tile);
+    if(t0!=null&&t<t0+DROP){ // his shadow spreads, he falls from above the screen, squashes on landing and springs back
+      const H=Math.max(2*h,board.offsetTop+slideY()+top+h+30),op={duration:DROP,delay:t0-t,fill:'backwards'},f=LAND/DROP;
+      dr.animate([{translate:`0px ${-H}px`,scale:'.9 1.14',opacity:0},{translate:`0px ${-H}px`,scale:'.9 1.14',opacity:1,offset:.16,easing:'cubic-bezier(.5,0,1,.6)'},{translate:'0px 0px',scale:'.9 1.14',opacity:1,offset:f},{translate:'0px 0px',scale:'1.22 .76',opacity:1,offset:.73,easing:'ease-out'},{translate:'0px 0px',scale:'.95 1.06',opacity:1,offset:.85},{translate:'0px 0px',scale:'1.02 .98',opacity:1,offset:.93},{translate:'0px 0px',scale:'1',opacity:1}],op);
+      gr.animate([{opacity:0,scale:'.2'},{opacity:.5,scale:'.5',offset:.16},{opacity:1,scale:'.95',offset:f},{opacity:1,scale:'1.15',offset:.73},{opacity:1,scale:'1'}],op);
+    }
+  }
+  function thud(en){ // the landing: hold, a vertical jolt, dust from both feet and the panels leap in a ring
+    if(!run||en.tile.e!==en.e||dead.has(en.e))return;
+    const nbI=idOf(en.r,en.nb),x=elOf(nbI);if(x&&cellAt(nbI)&&cellAt(nbI).rock===2)x.classList.add('bb-crush');
+    hitStop(50,()=>{
+      shake(en.king?11:9,true);puff(en.i,true);puff(nbI,true);
+      wave({cx:(en.b+en.nb)/2,cy:en.r+.5,amp:en.king?15:12,R:12,spd:55,decay:6,dur:520,under:[en.i,nbI,idOf(en.r+1,en.b),idOf(en.r+1,en.nb)],underAmp:7});
+      pop(en.i,'ドスン！','p-thud');
+    });
+  }
+  function sync(){ // draw every big boss on the board; one whose gap just came into view drops in. unchanged ones stay as they are
+    if(!live())return;
+    const t=now(),have=new Map();board.querySelectorAll(':scope>.bboss').forEach(x=>have.set(+x.dataset.i,x));
+    for(let r=win.lo;r<=win.hi;r++){
+      const row=run.rows[r];if(!row)continue;const b=row.findIndex(x=>x.tile&&x.tile.gate);if(b<0)continue;
+      const e=row[b].tile.e;if(!e||e.k!=='foe'||!e.boss||dead.has(e))continue;
+      const i=idOf(r,b),en=ents.get(i);if(!en||en.e!==e)ents.set(i,{i,r,b,nb:nbOf(b),tile:row[b].tile,e,king:!!e.king});
+    }
+    for(const [i,en] of ents){
+      const dying=en.dieT!=null;
+      if(!dying&&en.tile.e!==en.e)en.gone=en.gone||t; // his toy was taken off before it broke (the cannon): keep him until it does
+      if(dying?t>en.dieT+DIE:en.gone&&t>en.gone+800){ents.delete(i);continue}
+      if(en.r<win.lo||en.r>win.hi)continue;
+      if(!REDUCED&&!dropAt.has(en.tile)){
+        if(dying||en.gone||sheetUp()||topOf(i)+win.pitch*.6<(innerWidth>=1100?0:44))continue; // no sheet in front, and his gap shows below the status row
+        const dl=hero.classList.contains('walk')?190:40;dropAt.set(en.tile,t+dl);setTimeout(()=>thud(en),dl+LAND);
+      }
+      const key=dying?'x':'a'+badge(en.e),o=have.get(i);
+      if(o&&o.dataset.k===key){have.delete(i);continue}
+      if(o){o.remove();have.delete(i)}
+      draw(en,t,key);if(recs.has(i))apply(i);
+    }
+    have.forEach(x=>x.remove());
+  }
+  function bossHit(i,dl){
+    const b=!REDUCED&&board.querySelector(`:scope>.bboss[data-i="${i}"] .bb-b`);
+    if(b)b.animate([{translate:'0% 0%',filter:'brightness(1)'},{translate:'3% 0%',filter:'brightness(1.35)'},{translate:'-3% 0%',filter:'brightness(1.1)'},{translate:'0% 0%',filter:'brightness(1)'}],{duration:220,delay:dl||0});
+  }
+  function killBoss(i,e){
+    let en=ents.get(i);
+    if(!en||en.e!==e){const c=cellAt(i);if(!c||!c.tile)return;en={i,r:rowOf(i),b:colOf(i),nb:nbOf(colOf(i)),tile:c.tile,e,king:!!e.king};ents.set(i,en)}
+    const nbI=idOf(en.r,en.nb),seenIt=landed(en.tile);dead.add(e);
+    if(REDUCED||!seenIt){ents.delete(i);const x=elOf(nbI);if(x)x.classList.remove('bb-crush');sync();return}
+    en.dieT=now();sync();
+    setTimeout(()=>{const x=elOf(nbI);if(x)x.classList.remove('bb-crush');wave({cx:(en.b+en.nb)/2,cy:en.r,amp:9,R:7,spd:50,decay:3.5,under:[en.i,nbI],underAmp:6})},150);
+    setTimeout(()=>{if(run)sync()},DIE+40);
+  }
+
+  /* ---- things that wait until the field is in view again (a reward sheet often covers the moment) ---- */
+  const later=[]; // {run, f}: only for the climb it was made in
+  const sheetUp=()=>!!document.querySelector('.sheet:not([hidden])');
+  const calm=()=>!!run&&run.phase==='build'&&!busy&&!sheetUp();
+
+  /* ---- the hooks ---- */
+  let lastRun=null;
+  FXH.add('render',()=>{
+    if(!run)return;
+    if(run!==lastRun){lastRun=run;for(const [,r] of recs)stop(r);recs.clear();ents.clear();later.length=0} // a new climb (or a reload) starts clean
+    for(const i of [...recs.keys()])apply(i);
+    sync();
+    if(later.length&&calm()){const a=later.splice(0),R0=run;setTimeout(()=>a.forEach(x=>{if(x.run===R0&&run===R0)x.f()}),140)}
+  });
+  FXH.add('update',({i})=>{
+    if(!run)return;if(recs.has(i))apply(i);
+    const c=cellAt(i),t=c&&c.tile;
+    if(t&&t.gate&&(ents.has(i)||(t.e&&t.e.boss)))sync();
+    if(t&&t.kg&&!t.e&&!seen.has(t)){seen.add(t);later.push({run,f:()=>{ // the king's gap opens: the panels are pulled toward the portal, then pushed away
+      wave({i,amp:4,R:4,spd:70,kind:'jolt',inward:true,center:'skip',decay:6,dur:360});
+      setTimeout(()=>wave({i,amp:8,R:6,spd:55,decay:3,center:'dip'}),580);
+    }})}
+  });
+  FXH.add('strike',d=>{ // a big blow makes the panels around the toy hop
+    if(ents.has(d.i))bossHit(d.i,80);
+    const fin=d.hpBefore-d.d<=0,p=d.d/Math.max(1,d.hpMax);let amp=0,R=1;
+    if(d.boss&&fin){amp=12;R=3}else if(d.crit){amp=8;R=2}else if(d.boss&&p>=.25){amp=6;R=2} // a plain one-blow kill gets the small ring from 'kill'
+    if(!amp)return;
+    wave({i:d.i,amp,R,delay:75,center:'dip',decay:R>2?3.5:2.6});
+    if(d.crit||(d.boss&&fin))setTimeout(()=>hitStop(d.boss&&fin?75:50),85);
+  });
+  FXH.add('toyhit',d=>{if(ents.has(d.i))bossHit(d.i,0);if(d.cls==='p-crit')wave({i:d.i,amp:6,R:1,center:'dip',delay:30})});
+  FXH.add('boom',d=>wave({i:d.at,amp:Math.min(12,5+2.5*d.R),R:d.R+1,center:'dip',spd:60,decay:2.5+d.R*.6}));
+  FXH.add('cannon',d=>{
+    if(!run)return;wave({i:run.at,amp:5,R:2,center:'dip',centerAmp:.8});
+    for(const h of d.hits){wave({i:h.i,amp:h.dead?5:4.5,R:1,delay:h.dl+60,center:'dip'});if(ents.has(h.i))bossHit(h.i,h.dl+60)}
+  });
+  FXH.add('kill',({i,e})=>{if(e&&e.boss)killBoss(i,e);else wave({i,amp:4,R:1,center:'dip',centerAmp:.6,delay:40})});
+  FXH.add('hurt',d=>{ // the knight's panel jolts away from whoever hit him
+    if(!run||d.i==null)return;
+    if(ents.has(d.i)&&!REDUCED){const b=board.querySelector(`:scope>.bboss[data-i="${d.i}"] .bb-b`);if(b)b.animate([{translate:'0% 0%'},{translate:'0% 5%',offset:.4},{translate:'0% 0%'}],{duration:220,easing:'ease-out'})} // he stamps
+    const dx=colOf(d.at)-colOf(d.i),dy=rowOf(d.i)-rowOf(d.at),L=Math.hypot(dx,dy)||1;
+    wave({i:d.at,R:0,kind:'jolt',amp:d.boss?4:d.src==='shot'?2:2.5,ux:dx/L,uy:dy/L});
+    if(d.boss||d.b>=.2*(d.max||1))wave({i:d.at,amp:d.boss?5:3.5,R:1,center:'skip',delay:30,decay:2});
+  });
+  FXH.add('place',({j})=>{ // a block lands: thunk, and the panels beside it give a little
+    const c=run&&cellAt(j),ace=!!(c&&c.tile&&c.tile.m===15&&!c.tile.gate);
+    wave({i:j,amp:ace?5:3.5,R:1,kind:ace?'hop':'dip',center:'dip',centerAmp:ace?1:1.6,delay:60,decay:2});
+  });
+  FXH.add('step',({to})=>wave({i:to,R:0,kind:'dip',amp:2.5,delay:120,dur:300}));
+  FXH.add('land',({j,kind})=>wave({i:j,amp:kind==='wall'?5:3.5,R:1,center:'dip',centerAmp:1.3,delay:20}));
+  FXH.add('reach',({s})=>{if(s>0&&s%SPAN===0)later.push({run,f:()=>wave({cx:colOf(run.at),cy:rowOf(run.at),R:14,rows:1,kind:'flip',amp:1,decay:99,spd:55,dur:420})})}); // a new land: the rows turn over one by one
+  FXH.add('over',({at})=>{ // the knight falls: the panels sag, spreading out from him
+    later.length=0;if(REDUCED||!live())return;
+    setTimeout(()=>{
+      if(!board.firstElementChild)return;
+      for(const [,r] of recs)stop(r);recs.clear();
+      const [v0,v1]=visRows(),c0=colOf(at),r0=rowOf(at);
+      for(let r=v0;r<=v1;r++)for(let c=0;c<W;c++){
+        const el=elOf(idOf(r,c));if(!el)continue;const d=Math.hypot(c-c0,r-r0),s=hsh(idOf(r,c));
+        el.animate([{translate:'0px 0px',rotate:'0deg',scale:'1'},{translate:`0px ${(3+d*.25).toFixed(1)}px`,rotate:`${(s*(1+d*.15)).toFixed(2)}deg`,scale:'.965'}],{duration:620,delay:d*55,easing:'cubic-bezier(.45,0,.3,1.25)',fill:'forwards'});
+      }
+    },900);
+  });
+  const bossArea=()=>{const a=new Set();for(const [,en] of ents)if(en.dieT==null&&!en.gone)[en.i,idOf(en.r,en.nb),idOf(en.r+1,en.b),idOf(en.r+1,en.nb)].forEach(x=>a.add(x));return a}; // for C: keep off these cells
+  return {wave,poke,hitStop,bossArea};
+})();
+if(window.PQ)window.PQ.MO=MO;
 /* ===== end of fx module B ===== */
 
 /* ===== fx module C: life — agent C writes only between these two lines ===== */
