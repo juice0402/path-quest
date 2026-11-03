@@ -23,6 +23,7 @@ SPRITES = {  # name: longest side in px
     **{k: 128 for k in 'wst1 wbk1 wha1 wnd2 wbk2 wkn2 wst3 wnd3 wrp3 wbk4 wst4'.split()},  # p8
     **{k: 128 for k in 'rb1 sp1 mt1 mr2 rb2 cl2 ar3 rb3 mr3 mr4 rb4'.split()},  # p9
     **{k: 128 for k in 'cx1 cc2 cm2 ct2 cp3 cr3 cx3 ca3 ck4 cs4 cf4'.split()},  # p10
+    **{k: 200 for k in 'archer mage clown mason'.split()}, 'psn': 160, 'brick': 180,  # p11
 }
 BACKS = {'g-grass': 180, 'g-forest': 180, 'g-lake': 180, 'g-snow': 180, 'g-castle': 180, 'title': 900}
 

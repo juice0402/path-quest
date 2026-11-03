@@ -16,6 +16,7 @@
   - p8 武器と王さま 4×3（1440×1080）：MAHZ1cWlcKw → wst1, wbk1, wha1, wnd2, wbk2, wkn2, wst3, wnd3, wrp3, wbk4, wst4, king
   - p9 防具と宝箱 4×3：MAHZ1XefWGs → rb1, sp1, mt1, mr2, rb2, cl2, ar3, rb3, mr3, mr4, rb4, chest（宝箱は未使用）（`--lo 238 --tol 10`）
   - p10 お守りと次元のゲート 4×3：MAHZ1c0tKjk → cx1, cc2, cm2, ct2, cp3, cr3, cx3, ca3, ck4, cs4, cf4, portal（`--lo 240 --tol 8`）
+  - p11 新しい敵と毒マス・壁 3×2（1536×1024）：MAHZ1neDg18 → archer, mage, clown, mason, psn, brick（弓の内側をぬくため archer だけ `--holes`）
 - 生成は 1 枚ずつ、3 分以上あける（続けると待ち時間になる）
 - 書き出しの URL（export-download.canva.com）は作業場所から curl で落とせる
 
