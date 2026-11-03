@@ -46,17 +46,15 @@ body{font-family:var(--round);font-weight:500;-webkit-tap-highlight-color:transp
 button{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
-/* phone: a thin status row, the field edge to edge, the toy box's front board stuck to the bottom.
-   hud-a lays the status over the field instead of above it. 1100px and wider: the field on the left, the box lid on the right */
-.app{--slot:min(64px,calc((min(100vw,520px) - 40px)/7));--hudh:44px;position:relative;box-sizing:border-box;height:100%;max-width:520px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hud" "field" "tray";padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
-.app.hud-a{grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"field" "tray"}
+/* phone: the field edge to edge with the status floating on its top edge, the toy box's front board stuck to the bottom.
+   1100px and wider: the field on the left, the box lid on the right */
+.app{--slot:min(64px,calc((min(100vw,520px) - 40px)/7));--hudh:44px;position:relative;box-sizing:border-box;height:100%;max-width:520px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"field" "tray";padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 
 /* the field */
 .field{grid-area:field;position:relative;min-height:220px;display:flex;overflow:hidden;background:var(--line)}
 .view{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:none}
 .view::-webkit-scrollbar{display:none}
-.track{padding:4px 0 10px}
-.app.hud-a .track{padding-top:calc(var(--hudh) + 4px)}
+.track{padding:calc(var(--hudh) + 4px) 0 10px}
 .board{--w:5;--h:9;position:relative;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));grid-template-rows:repeat(var(--h),minmax(0,1fr));gap:3px;padding:4px;margin:0 auto;width:100%;aspect-ratio:var(--w)/var(--h);touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .cell{position:relative;min-width:0;min-height:0;background:var(--ground);border-radius:5px}
 .cell svg{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -95,13 +93,14 @@ button{font:inherit;color:inherit}
 .p-deal{color:var(--deal)}.p-hurt{color:var(--foe)}.p-guard{color:var(--dim)}.p-gold{color:var(--gold)}.p-heal{color:var(--heal)}.p-gear{color:var(--gear)}
 @keyframes rise{from{transform:translate(-50%,4px) scale(.7)}20%{transform:translate(-50%,-6px) scale(1.15)}to{transform:translate(-50%,-32px);opacity:0}}
 
-/* status: one thin row. hp is a row of ten little blocks; while a block is held, the part it would cost blinks pale */
-.hud{grid-area:hud;box-sizing:border-box;height:var(--hudh);display:flex;align-items:center;gap:10px;padding:0 6px 0 10px;font:800 15px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* status: one thin row floating on the field with a white halo. hp is a row of ten little blocks; while a block is held, the part it would cost blinks pale */
+.hud{position:absolute;top:0;left:0;right:0;z-index:6;pointer-events:none;text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 4px #fff;box-sizing:border-box;height:var(--hudh);display:flex;align-items:center;gap:10px;padding:0 6px 0 10px;font:800 15px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap}
 .hud svg{width:20px;height:20px;flex:none;display:block}
+.gear svg,.hp>span>svg{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1px #fff)}
 .hp{display:flex;align-items:center;gap:5px;min-width:0}
 .hp.dying b{color:var(--foe)}
 .blocks{display:flex;gap:2px}
-.blocks i{position:relative;width:10px;height:15px;border-radius:3px;background:#f6d3dc;overflow:hidden}
+.blocks i{position:relative;width:10px;height:15px;border-radius:3px;background:#f6d3dc;box-shadow:0 0 0 1.5px #fff;overflow:hidden}
 .blocks u,.blocks s{position:absolute;top:0;bottom:0;left:0}
 .blocks u{background:var(--hp)}
 .blocks s{background:#fff;animation:lose .45s ease-in-out infinite alternate}
@@ -109,17 +108,13 @@ button{font:inherit;color:inherit}
 .gear{display:flex;align-items:center;gap:9px;margin-left:auto}
 .gear span{display:flex;align-items:center;gap:2px}
 .gear .g b{color:var(--gold)}
-.quit{position:relative;flex:none;width:38px;height:38px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 2px 0 var(--edge);cursor:pointer}
+.quit{position:relative;flex:none;pointer-events:auto;width:38px;height:38px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 2px 0 var(--edge);cursor:pointer}
 .hud .quit svg{position:absolute;inset:0;width:100%;height:100%}
 .quit .ring circle{fill:none;stroke:var(--accent);stroke-width:3.5;stroke-linecap:round;stroke-dasharray:107;stroke-dashoffset:107;transform:rotate(-90deg);transform-origin:50% 50%}
 .quit.hold .ring circle{animation:hold .65s linear forwards}
 .quit:active{transform:translateY(2px);box-shadow:0 0 0 var(--edge)}
 .quit:disabled{opacity:.4;cursor:default}
 @keyframes hold{to{stroke-dashoffset:0}}
-.app.hud-a .hud{position:absolute;top:0;left:0;right:0;z-index:6;pointer-events:none;text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 4px #fff}
-.app.hud-a .quit{pointer-events:auto}
-.app.hud-a .blocks i{box-shadow:0 0 0 1.5px #fff}
-.app.hud-a .gear svg,.app.hud-a .hp>span>svg{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1px #fff)}
 
 /* the tray: the front board of the toy box. blocks keep one size whether there are 4 or 6; the die sits at the right end and is the one loud thing */
 .tray{grid-area:tray;position:relative;display:flex;align-items:center;gap:8px;padding:12px 6px 10px;background:var(--card);border-top:7px solid var(--edge);box-shadow:inset 0 2px 0 #fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
@@ -188,16 +183,15 @@ button{font:inherit;color:inherit}
 
 /* wide screens: the field fills the left, the box lid on the right holds the status, the blocks in rows of three and the die */
 @media (min-width:1100px){
-  .app,.app.hud-a{--slot:96px;max-width:1080px;padding:24px 32px;column-gap:28px;grid-template-columns:minmax(0,1fr) 360px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"field hud" "field tray" "field ."}
+  .app{--slot:96px;max-width:1080px;padding:24px 32px;column-gap:28px;grid-template-columns:minmax(0,1fr) 360px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"field hud" "field tray" "field ."}
   .field{border-radius:22px;box-shadow:inset 0 0 0 5px rgba(74,53,65,.07)}
-  .track,.app.hud-a .track{padding:10px 6px 14px}
-  .app .hud,.app.hud-a .hud{position:static;height:auto;flex-wrap:wrap;gap:16px;padding:22px 22px 12px;border-radius:24px 24px 0 0;background:var(--card);text-shadow:none;pointer-events:auto;font-size:22px}
+  .track{padding:10px 6px 14px}
+  .hud{grid-area:hud;position:static;height:auto;flex-wrap:wrap;gap:16px;padding:22px 22px 12px;border-radius:24px 24px 0 0;background:var(--card);text-shadow:none;pointer-events:auto;font-size:22px}
   .hud svg{width:28px;height:28px}
-  .app.hud-a .gear svg,.app.hud-a .hp>span>svg{filter:none}
-  .app.hud-a .blocks i{box-shadow:none}
+  .gear svg,.hp>span>svg{filter:none}
   .hp{flex:1 0 100%;gap:8px}
   .blocks{gap:4px}
-  .blocks i{width:18px;height:26px;border-radius:5px}
+  .blocks i{width:18px;height:26px;border-radius:5px;box-shadow:none}
   .gear{margin-left:0;gap:20px}
   .gear span{gap:5px}
   .quit{margin-left:auto;width:48px;height:48px}
@@ -243,7 +237,6 @@ button{font:inherit;color:inherit}
     <button class="btn" id="t-cont" type="button" hidden>つづきから</button>
     <button class="btn" id="t-shop" type="button">強化する</button>
     <div class="record" id="t-best"></div>
-    <button class="btn link" id="t-look" type="button"></button>
   </div>
 </div>
 
@@ -901,12 +894,6 @@ rollBtn.addEventListener('click',reroll);
     if(!run||busy)return;
     $('q-text').textContent=`ここまでの金貨 ${run.gold} を持ち帰って、強化に使える。`;show('s-quit');
   });
-}
-{ // trial only: switch between the two status layouts on the title screen
-  const LOOK='pathquest.look.v1',b=$('t-look');
-  const apply=()=>{const a=store.get(LOOK)==='a';app.classList.toggle('hud-a',a);b.textContent=`画面の見本：${a?'案A':'案B'}（タップで${a?'案B':'案A'}）`};
-  b.addEventListener('click',()=>{store.set(LOOK,store.get(LOOK)==='a'?'b':'a');apply()});
-  apply();
 }
 $('q-no').addEventListener('click',hideSheets);
 $('q-yes').addEventListener('click',()=>gameOver('quit'));
