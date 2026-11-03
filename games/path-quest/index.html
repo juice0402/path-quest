@@ -601,6 +601,139 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 /* ===== end of fx css B ===== */
 
 /* ===== fx css C: life ===== */
+/* the living field (module C): critters, small lives on the obstacles, painted step numbers, bunting, trims where the land
+   changes, cloud shadows and surprises. every loop starts from --lfT, the clock of the last redraw, so a redraw never restarts it */
+.lf-1{position:absolute;pointer-events:none;background:center/contain no-repeat}
+.lf-c,.lf-smk,.lf-rip,.lf-fish,.lf-leaf,.lf-pk,.lf-pen,.lf-sp,.lf-num,.lf-blk,.lf-chim{position:absolute;pointer-events:none}
+.lf-c{width:var(--z,30%);aspect-ratio:1}
+.lf-c>b,.lf-c::before,.lf-c::after{position:absolute;content:""}
+.lf-c>b{inset:0;background:center/contain no-repeat}
+.lf-gr::before{left:16%;right:16%;bottom:-2%;height:16%;border-radius:50%;background:rgba(74,53,65,.16)}
+.lf-air::before{left:30%;right:30%;bottom:-36%;height:12%;border-radius:50%;background:rgba(74,53,65,.09)}
+.lf-gold>b{filter:sepia(.9) saturate(2.4) hue-rotate(-8deg) brightness(1.1)}
+.lf-gold::after{right:-14%;top:-14%;width:40%;aspect-ratio:1;background:center/contain no-repeat;animation:tw 1.4s ease-in-out infinite}
+/* how each critter moves: the outer piece walks its path, the inner picture flaps, hops or rocks */
+.mv-fl{animation:lfFl 7s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+.mv-fl>b,.lf-flap{animation:lfFlap .2s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite alternate}
+@keyframes lfFl{0%,100%{transform:translate(0,0) rotate(-8deg)}25%{transform:translate(62%,-38%) rotate(10deg)}50%{transform:translate(18%,-68%) rotate(-3deg)}75%{transform:translate(-46%,-26%) rotate(-14deg)}}
+@keyframes lfFlap{to{scale:.32 1}}
+.mv-bz{animation:lfBz 6s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+.mv-bz>b,.mv-ms>b{animation:lfJit .12s steps(2) calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+@keyframes lfBz{0%,100%{transform:translate(0,0)}14%{transform:translate(48%,-26%)}28%{transform:translate(74%,8%)}42%{transform:translate(42%,34%)}57%{transform:translate(-6%,18%)}71%{transform:translate(-42%,-14%)}85%{transform:translate(-14%,-36%)}}
+@keyframes lfJit{to{translate:0 -7%}}
+.mv-cr{animation:lfCr 16s linear calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+@keyframes lfCr{0%{transform:translate(0,0) rotate(90deg)}28%{transform:translate(110%,0) rotate(90deg)}34%{transform:translate(110%,0) rotate(225deg)}62%{transform:translate(20%,90%) rotate(225deg)}68%{transform:translate(20%,90%) rotate(354deg)}94%{transform:translate(0,0) rotate(354deg)}100%{transform:translate(0,0) rotate(450deg)}}
+.mv-hp{animation:lfHpX 8s linear calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+.mv-hp>b{transform-origin:50% 100%;animation:lfHpY 8s linear calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+@keyframes lfHpX{0%,20%{transform:translateX(0) scaleX(1)}30%,46%{transform:translateX(60%) scaleX(1)}48%,70%{transform:translateX(60%) scaleX(-1)}80%,96%{transform:translateX(0) scaleX(-1)}98%,100%{transform:translateX(0) scaleX(1)}}
+@keyframes lfHpY{0%,20%,30%,33.5%,70%,80%,83.5%,100%{translate:0 0;scale:1 1}22%,72%{translate:0 0;scale:1.12 .86}25%,75%{translate:0 -42%;scale:.94 1.08}31.5%,81.5%{scale:1.1 .9}10%,12.5%,58%,60.5%{rotate:0deg}11%{rotate:-8deg}59%{rotate:7deg}}
+.mv-df{animation:lfDf 7s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+.mv-df>b{animation:lfFlick .1s steps(2) calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+@keyframes lfDf{0%,16%{transform:translate(0,0) rotate(25deg)}22%,40%{transform:translate(70%,-34%) rotate(70deg)}46%,64%{transform:translate(22%,40%) rotate(-28deg)}70%,88%{transform:translate(-42%,-12%) rotate(-75deg)}94%,100%{transform:translate(0,0) rotate(25deg)}}
+@keyframes lfFlick{to{opacity:.72}}
+.mv-sn{animation-duration:34s}
+.mv-ff{animation:lfFf 9s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+.mv-ff::before{display:none}
+.mv-ff>b{border-radius:50%;background:radial-gradient(circle,#fff 0 14%,#fff0a0 26%,rgba(255,226,120,.7) 42%,rgba(255,226,120,0) 70%)}
+.mv-ff>b,.mv-ff::after{animation:lfGlow 2.6s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite alternate}
+.mv-ff::after{left:110%;top:-50%;width:70%;height:70%;border-radius:50%;background:radial-gradient(circle,#fffbe0 0 18%,rgba(255,229,138,.9) 32%,rgba(255,229,138,0) 68%);animation-delay:calc(var(--lfT,0s) + var(--sd,0s) - 1.3s)}
+@keyframes lfFf{0%,100%{transform:translate(0,0)}33%{transform:translate(60%,-50%)}66%{transform:translate(-40%,-70%)}}
+@keyframes lfGlow{from{opacity:.2;scale:.7}to{opacity:1;scale:1.1}}
+.mv-pk{animation:lfPkX 9s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+.mv-pk>b{transform-origin:55% 95%;animation:lfPkY 9s linear calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+@keyframes lfPkX{0%,30%{transform:translateX(0) scaleX(1)}36%,62%{transform:translateX(45%) scaleX(1)}64%,92%{transform:translateX(45%) scaleX(-1)}98%{transform:translateX(0) scaleX(-1)}100%{transform:translateX(0) scaleX(1)}}
+@keyframes lfPkY{0%,30%,36%,92%,98%,100%{translate:0 0}33%,95%{translate:0 -28%}0%,10%,14%,46%,50%,74%,78%,100%{rotate:0deg}12%,48%,76%{rotate:26deg}}
+.mv-wd{animation:lfWd 11s linear calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+.mv-wd>b{transform-origin:50% 100%;animation:lfRock .4s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite alternate}
+@keyframes lfWd{0%{transform:translateX(-25%) scaleX(1)}46%{transform:translateX(60%) scaleX(1)}50%{transform:translateX(60%) scaleX(-1)}96%{transform:translateX(-25%) scaleX(-1)}100%{transform:translateX(-25%) scaleX(1)}}
+@keyframes lfRock{from{rotate:-8deg}to{rotate:8deg}}
+.mv-ms{animation:lfMs 7s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+@keyframes lfMs{0%,22%{transform:translateX(-20%) scaleX(1)}36%,50%{transform:translateX(75%) scaleX(1)}52%,72%{transform:translateX(75%) scaleX(-1)}86%,98%{transform:translateX(-20%) scaleX(-1)}100%{transform:translateX(-20%) scaleX(1)}}
+.mv-tp{animation:lfTp 10s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+.mv-tp>b{animation:lfSpin .22s linear calc(var(--lfT,0s) + var(--sd,0s)) infinite alternate,lfRock 1.1s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite alternate}
+@keyframes lfTp{0%,100%{transform:translate(0,0)}25%{transform:translate(55%,30%)}50%{transform:translate(20%,60%)}75%{transform:translate(-30%,25%)}}
+@keyframes lfSpin{to{scale:.72 1}}
+/* the bird on a roof */
+.mv-rf{margin:calc(var(--z,20%) * -.86) 0 0 calc(var(--z,20%) * -.5)}
+.mv-rf>b{scale:var(--fx,1) 1;transform-origin:50% 100%;animation:lfRf 6s linear calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+@keyframes lfRf{0%,40%,48%,86%,94%,100%{translate:0 0}44%,90%{translate:0 -26%}0%,20%,23%,64%,67%,100%{rotate:0deg}21.5%,65.5%{rotate:-18deg}}
+/* small lives on the obstacles: chimney smoke, a falling leaf, ripples and a jumping fish, a castle pennant, someone peeking */
+.lf-smk{width:14%;aspect-ratio:1;margin:-7% 0 0 -7%}
+.lf-smk::before,.lf-smk::after,.lf-train>i::before,.lf-train>i::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 40% 38%,#fff 0 38%,rgba(255,255,255,.75) 58%,rgba(255,255,255,0) 72%);opacity:0;animation:lfSmk 3.6s ease-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+.lf-smk::after{animation-delay:calc(var(--lfT,0s) + var(--sd,0s) - 1.8s)}
+@keyframes lfSmk{0%{transform:translate(0,0) scale(.35);opacity:0}12%{opacity:.85}100%{transform:translate(40%,-220%) scale(1.4);opacity:0}}
+.lf-rip{width:30%;height:11%;margin:-5.5% 0 0 -15%}
+.lf-rip::before,.lf-rip::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,.9);opacity:0;animation:lfRip 3.2s ease-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+.lf-rip::after{animation-delay:calc(var(--lfT,0s) + var(--sd,0s) - 1.6s)}
+@keyframes lfRip{0%{transform:scale(.35);opacity:0}15%{opacity:.9}100%{transform:scale(1.2);opacity:0}}
+.lf-fish{width:14%;aspect-ratio:1.6;margin:-4% 0 0 -7%;background:center/contain no-repeat;opacity:0;animation:lfFish 8s linear calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+@keyframes lfFish{0%,64%{opacity:0;transform:translate(0,30%) rotate(-55deg)}66%{opacity:1}72%{transform:translate(45%,-170%) rotate(0deg)}78%{opacity:1;transform:translate(90%,20%) rotate(55deg)}80%,100%{opacity:0;transform:translate(90%,40%) rotate(55deg)}}
+.lf-leaf{width:11%;aspect-ratio:1;margin:-5.5% 0 0 -5.5%;background:center/contain no-repeat;opacity:0;animation:lfLeaf 8s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+@keyframes lfLeaf{0%,50%{opacity:0;transform:translate(0,0) rotate(0)}55%{opacity:1}66%{transform:translate(70%,140%) rotate(70deg)}78%{transform:translate(-30%,280%) rotate(-20deg)}90%{opacity:1;transform:translate(60%,420%) rotate(80deg)}100%{opacity:0;transform:translate(20%,480%) rotate(30deg)}}
+.lf-pk{width:18%;aspect-ratio:1;margin:-9% 0 0 -9%;background:center/contain no-repeat;scale:var(--dir,1) 1;animation:lfPeek 10s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+.lf-pk2{width:16%;margin:-8% 0 0 -8%}
+@keyframes lfPeek{0%,58%,94%,100%{transform:translateX(0)}66%,86%{transform:translateX(80%)}}
+.lf-pen{width:2.4%;height:14%;margin:-14% 0 0 -1.2%;border-radius:2px;background:linear-gradient(90deg,#c99b6e,#a87a52)}
+.lf-pen::before{content:"";position:absolute;left:-60%;top:-9%;width:220%;aspect-ratio:1;border-radius:50%;background:#ffd95e}
+.lf-pen::after{content:"";position:absolute;left:100%;top:6%;width:560%;height:44%;background:linear-gradient(#f7a8c0,#ee88ac);clip-path:polygon(0 0,100% 50%,0 100%);transform-origin:0 50%;animation:lfPen 1.3s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite alternate}
+@keyframes lfPen{from{transform:skewY(-10deg) scaleX(.86)}to{transform:skewY(9deg) scaleX(1)}}
+.cell.lf-sway>svg{transform-origin:50% 88%;animation:lfSway 5s ease-in-out calc(var(--lfT,0s) + var(--lfd,0s)) infinite}
+.cell.lf-wob>svg{transform-origin:50% 88%;animation:lfWob 7s ease-in-out calc(var(--lfT,0s) + var(--lfd,0s)) infinite}
+.lf-d1{--lfd:-.9s}.lf-d2{--lfd:-1.8s}.lf-d3{--lfd:-2.7s}.lf-d4{--lfd:-3.6s}.lf-d5{--lfd:-4.5s}.lf-d6{--lfd:-5.4s}.lf-d7{--lfd:-6.3s}
+@keyframes lfSway{0%,100%{rotate:-1.4deg}50%{rotate:1.4deg}}
+@keyframes lfWob{0%,80%,100%{rotate:0deg}83%{rotate:3.5deg}86%{rotate:-3deg}89%{rotate:2deg}92%{rotate:-1deg}95%{rotate:.4deg}}
+.lf-chim{width:12%;aspect-ratio:20/24;translate:-50% -50%}
+.lf-blk{width:calc(20.6% * var(--k,1));aspect-ratio:3;translate:-50% -50%;opacity:0;animation:lfBlink 5.2s linear calc(var(--lfT,0s) + var(--sd,0s)) infinite}
+@keyframes lfBlink{0%,93%{opacity:0}93.6%,96.4%{opacity:1}97%,100%{opacity:0}}
+/* every 10 steps a number painted on the ground */
+.lf-num{inset:0;display:grid;place-items:center;font:400 calc(var(--cell,60px) * .46)/1 var(--disp);color:rgba(255,255,255,.84);rotate:-8deg;text-shadow:0 2px 0 rgba(74,53,65,.1);letter-spacing:-.02em}
+.lf-num.lf-n3{font-size:calc(var(--cell,60px) * .33)}
+/* the layer over the panels: trims where the land changes, bunting, the toy train and the band */
+.lf-l{position:absolute;left:0;top:0;width:100%;height:0;z-index:1;pointer-events:none}
+.lf-seam{position:absolute;height:calc(var(--cell,60px) * .2);margin-top:calc(var(--cell,60px) * -.1);background:center/auto 100% repeat-x;filter:drop-shadow(0 1.5px 0 rgba(74,53,65,.14))}
+.lf-bun{position:absolute;left:3px;right:3px;height:calc(var(--cell,60px) * .16);margin-top:calc(var(--cell,60px) * -.04)}
+.lf-bun svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.lf-pn{position:absolute;width:calc(var(--cell,60px) * .13);height:calc(var(--cell,60px) * .17);margin-left:calc(var(--cell,60px) * -.065);transform-origin:50% 0;background:linear-gradient(90deg,var(--c) 0 50%,var(--e) 50%);clip-path:polygon(0 0,100% 0,50% 100%);animation:lfPn 1.7s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite alternate}
+.lf-ch .lf-pn{animation:lfCheer 1.1s cubic-bezier(.3,1.5,.5,1) calc(var(--cd,0s) + var(--k,0) * .07s) 1 backwards,lfPn 1.7s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite alternate}
+@keyframes lfCheer{0%{translate:0 0;scale:1}35%{translate:0 -50%;scale:1.3}100%{translate:0 0;scale:1}}
+@keyframes lfPn{from{transform:rotate(calc(var(--a,0deg) - 6deg))}to{transform:rotate(calc(var(--a,0deg) + 6deg))}}
+.lf-train,.lf-band{position:absolute;left:0;top:0}
+.lf-train{width:calc(var(--cell,60px) * 2.1);aspect-ratio:3}
+.lf-band{width:calc(var(--cell,60px) * 1.5);aspect-ratio:2.25}
+.lf-train>b,.lf-band>b{position:absolute;inset:0;background:center/contain no-repeat}
+.lf-train>b{animation:lfJit .24s steps(2) infinite}
+.lf-band>b{animation:lfMarch .5s ease-in-out infinite alternate}
+@keyframes lfMarch{to{translate:0 -6%}}
+.lf-rev>b,.lf-rev>i{scale:-1 1}
+.lf-train>i{position:absolute;left:83%;top:-16%;width:16%;aspect-ratio:1}
+.lf-rev>i{left:1%}
+.lf-train>i::before,.lf-train>i::after{animation:lfTsm 1.3s ease-out infinite}
+.lf-train>i::after{animation-delay:-.65s}
+@keyframes lfTsm{0%{transform:translate(0,0) scale(.4);opacity:0}15%{opacity:.95}100%{transform:translate(-90%,-200%) scale(1.5);opacity:0}}
+/* the sky over the field: cloud shadows, balloons, shooting stars */
+.lf-sky{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
+.lf-cloud{position:absolute;left:0;width:var(--w);height:calc(var(--w) * .46);border-radius:50%;background:radial-gradient(closest-side,var(--cc,rgba(74,50,96,.075)),var(--cc2,rgba(74,50,96,.04)) 60%,rgba(74,50,96,0));animation:lfCloud 90s linear infinite}
+.lf-cloud::before{content:"";position:absolute;left:34%;top:-30%;width:56%;height:92%;border-radius:50%;background:inherit}
+@keyframes lfCloud{from{transform:translateX(calc(var(--w) * -1.1))}to{transform:translateX(var(--fw,520px))}}
+.lf-sky[data-d="2"]{--cc:rgba(20,22,70,.1);--cc2:rgba(20,22,70,.05)}
+.lf-bal{position:absolute;left:0;top:0;width:22px;height:50px;background:center/contain no-repeat;transform-origin:50% 100%;animation:lfBalS 1.8s ease-in-out infinite alternate}
+@keyframes lfBalS{from{rotate:-7deg}to{rotate:7deg}}
+.lf-star{position:absolute;left:0;top:0;width:84px;height:3px;border-radius:2px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.95));transform-origin:100% 50%}
+.lf-star::after{content:"";position:absolute;right:-6px;top:-5.5px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#fff 0 28%,#fff3a8 44%,rgba(255,243,168,0) 70%)}
+/* a critter running off, and what a tap leaves on the ground */
+.lf-flee{position:fixed;z-index:5;pointer-events:none;background:center/contain no-repeat}
+.lf-flee.lf-gold{filter:sepia(.9) saturate(2.4) hue-rotate(-8deg) brightness(1.1)}
+.lf-sp.lf-st{animation:none}
+.lf-sp{width:36%;aspect-ratio:1;background:center/contain no-repeat;transform-origin:50% 100%;animation:lfSprout .5s cubic-bezier(.3,1.7,.5,1) both}
+@keyframes lfSprout{from{transform:scale(0)}}
+.lf-sp.lf-ring{width:46%;aspect-ratio:2.6;border:2px solid rgba(255,255,255,.95);border-radius:50%;box-sizing:border-box;animation:lfRip .9s ease-out 2 both}
+.pop.lf-note{color:#5f9fd6;font-size:22px}
+/* the night dimension: windows glow and fireflies come out everywhere */
+.lf-door{position:absolute;pointer-events:none;width:30%;height:32%;margin:-16% 0 0 -15%;border-radius:50%;background:radial-gradient(closest-side,#fff3c0 0 22%,rgba(255,176,72,.85) 42%,rgba(255,150,60,.35) 66%,rgba(255,150,60,0));animation:lfGlow 3.4s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite alternate}
+@media (prefers-reduced-motion:reduce){
+  .lf-c,.lf-c>b,.lf-c::after,.lf-pn,.lf-pen::after,.cell.lf-sway>svg,.cell.lf-wob>svg,.lf-sp,.lf-door,.lf-blk{animation:none!important}
+  .lf-smk,.lf-rip,.lf-fish,.lf-leaf,.lf-pk,.lf-sky,.lf-train,.lf-band{display:none}
+}
 /* ===== end of fx css C ===== */
 </style>
 </head>
@@ -2335,6 +2468,293 @@ if(/fxtest/.test(location.hash))window.PQ={get run(){return run},FXH,render,rend
 /* ===== end of fx module B ===== */
 
 /* ===== fx module C: life — agent C writes only between these two lines ===== */
+/* the living field: small critters on the empty ground (a few per screen, different each climb), small lives on the obstacles,
+   critters that run off when the knight comes near, flowers planted by a tap, painted numbers and bunting every 10 steps,
+   trims where the land changes, cloud shadows, and now and then a toy train, a band, a balloon or a shooting star.
+   loops are CSS that start from --lfT (the clock when the board was drawn), so redrawing never restarts them */
+const LF=(()=>{
+  const lfH=(a,b)=>{let h=Math.imul((a|0)^0x5bd1e995,0x9e3779b1)^(b|0);h=Math.imul(h^(h>>>15),0x85ebca6b);h^=h>>>13;h=Math.imul(h,0xc2b2ae35);return (h^(h>>>16))>>>0};
+  const SVG=(vb,s)=>`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">${s}</svg>`)}")`;
+  const bf=(a,b)=>`<path d="M19 18C14 5 3 4 3 12c0 6 7 9 16 8z" fill="${a}"/><path d="M21 18C26 5 37 4 37 12c0 6-7 9-16 8z" fill="${a}"/><path d="M19 21c-9 0-14 4-12 9 2 4 9 3 12-6z" fill="${b}"/><path d="M21 21c9 0 14 4 12 9-2 4-9 3-12-6z" fill="${b}"/><circle cx="10" cy="12" r="2.6" fill="#fff" opacity=".75"/><circle cx="30" cy="12" r="2.6" fill="#fff" opacity=".75"/><rect x="18" y="10" width="4" height="21" rx="2" fill="#6b4a5a"/><path d="M19 11q-2-5-5-7M21 11q2-5 5-7" stroke="#6b4a5a" stroke-width="1.4" fill="none" stroke-linecap="round"/>`;
+  const bird=(a,b,c)=>`<path d="M10 22l-7-3 2 6z" fill="${b}"/><ellipse cx="19" cy="24" rx="10" ry="8.5" fill="${a}"/><circle cx="25" cy="17.5" r="6.5" fill="${a}"/><ellipse cx="22.5" cy="26" rx="6" ry="5" fill="${c}"/><path d="M31 17.5l5 1.5-5 1.5z" fill="#f2c14e"/><circle cx="27" cy="16" r="1.4" fill="#4a3541"/><path d="M13 22q4 4 9 1" stroke="${b}" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M18 32v4M22 32v4" stroke="#c99b6e" stroke-width="1.6" stroke-linecap="round"/>`;
+  const flw=c=>`<path d="M12 23v-9" stroke="#74bf70" stroke-width="2" stroke-linecap="round"/><path d="M12 20q-5-1-6-5 5 0 6 5zM12 19q5-1 6-5-5 0-6 5z" fill="#8fd08a"/><g fill="${c}"><circle cx="12" cy="5.6" r="3.4"/><circle cx="16.2" cy="8.7" r="3.4"/><circle cx="14.6" cy="13.4" r="3.4"/><circle cx="9.4" cy="13.4" r="3.4"/><circle cx="7.8" cy="8.7" r="3.4"/></g><circle cx="12" cy="10" r="2.7" fill="#ffd36e"/>`;
+  const bal=c=>`<path d="M12 33q-3 9 1 22" stroke="#b08968" stroke-width="1" fill="none"/><ellipse cx="12" cy="16" rx="11" ry="14" fill="${c}"/><path d="M10 29.5l2 3.5 2-3.5z" fill="${c}"/><ellipse cx="8" cy="10.5" rx="3" ry="5" fill="#fff" opacity=".55"/>`;
+  const ART={ // [viewBox, drawing]; critters facing right when seen from the side, head up when seen from above
+    bfly:['0 0 40 40',bf('#f7a8c0','#fbd3e0')],
+    bfly2:['0 0 40 40',bf('#ffd36e','#fbe9a8')],
+    bee:['0 0 40 40','<ellipse cx="12" cy="14" rx="8" ry="5.5" transform="rotate(-25 12 14)" fill="#fff" stroke="#bcd6ee" stroke-width="1.2"/><ellipse cx="28" cy="14" rx="8" ry="5.5" transform="rotate(25 28 14)" fill="#fff" stroke="#bcd6ee" stroke-width="1.2"/><ellipse cx="20" cy="24" rx="9.5" ry="11" fill="#ffd95e"/><path d="M11.5 22h17M11.5 28h17" stroke="#5a4048" stroke-width="3.2" stroke-linecap="round"/><circle cx="20" cy="12.5" r="5" fill="#5a4048"/><ellipse cx="16.5" cy="19" rx="2.4" ry="1.8" fill="#fff" opacity=".7"/>'],
+    lady:['0 0 40 40','<circle cx="20" cy="9.5" r="5.5" fill="#4a3541"/><circle cx="17.5" cy="8.5" r="1.2" fill="#fff"/><circle cx="22.5" cy="8.5" r="1.2" fill="#fff"/><ellipse cx="20" cy="23" rx="11" ry="12" fill="#f08a8a"/><path d="M20 11.5v23" stroke="#4a3541" stroke-width="1.6"/><circle cx="14" cy="19" r="2.5" fill="#4a3541"/><circle cx="26" cy="19" r="2.5" fill="#4a3541"/><circle cx="15" cy="28" r="2.1" fill="#4a3541"/><circle cx="25" cy="28" r="2.1" fill="#4a3541"/><ellipse cx="15" cy="15.5" rx="3" ry="2" fill="#fff" opacity=".6"/>'],
+    squir:['0 0 40 40','<path d="M15 32C2 32 1 18 6 11c4-5 12-3 11 4-1 5-6 4-6 9z" fill="#d99a62"/><path d="M7 14q2-4 6-2" stroke="#f0c494" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="22" cy="27" rx="8" ry="8.5" fill="#e8b07a"/><path d="M25 11.5l1-4.5 3.4 3.4z" fill="#d99a62"/><circle cx="28" cy="17" r="6.5" fill="#e8b07a"/><ellipse cx="24" cy="28" rx="4" ry="5" fill="#fff1dc"/><circle cx="30" cy="16" r="1.4" fill="#4a3541"/><circle cx="34.2" cy="18.4" r="1.1" fill="#7a5a48"/><circle cx="29" cy="20.2" r="1.4" fill="#f4a6b8"/><ellipse cx="27" cy="35" rx="3" ry="1.6" fill="#d99a62"/><ellipse cx="19" cy="35" rx="3" ry="1.6" fill="#d99a62"/>'],
+    snail:['0 0 40 40','<ellipse cx="20" cy="20" rx="5.5" ry="15" fill="#f3e2c8"/><path d="M17.5 7l-2.5-5M22.5 7l2.5-5" stroke="#d9c4a5" stroke-width="1.6" stroke-linecap="round"/><circle cx="15" cy="2.6" r="1.6" fill="#4a3541"/><circle cx="25" cy="2.6" r="1.6" fill="#4a3541"/><circle cx="20" cy="25" r="10" fill="#f7c3d4" stroke="#e29ab4" stroke-width="2"/><path d="M15 25a5 5 0 1 0 5-5 3 3 0 1 1-3 3" stroke="#e29ab4" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="16.5" cy="20.5" r="2" fill="#fff" opacity=".7"/>'],
+    frog:['0 0 40 40','<path d="M5 34q0-15 15-15t15 15z" fill="#9fdc8a"/><path d="M6 34q2-6 8-5" stroke="#86c873" stroke-width="2.4" fill="none" stroke-linecap="round"/><ellipse cx="22" cy="31" rx="9" ry="3.5" fill="#dff5cf"/><circle cx="28" cy="16" r="5.5" fill="#9fdc8a"/><circle cx="20" cy="17" r="4.8" fill="#8fcf7a"/><circle cx="28.6" cy="15.4" r="2.8" fill="#fff"/><circle cx="29.4" cy="15.8" r="1.5" fill="#4a3541"/><circle cx="20.4" cy="16.4" r="2.2" fill="#fff"/><circle cx="21" cy="16.8" r="1.2" fill="#4a3541"/><path d="M27 24q4 2.5 7-1" stroke="#5f9e55" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="31" cy="21.5" r="1.5" fill="#f4a6b8"/>'],
+    dfly:['0 0 40 40','<ellipse cx="11" cy="13" rx="9" ry="3.2" fill="#eef8ff" stroke="#a8d8f3" stroke-width="1"/><ellipse cx="29" cy="13" rx="9" ry="3.2" fill="#eef8ff" stroke="#a8d8f3" stroke-width="1"/><ellipse cx="12" cy="19" rx="8" ry="2.8" fill="#eef8ff" stroke="#a8d8f3" stroke-width="1"/><ellipse cx="28" cy="19" rx="8" ry="2.8" fill="#eef8ff" stroke="#a8d8f3" stroke-width="1"/><rect x="18.4" y="9" width="3.2" height="28" rx="1.6" fill="#8fb8e8"/><circle cx="20" cy="8" r="3.8" fill="#6aa8d8"/><circle cx="18.6" cy="7" r="1.2" fill="#fff" opacity=".8"/>'],
+    duckl:['0 0 40 40','<path d="M7 24l-4-4 6 .5z" fill="#ffe27a"/><ellipse cx="18" cy="27" rx="12" ry="8.5" fill="#ffe27a"/><circle cx="26" cy="16" r="7" fill="#ffe27a"/><path d="M32 16.5l6 1.5-6 2z" fill="#f2a65e"/><circle cx="28.2" cy="14.6" r="1.4" fill="#4a3541"/><circle cx="27.6" cy="19.4" r="1.4" fill="#f7b6c8"/><path d="M12 25q5 4 10 0" stroke="#f2c94e" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M15 35v3M21 35v3" stroke="#f2a65e" stroke-width="2.2" stroke-linecap="round"/>'],
+    bunny:['0 0 40 40','<circle cx="8" cy="26" r="3.6" fill="#fff" stroke="#d3dcee" stroke-width="1.2"/><ellipse cx="18" cy="28" rx="11" ry="8.5" fill="#fff" stroke="#d3dcee" stroke-width="1.2"/><ellipse cx="24" cy="9" rx="2.8" ry="7.4" transform="rotate(-12 24 9)" fill="#fff" stroke="#d3dcee" stroke-width="1.2"/><ellipse cx="24" cy="9.6" rx="1.2" ry="4.6" transform="rotate(-12 24 9.6)" fill="#f7c3d4"/><circle cx="27" cy="21" r="7" fill="#fff" stroke="#d3dcee" stroke-width="1.2"/><circle cx="29.5" cy="20" r="1.4" fill="#4a3541"/><circle cx="33.6" cy="22.6" r="1" fill="#ee88ac"/><circle cx="28.4" cy="24" r="1.6" fill="#fbd3e0"/>'],
+    peng:['0 0 40 40','<ellipse cx="20" cy="23" rx="11" ry="14" fill="#6f7cab"/><ellipse cx="21.5" cy="25" rx="7.5" ry="10.5" fill="#fff"/><path d="M9.5 21q-3.5 6 0 10" stroke="#5d6a98" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="18.5" cy="15.5" r="1.4" fill="#4a3541"/><circle cx="24.5" cy="15.5" r="1.4" fill="#4a3541"/><path d="M20 17.6h3.4l-1.7 2.6z" fill="#f2a65e"/><circle cx="16.4" cy="19.4" r="1.4" fill="#f4a6b8"/><circle cx="26.6" cy="19.4" r="1.4" fill="#f4a6b8"/><path d="M11.5 23q9 4.5 18 0" stroke="#e8607e" stroke-width="3.2" fill="none" stroke-linecap="round"/><ellipse cx="16" cy="37" rx="3.6" ry="1.6" fill="#f2a65e"/><ellipse cx="25" cy="37" rx="3.6" ry="1.6" fill="#f2a65e"/>'],
+    robin:['0 0 40 40',bird('#c7a688','#a8876a','#f4a28a')],
+    tit:['0 0 40 40',bird('#93c3e4','#7fb0d8','#fff6ec')],
+    mouse:['0 0 40 40','<path d="M6 30q-5 1-4-4" stroke="#c9b6ff" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M5 31q2-14 16-14 11 0 15 13z" fill="#d8cdf6"/><circle cx="22" cy="17" r="4.5" fill="#d8cdf6"/><circle cx="22" cy="17" r="2.4" fill="#f7c3d4"/><circle cx="29" cy="24" r="1.4" fill="#4a3541"/><circle cx="36.4" cy="29.2" r="1.6" fill="#ee88ac"/><path d="M13 18v-6" stroke="#e0a12a" stroke-width="2.2" stroke-linecap="round"/><circle cx="10" cy="10" r="2.4" fill="none" stroke="#f2c14e" stroke-width="1.8"/><circle cx="16" cy="10" r="2.4" fill="none" stroke="#f2c14e" stroke-width="1.8"/><circle cx="12" cy="33" r="2.4" fill="#b4a3e8"/><circle cx="27" cy="33" r="2.4" fill="#b4a3e8"/>'],
+    top:['0 0 40 40','<ellipse cx="20" cy="37" rx="7" ry="1.8" fill="rgba(74,53,65,.16)"/><path d="M6 20q1 9 14 16 13-7 14-16z" fill="#93c3e4"/><path d="M7 23q13 6 26 0" stroke="#fff" stroke-width="2.2" fill="none" opacity=".8"/><ellipse cx="20" cy="20" rx="14" ry="5" fill="#c4e2f5" stroke="#93c3e4" stroke-width="1.5"/><rect x="18" y="8" width="4" height="12" rx="2" fill="#f7a8c0"/><circle cx="15" cy="19" r="1.8" fill="#fff" opacity=".7"/>'],
+    wduck:['0 0 40 40','<path d="M2 30h6" stroke="#b08968" stroke-width="1.2" stroke-linecap="round"/><path d="M7 21l-3-4 6 1z" fill="#f7c3d4"/><path d="M6 22q0 9 12 9t14-6q0-5-5-5H12q-6 0-6 2z" fill="#f7c3d4"/><circle cx="26" cy="14" r="6.5" fill="#f7c3d4"/><path d="M32 14.5l5 1.4-5 1.6z" fill="#f2a65e"/><circle cx="28" cy="12.6" r="1.4" fill="#4a3541"/><path d="M11 22q5 4 10 0" stroke="#e29ab4" stroke-width="2" fill="none" stroke-linecap="round"/><rect x="8" y="30" width="22" height="3" rx="1.5" fill="#e6b98e"/><circle cx="11" cy="35" r="3" fill="#b4a3e8"/><circle cx="27" cy="35" r="3" fill="#b4a3e8"/>'],
+    chim:['0 0 20 24','<path d="M4 6h12v16.6L4 14z" fill="#e8907a"/><path d="M4 6h4v10.8L4 14z" fill="#f4b4a0"/><rect x="2" y="2" width="16" height="5" rx="1.5" fill="#c97a68"/><rect x="3" y="2.6" width="6" height="1.6" rx=".8" fill="#f4b4a0"/>'],
+    leaf:['0 0 16 16','<path d="M2 14C2 6 7 2 14 2c0 7-4 12-12 12z" fill="#8fcf7a"/><path d="M3 13 12 4" stroke="#6fae5a" stroke-width="1.2"/>'],
+    fish:['0 0 32 20','<path d="M28 10q-8-8-18-3L4 2v16l6-5q10 5 18-3z" fill="#f2a65e"/><path d="M19 6q-3 4 0 8" stroke="#fff" stroke-width="2" fill="none" opacity=".85"/><circle cx="23" cy="9" r="1.3" fill="#4a3541"/>'],
+    cat:['0 0 24 24','<path d="M5 9l2-7 5 5zM14 7l5-5 1 7z" fill="#fff" stroke="#e0c9b0" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 4l1.5 3M18 4l-1.5 3" stroke="#f7a8c0" stroke-width="1.5" stroke-linecap="round"/><ellipse cx="12.5" cy="14" rx="9.5" ry="8" fill="#fff" stroke="#e0c9b0" stroke-width="1.2"/><circle cx="9" cy="13" r="1.4" fill="#4a3541"/><circle cx="16" cy="13" r="1.4" fill="#4a3541"/><path d="M11.3 16q1.2 1.2 2.4 0" stroke="#4a3541" stroke-width="1" fill="none" stroke-linecap="round"/><circle cx="7" cy="16" r="1.3" fill="#fbd3e0"/><circle cx="18" cy="16" r="1.3" fill="#fbd3e0"/>'],
+    sqh:['0 0 24 24','<path d="M6 8l2-6 4 4z" fill="#d99a62"/><path d="M12 6l3-5 3 5z" fill="#d99a62"/><circle cx="12" cy="13" r="8" fill="#e8b07a"/><ellipse cx="14" cy="16" rx="4.5" ry="3.5" fill="#fff1dc"/><circle cx="15" cy="11.5" r="1.4" fill="#4a3541"/><circle cx="19.5" cy="14" r="1.2" fill="#7a5a48"/><circle cx="12.6" cy="16.6" r="1.3" fill="#f4a6b8"/>'],
+    blink:['0 0 36 12','<ellipse cx="7" cy="6" rx="4.8" ry="4.6" fill="#fbfbfd"/><ellipse cx="29" cy="6" rx="4.8" ry="4.6" fill="#fbfbfd"/><path d="M4 6.4q3 2.4 6 0M26 6.4q3 2.4 6 0" stroke="#4a3541" stroke-width="1.6" fill="none" stroke-linecap="round"/>'],
+    flw1:['0 0 24 24',flw('#f7a8c0')],flw2:['0 0 24 24',flw('#ffe08a')],flw3:['0 0 24 24',flw('#fff')],flw4:['0 0 24 24',flw('#d8cdf6')],
+    mush:['0 0 24 24','<ellipse cx="12" cy="21.5" rx="6" ry="1.4" fill="rgba(74,53,65,.15)"/><rect x="9.5" y="12" width="5" height="9.4" rx="2.2" fill="#fff6ec"/><path d="M3 13q0-10 9-10t9 10z" fill="#f08a8a"/><circle cx="8" cy="9" r="1.6" fill="#fff"/><circle cx="14" cy="6.5" r="1.4" fill="#fff"/><circle cx="16.5" cy="10.5" r="1.3" fill="#fff"/>'],
+    shell:['0 0 24 24','<path d="M12 21 3 12q0-8 9-8t9 8z" fill="#fbd3e0" stroke="#e29ab4" stroke-width="1.2" stroke-linejoin="round"/><path d="M12 21 7 6M12 21V4M12 21l5-15" stroke="#e29ab4" stroke-width="1.1"/>'],
+    snowm:['0 0 24 24','<circle cx="12" cy="16" r="5.5" fill="#fff" stroke="#c9d3ea" stroke-width="1.2"/><circle cx="12" cy="8.5" r="4" fill="#fff" stroke="#c9d3ea" stroke-width="1.2"/><circle cx="10.6" cy="8" r=".8" fill="#4a3541"/><circle cx="13.4" cy="8" r=".8" fill="#4a3541"/><path d="M12 9.2l2.6.6-2.6.7z" fill="#f2a65e"/><path d="M8.6 11.8q3.4 1.6 6.8 0" stroke="#e8607e" stroke-width="1.6" fill="none" stroke-linecap="round"/>'],
+    starst:['0 0 24 24','<path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.3l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z" fill="#fbe2a0" stroke="#e5bf63" stroke-width="1.3" stroke-linejoin="round"/><circle cx="10" cy="9" r="1.3" fill="#fff" opacity=".8"/>'],
+    bal0:['0 0 24 56',bal('#f7a8c0')],bal1:['0 0 24 56',bal('#a8d8f3')],bal2:['0 0 24 56',bal('#ffe08a')],
+    train:['0 0 120 40','<rect x="2" y="16" width="34" height="16" rx="3" fill="#f7c3d4"/><rect x="2" y="16" width="34" height="5" rx="2" fill="#e29ab4"/><rect x="7" y="7" width="10" height="10" rx="2" fill="#bfe6d6"/><rect x="19" y="9.5" width="10" height="7.5" rx="2" fill="#fbe2a0"/><rect x="36" y="26" width="5" height="2.4" rx="1" fill="#b08968"/><rect x="41" y="16" width="34" height="16" rx="3" fill="#bfe6d6"/><rect x="41" y="16" width="34" height="5" rx="2" fill="#8fcdb6"/><circle cx="58" cy="11" r="6" fill="#ffd95e"/><path d="M53 11h10" stroke="#f2a93b" stroke-width="2"/><rect x="75" y="26" width="5" height="2.4" rx="1" fill="#b08968"/><rect x="79" y="6" width="16" height="26" rx="3" fill="#93c3e4"/><rect x="77" y="3" width="20" height="5" rx="2" fill="#6aa8d8"/><rect x="82" y="10" width="10" height="8" rx="2" fill="#fffaf0"/><rect x="95" y="15" width="21" height="17" rx="5" fill="#f08a8a"/><rect x="104" y="5" width="6" height="11" rx="2" fill="#8e6a54"/><circle cx="116" cy="24" r="3" fill="#ffd95e"/><g fill="#b08968"><circle cx="10" cy="34" r="4.5"/><circle cx="28" cy="34" r="4.5"/><circle cx="49" cy="34" r="4.5"/><circle cx="67" cy="34" r="4.5"/><circle cx="86" cy="33" r="5.5"/><circle cx="107" cy="34" r="4.5"/></g><g fill="#f3e2c4"><circle cx="10" cy="34" r="1.8"/><circle cx="28" cy="34" r="1.8"/><circle cx="49" cy="34" r="1.8"/><circle cx="67" cy="34" r="1.8"/><circle cx="86" cy="33" r="2.2"/><circle cx="107" cy="34" r="1.8"/></g>'],
+    band:['0 0 90 40','<g><ellipse cx="19" cy="38" rx="11" ry="2" fill="rgba(74,53,65,.15)"/><circle cx="13" cy="6" r="3.2" fill="#d9a878"/><circle cx="25" cy="6" r="3.2" fill="#d9a878"/><ellipse cx="18" cy="27" rx="10" ry="9.5" fill="#e6b98e"/><circle cx="19" cy="12" r="8" fill="#e6b98e"/><ellipse cx="22" cy="14.5" rx="4" ry="3" fill="#fff1dc"/><circle cx="21" cy="10.5" r="1.3" fill="#4a3541"/><circle cx="25.6" cy="13.6" r="1.2" fill="#7a5a48"/><ellipse cx="23" cy="28" rx="7.5" ry="6.5" fill="#f7c3d4" stroke="#e29ab4" stroke-width="1.5"/><path d="M17 25l12 6M17 31l12-6" stroke="#fff" stroke-width="1.2"/><path d="M27 19l5-6" stroke="#b08968" stroke-width="1.8" stroke-linecap="round"/><path d="M13 36v3M22 36v3" stroke="#c99b6e" stroke-width="3" stroke-linecap="round"/></g><g><ellipse cx="62" cy="38" rx="11" ry="2" fill="rgba(74,53,65,.15)"/><circle cx="56" cy="6" r="3.2" fill="#e8c9a6"/><circle cx="68" cy="6" r="3.2" fill="#e8c9a6"/><ellipse cx="61" cy="27" rx="10" ry="9.5" fill="#f3d9b8"/><path d="M53 22h16v6H53z" fill="#bfe6d6"/><circle cx="62" cy="12" r="8" fill="#f3d9b8"/><ellipse cx="65" cy="14.5" rx="4" ry="3" fill="#fff8ec"/><circle cx="64" cy="10.5" r="1.3" fill="#4a3541"/><path d="M68 15l12-3" stroke="#f2c14e" stroke-width="2.4" stroke-linecap="round"/><path d="M79 8l7-3v12l-7-3z" fill="#ffd95e" stroke="#e0a12a" stroke-width="1.2" stroke-linejoin="round"/><path d="M56 36v3M65 36v3" stroke="#c99b6e" stroke-width="3" stroke-linecap="round"/></g>'],
+    gstar:['0 0 16 16','<path d="M8 1l1.8 4.6L15 8l-5.2 2.4L8 15l-1.8-4.6L1 8l5.2-2.4z" fill="#fff6c0"/>'],
+    forest:['0 0 40 16','<path d="M0 9q3-5 7-2 3-5 8-1 4-4 8 0 4-5 8-1 4-4 9 1v10H0z" fill="#8fcf7a"/><path d="M0 9q3-5 7-2 3-5 8-1 4-4 8 0 4-5 8-1 4-4 9 1" stroke="#74bf70" stroke-width="1.4" fill="none"/><path d="M28 9q2.5-5 5 0z" fill="#f08a8a"/><rect x="29.8" y="8.6" width="1.4" height="2.4" fill="#fff6ec"/><circle cx="12" cy="10" r="1.3" fill="#fff"/>'],
+    lake:['0 0 40 16','<path d="M0 6q5-2 10 0t10 0 10 0 10 0v10H0z" fill="#f1dfba"/><path d="M0 6q5-2 10 0t10 0 10 0 10 0" stroke="#e2c99a" stroke-width="1.4" fill="none"/><ellipse cx="8" cy="10" rx="2.6" ry="1.8" fill="#d8ccb6"/><ellipse cx="27" cy="11" rx="2" ry="1.5" fill="#cdbfa8"/><path d="M15 12q2.5-2 5 0" stroke="#a8d8f3" stroke-width="1.4" fill="none" stroke-linecap="round"/>'],
+    snow:['0 0 40 16','<path d="M0 10q2-6 7-5 3-4 8 0 4-5 9-1 4-4 9 0 4-3 7 2v10H0z" fill="#fff"/><path d="M0 10q2-6 7-5 3-4 8 0 4-5 9-1 4-4 9 0 4-3 7 2" stroke="#c9d3ea" stroke-width="1.4" fill="none"/><circle cx="20" cy="11" r="1" fill="#d9e2f2"/>'],
+    castle:['0 0 40 16','<rect x="0" y="5" width="40" height="7" fill="#f7c3d4"/><path d="M0 5h40M0 12h40" stroke="#e29ab4" stroke-width="1.2"/><path d="M0 12q2.5 4 5 0t5 0 5 0 5 0 5 0 5 0 5 0 5 0" fill="#fff" stroke="#f0d5e0" stroke-width=".8"/><circle cx="10" cy="8.5" r="1.2" fill="#fff"/><circle cx="30" cy="8.5" r="1.2" fill="#fff"/>'],
+    grass:['0 0 40 16','<path d="M0 9q3-4 6-1 3-4 7 0 3-4 7 0 3-4 7 0 3-4 7 0 3-3 6 1v8H0z" fill="#b6e09a"/><path d="M0 9q3-4 6-1 3-4 7 0 3-4 7 0 3-4 7 0 3-4 7 0 3-3 6 1" stroke="#93cc78" stroke-width="1.4" fill="none"/><circle cx="9" cy="10" r="2" fill="#fff"/><circle cx="9" cy="10" r=".8" fill="#ffd36e"/><circle cx="29" cy="11" r="1.8" fill="#fbd3e0"/>']
+  };
+  {let css='';for(const k in ART){const u=SVG(ART[k][0],ART[k][1]);css+=`.lf-c.lf-s-${k}>b,.lf-1.lf-s-${k}{background-image:${u}}`}
+   css+=`.lf-gold::after{background-image:${SVG(ART.gstar[0],ART.gstar[1])}}`;
+   for(const k of ['forest','lake','snow','castle','grass'])css+=`.lf-seam.lf-s-${k}{background-image:${SVG(ART[k][0],ART[k][1])}}`;
+   const st=document.createElement('style');st.textContent=css;document.head.appendChild(st)}
+
+  /* critters: how big (% of a panel), how they move, and how far that move reaches ([left, right, up, down] in their own size) */
+  const KIND={bfly:['fl',33,1],bfly2:['fl',33,1],bee:['bz',28,1],lady:['cr',24],squir:['hp',36],ffly:['ff',19,2],snail:['cr mv-sn',27],
+    frog:['hp',32],dfly:['df',35,1],duckl:['wd',31],bunny:['hp',35],peng:['wd',33],robin:['hp',29],mouse:['ms',33],top:['tp',29,2],wduck:['wd',32]};
+  const MV={fl:[.46,.62,.68,0],bz:[.42,.74,.36,.34],cr:[0,1.1,0,.9],hp:[0,.6,.42,0],ff:[.4,1.8,.7,0],df:[.42,.7,.34,.4],wd:[.25,.6,0,0],ms:[.2,.75,0,0],tp:[.3,.55,0,.6]};
+  const LANDS={grass:[['bfly','bfly2'],'bee','lady'],forest:['squir','ffly','snail'],lake:['frog','dfly','duckl'],snow:['bunny','peng','robin'],castle:['mouse','top','wduck']};
+  const SPROUT={grass:['flw1','flw2','flw3','flw4'],forest:['mush','mush','flw3'],lake:['shell'],snow:['snowm'],castle:['starst']};
+  const BITC={grass:['#f7a8c0','#fff','#ffe08a'],forest:['#8fcf7a','#74bf70','#f2b05e'],lake:['#fff','#a8d8f3','#f1dfba'],snow:['#fff','#e6efff'],castle:['#ffe58a','#fff','#f7c3d4']};
+  const PAL=[['#f7c3d4','#e29ab4'],['#bfe6d6','#8fcdb6'],['#fbe2a0','#e5bf63'],['#d8cdf6','#b4a3e8'],['#c4e2f5','#93c3e4']];
+  const S={off:new Set(),run:null,seed:0,F:null,gone:new Set(),plant:new Map(),numCol:new Map(),boss:new Set(),vlo:0,vhi:0,dim:0,land:{},tap:new Map(),cheer:null,lastEv:0,tr:null,sky:null,layer:null};
+  const H=(i,k)=>lfH(i,S.seed+k);
+  const now=()=>performance.now();
+  const plain=c=>!c.rock&&!c.foe&&!c.tile&&!c.start&&!c.gem&&!c.coin&&!c.psn;
+  const bossLive=(r,b)=>{const row=run.rows[r],c=row&&row[b];return !!(c&&c.tile&&c.tile.gate&&c.tile.e&&c.tile.e.k==='foe')};
+  function reset(){
+    S.run=run;S.seed=(Math.random()*0x7fffffff)|0;S.gone.clear();S.plant.clear();S.numCol.clear();S.tap.clear();S.cheer=null;S.lastEv=0;
+    for(const a in LANDS){const L=LANDS[a].map(k=>Array.isArray(k)?k[S.seed%k.length]:k);L.splice(lfH(S.seed,a.length)%3,1);S.land[a]=L} // each climb its own two critters per land
+    if(S.tr){S.tr.a.cancel();S.tr.el.remove();S.tr=null}
+  }
+  function bossCells(){
+    const s=new Set();
+    if(typeof MO!=='undefined'&&MO.bossArea)try{for(const x of MO.bossArea())s.add(x)}catch(e){}
+    for(let r=win.lo;r<=win.hi;r++)for(let b=0;b<W;b++)if(bossLive(r,b)){const nb=b<=2?b+1:b-1;[idOf(r,b),idOf(r,nb),idOf(r+1,b),idOf(r+1,nb)].forEach(x=>s.add(x))}
+    return s;
+  }
+  function pass(F){ // the first cell of a full redraw: start the clock, see what is on screen, and let critters that can't stay run off
+    S.F=F;const fresh=run!==S.run;if(fresh)reset();
+    board.style.setProperty('--lfT',(-now()/1000).toFixed(3)+'s');
+    const r=rowOf(run.at);S.vlo=r-1;S.vhi=win.hi-3;S.dim=dimOf(r); // renderBoard keeps 4 rows past the screen; no layout is read here
+    S.boss=bossCells();
+    for(const p of S.plant.keys())if(rowOf(p)<r-3)S.plant.delete(p);
+    for(const g of S.gone)if(rowOf(g)<r-3)S.gone.delete(g);
+    if(fresh)return;
+    for(const el of board.querySelectorAll('.lf-c')){
+      const ce=el.closest('.cell'),j=ce?+ce.dataset.i:-1,rr=rowOf(j);if(j<0||rr<S.vlo||rr>S.vhi)continue;
+      const c=cellAt(j),ok=c&&(el.classList.contains('mv-rf')?c.rock===1&&!S.gone.has(j):!!critterKind(j,c));
+      if(!ok)flee(el,j);
+    }
+  }
+  function critterKind(i,c){
+    if(!plain(c)||S.gone.has(i)||S.boss.has(i)||i===run.at||(S.F&&S.F.has(i)))return null;
+    const r=rowOf(i);if(r<S.vlo||r>S.vhi||r<2)return null;
+    const h=H(i,11),night=dimOf(r)===2;
+    if(h%1000>=(night?120:75))return null;
+    const L=S.land[areaOf(r).k]||S.land.grass,list=night?['ffly','ffly','ffly'].concat(L):L;
+    return list[(h>>>10)%list.length];
+  }
+  function critterHTML(i,k){
+    const h=H(i,11),[mv,z,air]=KIND[k],m=MV[mv.split(' ')[0]],gold=(h>>>20)%36===0;
+    const bw=z*(1+m[1]+m[0]),bh=z*(1+m[3]+m[2]),u1=((h>>>3)&127)/127,u2=((h>>>13)&127)/127;
+    const L=8+u1*Math.max(0,84-bw)+m[0]*z,T=12+u2*Math.max(0,80-bh)+m[2]*z;
+    return `<i class="lf-c mv-${mv} lf-s-${k}${air===1?' lf-air':air?'':' lf-gr'}${gold?' lf-gold':''}" style="left:${L.toFixed(1)}%;top:${T.toFixed(1)}%;--z:${z}%;--sd:-${(h%977/10).toFixed(1)}s"><b></b></i>`;
+  }
+  /* the obstacle's pose: module A turns, sizes and nudges each obstacle (obArt); the small lives follow the same pose */
+  function pose(i,a){
+    if(typeof A_H!=='function')return {fl:0,s:1,dx:0,ro:0};
+    const h=A_H(i,7),x=(h>>>10)%10;let s=.92+((h>>>1)%8)*.016,dx=((h>>>4)%7)-3;
+    if(a==='forest'&&x<4&&HAS_ART){s*=.9;dx-=9}
+    return {fl:h&1,s,dx,ro:(((h>>>7)%7)-3)*.8};
+  }
+  function obLife(i,a,r){
+    const o={cls:'',pre:'',post:''};if(!HAS_ART)return o;
+    const h=H(i,23),p=pose(i,a),rad=p.ro*Math.PI/180,cs=Math.cos(rad),sn=Math.sin(rad);
+    const at=(x,y)=>{const X=(x-50)*(p.fl?-p.s:p.s),Y=(y-88)*p.s;return `left:${(X*cs-Y*sn+50+p.dx).toFixed(1)}%;top:${(X*sn+Y*cs+88).toFixed(1)}%`};
+    const sd=k=>`;--sd:-${(((h>>>k)%89)/10).toFixed(1)}s`,fx=p.fl?';scale:-1 1':'',dir=s=>`;--dir:${p.fl?-s:s}`,night=dimOf(r)===2;
+    if(a==='grass'){
+      if(h%10<6)o.post+=`<i class="lf-chim lf-1 lf-s-chim" style="${at(55,26)}${fx}"></i>`+(h%10<4?`<i class="lf-smk" style="${at(56,17)}${sd(3)}"></i>`:'');
+      if((h>>>5)%3===0&&!S.gone.has(i))o.post+=`<i class="lf-c mv-rf lf-s-tit" style="${at(75,51)};--z:15%;--fx:${p.fl?-1:1}${sd(7)}"><b></b></i>`;
+      else if((h>>>5)%3===1)o.pre+=`<i class="lf-pk lf-1 lf-s-cat" style="${at(26,58)}${dir(-1)}${sd(9)}"></i>`;
+      if(night)o.post+=`<i class="lf-door" style="${at(47,72)}${sd(11)}"></i>`;
+    }else if(a==='forest'){
+      o.cls=' lf-sway lf-d'+(h%8);
+      if(h%10<6)o.post+=`<i class="lf-leaf lf-1 lf-s-leaf" style="${at(32,40)}${sd(3)}"></i>`;
+      if((h>>>5)%3===0)o.pre+=`<i class="lf-pk lf-pk2 lf-1 lf-s-sqh" style="${at(66,30)}${dir(1)}${sd(9)}"></i>`;
+    }else if(a==='lake'){
+      o.post+=`<i class="lf-rip" style="${at(30,64)}${sd(3)}"></i>`;
+      if(h%10<5)o.post+=`<i class="lf-fish lf-1 lf-s-fish" style="${at(24,64)}${fx}${sd(7)}"></i>`;
+    }else if(a==='snow'){
+      if((h>>>3)%3===0)o.cls=' lf-wob lf-d'+(h%8);
+      o.post+=`<i class="lf-blk lf-1 lf-s-blink" style="${at(47.3,40)};rotate:${p.ro}deg;--k:${p.s.toFixed(3)}${sd(5)}"></i>`;
+    }else if(a==='castle'){
+      if(h%10<7)o.post+=`<i class="lf-pen" style="${at(50,13)}${sd(3)}"></i>`;
+      if(night)o.post+=`<i class="lf-door" style="${at(54,66)}${sd(11)}"></i>`;
+    }
+    return o;
+  }
+  FXH.cells.push((i,c,F)=>{
+    if(!run||!c)return null;
+    if(F&&F!==S.F)pass(F);
+    const r=rowOf(i),s=stepOf(r);let pre='',post='',cls='';
+    if(s>0&&s%10===0&&s%SPAN&&s%DIM_LEN){ // every 10 steps the number is painted on one panel of the row; blocks and toys stand on it
+      let col=S.numCol.get(r);
+      if(col==null){const row=run.rows[r],h0=H(r,31)%W;col=h0;for(let k=0;k<W;k++){const cc=row&&row[(h0+k)%W];if(cc&&plain(cc)){col=(h0+k)%W;break}}S.numCol.set(r,col)}
+      if(colOf(i)===col)pre+=`<b class="lf-num${s>=100?' lf-n3':''}" aria-hidden="true">${s}</b>`;
+    }
+    if(S.boss.has(i))return pre?{pre}:null;
+    const vis=r>=S.vlo&&r<=S.vhi;
+    if(plain(c)){
+      const k=!S.off.has('crit')&&critterKind(i,c);if(k)post+=critterHTML(i,k);
+      const p=S.plant.get(i);if(p)post+=`<i class="lf-sp lf-st lf-1 lf-s-${p.k}" style="left:${p.x}%;top:${p.y}%"></i>`;
+    }else if(c.rock===1&&!c.foe&&vis&&!S.off.has('ob')){const o=obLife(i,areaOf(r).k,r);pre+=o.pre;post+=o.post;cls+=o.cls}
+    return {cls,pre,post};
+  });
+  FXH.add('update',({i})=>{const el=elOf(i);if(el)el.style.setProperty('--lfT',(-now()/1000).toFixed(3)+'s')});
+
+  /* the layer over the panels: a trim where the land changes, bunting on every 10th row (on the captain's row once he is down) */
+  function layer(){
+    let L=S.layer;if(!L){L=document.createElement('div');L.className='lf-l';L.setAttribute('aria-hidden','true');S.layer=L}
+    let h='';const c0=elOf(idOf(win.hi,0));if(!c0){L.remove();return}
+    const ch=c0.offsetHeight,gap=Math.max(0,win.pitch-ch),bw=board.clientWidth,tOf=r=>{const e=elOf(idOf(r,0));return e?e.offsetTop:null};
+    for(let r=Math.max(2,win.lo);r<=win.hi;r++){
+      const s=stepOf(r),t=tOf(r);if(t==null)continue;
+      if(s%SPAN===0){ // the captain's row is the new land's first row: its lower edge gets the new land's trim
+        const k=areaOf(r).k;
+        for(let b=0;b<W;b++){if(S.boss.has(idOf(r,b)))continue;const e=elOf(idOf(r,b)),l=b?e.offsetLeft-gap/2:0,w=b===W-1?bw-l:e.offsetLeft+e.offsetWidth+gap/2-l;
+          h+=`<i class="lf-seam lf-s-${k}" style="top:${(t+ch+gap/2).toFixed(1)}px;left:${l.toFixed(1)}px;width:${w.toFixed(1)}px"></i>`}
+      }
+      if(s%10===0&&!Array.from({length:W},(_,b)=>bossLive(r,b)).some(Boolean)){
+        const el=now()-(S.cheer&&S.cheer.r===r?S.cheer.t:-1e9),N=8,P=PAL.map((_,k)=>PAL[(k+S.seed)%PAL.length]);
+        let pn='';for(let k=0;k<N;k++){const u=(k+.5)/N,v=(u*2)%1,[c1,c2]=P[k%P.length];
+          pn+=`<i class="lf-pn" style="left:${(u*100).toFixed(2)}%;top:${(3.6*v*(1-v)*ch*.16).toFixed(1)}px;--c:${c1};--e:${c2};--k:${k};--sd:-${(k*.37).toFixed(2)}s"></i>`}
+        h+=`<div class="lf-bun${el<1600?' lf-ch':''}" style="top:${(s%SPAN?t+ch+gap/2:t-gap/2).toFixed(1)}px;--cd:${(-el/1000).toFixed(3)}s"><svg viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 0Q25 18 50 0Q75 18 100 0" stroke="#b08968" stroke-width="1.4" fill="none" vector-effect="non-scaling-stroke"/></svg>${pn}</div>`;
+      }
+    }
+    L.innerHTML=h;board.appendChild(L);
+  }
+  function sky(){ // the sky over the field: two or three soft cloud shadows drift across, never restarted
+    if(REDUCED)return;
+    let s=S.sky;
+    if(!s){s=S.sky=document.createElement('div');s.className='lf-sky';s.setAttribute('aria-hidden','true');view.after(s);
+      const fw=view.clientWidth||390,fh=view.clientHeight||640;let h='';
+      for(let k=0;k<3;k++){const w=Math.round(fw*(.6+Math.random()*.35)),t=Math.round(75+Math.random()*45);
+        h+=`<i class="lf-cloud" style="--w:${w}px;--fw:${fw}px;top:${Math.round(fh*(k/3+Math.random()*.18)-w*.15)}px;animation-duration:${t}s;animation-delay:-${(Math.random()*t).toFixed(1)}s"></i>`}
+      s.innerHTML=h}
+    s.dataset.d=Math.min(5,S.dim);
+  }
+  function placeTrain(){
+    const t=S.tr;if(!t)return;const e=elOf(idOf(t.r,0));
+    if(!e){t.a.cancel();t.el.remove();S.tr=null;return}
+    if(t.el.parentNode!==board)board.appendChild(t.el);
+    t.el.style.top=(e.offsetTop+e.offsetHeight-t.el.offsetHeight*.94).toFixed(1)+'px';
+  }
+  FXH.add('render',()=>{if(!run||S.off.has('layer'))return;sky();layer();placeTrain()});
+
+  /* critters run off when the knight comes near, when a toy breaks next to them, or when the ground they sit on changes */
+  function flee(el,j){
+    S.gone.add(j);
+    const r=el.getBoundingClientRect(),k=[...el.classList].find(x=>x.startsWith('lf-s-')),air=el.classList.contains('lf-air')||el.classList.contains('mv-rf')||el.classList.contains('mv-ff'),gold=el.classList.contains('lf-gold');
+    el.remove();if(REDUCED||!r.width||!k)return;
+    const p=document.createElement('i');p.className='lf-flee lf-1 '+k+(gold?' lf-gold':'');
+    p.style.cssText=`left:${r.left.toFixed(1)}px;top:${r.top.toFixed(1)}px;width:${r.width.toFixed(1)}px;height:${r.height.toFixed(1)}px`;
+    if(k==='lf-s-ffly')p.style.background='radial-gradient(circle,#fffbe0 0 18%,rgba(255,229,138,.9) 32%,rgba(255,229,138,0) 68%)';
+    document.body.appendChild(p);
+    const d=Math.random()<.5?-1:1,f=`scaleX(${d})`;
+    const K=air?[{transform:'none',opacity:1},{transform:`translate(${d*24}px,-34px) rotate(${d*10}deg) scale(1.12)`,opacity:1,offset:.35},{transform:`translate(${d*80}px,-150px) rotate(${d*18}deg) scale(.85)`,opacity:0}]
+      :[{transform:f},{transform:`translate(${d*16}px,-16px) ${f}`,offset:.2},{transform:`translate(${d*32}px,0) ${f}`,offset:.4},{transform:`translate(${d*48}px,-12px) ${f}`,offset:.6},{transform:`translate(${d*64}px,0) ${f}`,opacity:1,offset:.8},{transform:`translate(${d*76}px,0) ${f}`,opacity:0}];
+    p.animate(K,{duration:air?900:760,easing:air?'cubic-bezier(.3,.6,.5,1)':'linear'}).onfinish=()=>p.remove();
+    if(gold)bits(r.left+r.width/2,r.top+r.height/2,6,['#fff6c0','#ffd95e','#fff'],r.width*1.2,4);
+  }
+  function scare(i,R){
+    const r0=rowOf(i),c0=colOf(i);
+    for(let r=r0-R;r<=r0+R;r++)for(let c=Math.max(0,c0-R);c<=Math.min(W-1,c0+R);c++){const e=elOf(idOf(r,c));if(!e)continue;for(const k of e.querySelectorAll('.lf-c'))flee(k,idOf(r,c))}
+  }
+  FXH.add('step',({to})=>{if(run)scare(to,1)});
+  FXH.add('kill',({i})=>{if(run)scare(i,1)});
+  FXH.add('boom',({at,R})=>{if(run)scare(at,(R|0)+1)});
+  FXH.add('cannon',({hits})=>{if(run)(hits||[]).forEach(x=>scare(x.i,1))});
+
+  /* a tap on the empty ground plants a flower (it stays for the climb); a tap on an obstacle wakes its little life */
+  const poke=(i,amp)=>{
+    if(REDUCED)return;
+    if(typeof MO!=='undefined'&&MO.poke){MO.poke(i,amp);return}
+    const e=elOf(i),s=e&&e.querySelector(':scope>svg');if(s)s.animate([{transform:'none'},{transform:'translateY(5%) scale(1.04,.93)'},{transform:'translateY(-3%)'},{transform:'none'}],{duration:320,easing:'ease-out'});
+  };
+  const ring=(el,x,y)=>{if(REDUCED)return;el.insertAdjacentHTML('beforeend',`<i class="lf-sp lf-ring" style="left:${x}%;top:${y}%"></i>`);const g=el.lastElementChild;setTimeout(()=>g.remove(),1900)};
+  function peekOut(e){if(e&&!REDUCED)e.animate([{transform:'translateX(0)'},{transform:'translateX(62%)',offset:.22},{transform:'translateX(62%) rotate(-6deg)',offset:.5},{transform:'translateX(62%)',offset:.8},{transform:'translateX(0)'}],{duration:1500,easing:'ease-in-out'})}
+  FXH.add('tap',({i})=>{
+    if(!run||sel>=0||aim||run.phase!=='build')return;
+    const c=cellAt(i),el=elOf(i);if(!c||!el||i===run.at||S.boss.has(i))return;
+    if(frontier().has(i))return;
+    const t=now();if(t-(S.tap.get(i)||0)<260)return;S.tap.set(i,t);
+    const a=areaOf(rowOf(i)).k,m=spot(i);
+    if(plain(c)){
+      poke(i,3);
+      const p=S.plant.get(i),sp=el.querySelector('.lf-sp:not(.lf-ring)');
+      if(p){if(sp&&!REDUCED)sp.animate([{transform:'none'},{transform:'scale(1.22,.8)'},{transform:'scale(.9,1.14) translateY(-10%)'},{transform:'none'}],{duration:420,easing:'ease-out'})}
+      else{const L=SPROUT[a]||SPROUT.grass,h=H(i,5),k=L[(h>>>4)%L.length],x=22+h%22,y=24+(h>>>8)%22;
+        S.plant.set(i,{k,x,y});el.insertAdjacentHTML('beforeend',`<i class="lf-sp lf-1 lf-s-${k}" style="left:${x}%;top:${y}%"></i>`)}
+      if(a==='lake')ring(el,28,40);
+      if(m)bits(m.x,m.y,4,BITC[a]||BITC.grass,m.w*.3,4);
+      for(const k of el.querySelectorAll('.lf-c'))flee(k,i); // whoever sat there hops off
+      return;
+    }
+    if(c.rock!==1||c.foe)return;
+    poke(i,4);
+    if(a==='grass'){const b=el.querySelector('.mv-rf');if(b)flee(b,i);peekOut(el.querySelector('.lf-pk'));const s=el.querySelector('.lf-smk');if(s&&m){const q=s.getBoundingClientRect();bits(q.left+q.width/2,q.top,5,['#fff','#f4f4f4'],m.w*.22,7)}}
+    else if(a==='forest'){if(m)bits(m.x,m.y-m.w*.2,7,BITC.forest,m.w*.5,5);peekOut(el.querySelector('.lf-pk'))}
+    else if(a==='lake'){pop(i,'♪','lf-note');ring(el,30,58)}
+    else if(a==='snow'){const b=el.querySelector('.lf-blk');if(b&&!REDUCED)b.animate([{opacity:0},{opacity:1,offset:.1},{opacity:1,offset:.8},{opacity:0}],{duration:700});pop(i,'♪','lf-note')}
+    else if(a==='castle'){const p=el.querySelector('.lf-pen');if(p&&!REDUCED)p.animate([{rotate:'0deg'},{rotate:'-14deg'},{rotate:'10deg'},{rotate:'-5deg'},{rotate:'0deg'}],{duration:600,easing:'ease-out'});if(m)bits(m.x,m.y-m.w*.35,5,BITC.castle,m.w*.35,4)}
+  });
+
+  /* every 10 steps: the bunting cheers and a little confetti; now and then a surprise passes by */
+  function fire(k){
+    if(REDUCED||!run)return;
+    if(k==='train'||k==='band'){
+      if(S.tr)return;const r0=rowOf(run.at)-1,e=elOf(idOf(r0,0));if(!e)return;
+      const rev=Math.random()<.5,el=document.createElement('div');el.className='lf-'+k+(rev?' lf-rev':'');el.setAttribute('aria-hidden','true');
+      el.innerHTML=`<b class="lf-1 lf-s-${k}"></b>`+(k==='train'?'<i></i>':'');board.appendChild(el);
+      const bw=board.clientWidth,w=el.offsetWidth;
+      const a=el.animate([{transform:`translateX(${rev?bw:-w}px)`},{transform:`translateX(${rev?-w:bw}px)`}],{duration:k==='train'?5600:8000,easing:'linear'});
+      S.tr={el,a,r:r0};placeTrain();a.onfinish=()=>{el.remove();if(S.tr&&S.tr.el===el)S.tr=null};
+    }else if(k==='balloon'&&S.sky){
+      const b=document.createElement('i'),fw=S.sky.clientWidth,fh=S.sky.clientHeight,x=fw*(.1+Math.random()*.72);
+      b.className='lf-bal lf-1 lf-s-bal'+rnd(3);S.sky.appendChild(b);
+      b.animate([{translate:`${x}px ${fh+10}px`},{translate:`${x+26}px ${fh*.55}px`,offset:.45},{translate:`${x-12}px -70px`}],{duration:10000,easing:'linear'}).onfinish=()=>b.remove();
+    }else if(k==='star'&&S.sky){
+      const s=document.createElement('i'),fw=S.sky.clientWidth,fh=S.sky.clientHeight,x0=fw*(.35+Math.random()*.45),y0=fh*(.06+Math.random()*.22),g=148+Math.random()*14,rd=g*Math.PI/180,L=fw*.55;
+      s.className='lf-star';S.sky.appendChild(s);
+      s.animate([{transform:`translate(${x0}px,${y0}px) rotate(${g}deg) scaleX(.2)`,opacity:0},{opacity:1,offset:.25},{transform:`translate(${x0+Math.cos(rd)*L}px,${y0+Math.sin(rd)*L}px) rotate(${g}deg) scaleX(1)`,opacity:0}],{duration:1100,easing:'ease-in'}).onfinish=()=>s.remove();
+    }
+  }
+  FXH.add('reach',({r,s})=>{
+    if(!run||s<=0)return;
+    if(s%10===0){S.cheer={r,t:now()};if(S.layer&&S.layer.isConnected)layer();
+      if(s%SPAN&&s%DIM_LEN){const m=spot(run.at);if(m)bits(m.x,m.y-m.w*.3,14,PAL.map(p=>p[0]).concat(['#fff']),m.w*.9,5)}
+      return}
+    if(REDUCED||s<5||r-S.lastEv<8||Math.random()>.17)return;
+    S.lastEv=r;const a=areaOf(r).k,d=dimOf(r),x=Math.random();
+    fire(d===2&&x<.6?'star':a==='castle'&&x<.45?'band':x<.6?'train':'balloon');
+  });
+  return {fire,S};
+})();
+if(window.PQ)window.PQ.LF=LF;
 /* ===== end of fx module C ===== */
 
 showTitle();
