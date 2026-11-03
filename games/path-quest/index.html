@@ -594,6 +594,14 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .inv i{border-radius:2px}
 .rcard{border-radius:2px}
 .sh-tabs button.on{background:var(--paper);color:var(--frame);outline:2px solid var(--frame);outline-offset:-2px}
+/* ===== fx css A: panels ===== */
+/* ===== end of fx css A ===== */
+
+/* ===== fx css B: motion ===== */
+/* ===== end of fx css B ===== */
+
+/* ===== fx css C: life ===== */
+/* ===== end of fx css C ===== */
 </style>
 </head>
 <body>
@@ -726,6 +734,15 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const STEP=REDUCED?60:170;
+/* ---------- field effects: the modules at the end hook in with FXH.add(event,fn); FXH.cells adds classes and inner html to every cell.
+   events: render {lo,hi,pitch,cell} · update {i} (one cell redrawn) · place {j} (a block lands) · step {from,to,up} ·
+   strike {i,at,d,crit,atk,foeHp,boss,king} (the knight hits) · hurt {at,b,boss} · kill {i,e} (a toy breaks) · toyhit {i,d,cls} ·
+   boom {at,R} (marble bomb) · skill {id} · reach {r,s} (a new row) · tap {i} · over {at} (the knight falls) ---------- */
+const FXH={on:{},cells:[],
+  add(n,f){(this.on[n]=this.on[n]||[]).push(f)},
+  emit(n,d){const a=this.on[n];if(a)for(const f of a){try{f(d||{})}catch(err){console.error('fx',n,err)}}},
+  cell(i,c){let cls='',pre='',post='';for(const f of this.cells){let r=null;try{r=f(i,c)}catch(err){console.error('fx cell',err)}if(r){if(r.cls)cls+=' '+r.cls;if(r.pre)pre+=r.pre;if(r.post)post+=r.post}}return {cls,pre,post}}
+};
 
 /* ---------- the land: one road climbing forever. every 20 rows the land changes and the captain bars the way ---------- */
 const AREAS=[
@@ -1270,6 +1287,7 @@ function cellHTML(i,F){
     if(F&&F.has(i)){cls+=' front'+(sel>=0&&fits(run.hand[sel],i,F)?' fit':'');tab=' tabindex="0" role="button" aria-label="道の先"'}
   }
   const tn=tintOf(rowOf(i));if(tn)tab=tab?tab.replace('style="','style="'+tn+';'):` style="${tn}"`;
+  const fx=FXH.cell(i,c);cls+=fx.cls;inner=fx.pre+inner+fx.post;
   return `<div class="${cls}" data-i="${i}"${tab}>${inner}</div>`;
 }
 function renderBoard(F){
@@ -1290,6 +1308,7 @@ function renderBoard(F){
   board.insertAdjacentHTML('beforeend',rl);
   hero.classList.remove('down');app.classList.remove('ko');
   slide(false);placeHero(run.at,true);
+  FXH.emit('render',{lo,hi,pitch,cell});
 }
 function slide(smooth){ // the knight's row sits second from the bottom
   const y=(rowOf(run.at)-1-win.lo)*win.pitch;
@@ -1300,7 +1319,7 @@ function refreshMarks(){
   const F=frontier();
   for(const [j] of F){const el=elOf(j);if(el)el.classList.toggle('fit',sel>=0&&fits(run.hand[sel],j,F))}
 }
-function updateCell(i){const el=elOf(i);if(el)el.outerHTML=cellHTML(i,null)}
+function updateCell(i){const el=elOf(i);if(el){el.outerHTML=cellHTML(i,null);FXH.emit('update',{i})}}
 function renderHand(F){
   F=F||frontier();
   handEl.style.setProperty('--hs',run.hand.length);
@@ -1418,6 +1437,7 @@ function breakToy(i,e){ // the beaten toy pops and flies apart
   const el=elOf(i),t=el&&el.querySelector('.toy');
   if(t&&!REDUCED)t.animate([{transform:'none',opacity:1},{transform:'scale(1.25)',opacity:1,offset:.4},{transform:'scale(.2) translateY(-20%)',opacity:0}],{duration:260,easing:'ease-in',fill:'forwards'});
   const a=spot(i);if(a)bits(a.x,a.y,e.boss?22:12,TOYBITS[e.t]||TOYBITS.soldier,a.w*(e.boss?1:.75),e.boss?6:5);
+  FXH.emit('kill',{i,e});
 }
 function shake(power){if(!REDUCED)view.animate([{transform:'none'},{transform:`translate(${power}px,${-power/2}px)`},{transform:`translate(${-power}px,${power/2}px)`},{transform:`translate(${power/2}px,0)`},{transform:'none'}],{duration:230})}
 function bump(el){if(el&&!REDUCED)el.animate([{transform:'none'},{transform:'scale(1.3)'},{transform:'none'}],{duration:240,easing:'ease-out'})}
@@ -1431,7 +1451,7 @@ function fly(i,art,target,delay){ // a coin, a heart, a sword or a shield flies 
   },delay||0);
 }
 async function knockOut(){ // the knight runs down and topples over
-  hero.classList.remove('walk','hurt');hero.classList.add('down');app.classList.add('ko');
+  hero.classList.remove('walk','hurt');hero.classList.add('down');app.classList.add('ko');FXH.emit('over',{at:run.at});
   if(REDUCED)return sleep(400);
   setTimeout(()=>puff(run.at,true),1400);
   await sleep(1900);
@@ -1452,6 +1472,7 @@ function tapSlot(i){
   renderHand();refreshMarks();setPreview(-1);hintFinger(frontier());
 }
 function tapCell(i){
+  FXH.emit('tap',{i});
   if(aim){if(aim.kind==='rock'&&targets('rock').includes(i))useSkill(aim.k,i);else{aim=null;hideSay();render()}return}
   if(sel<0){if(frontier().has(i))hop();return}
   place(i,sel);
@@ -1467,7 +1488,7 @@ function place(j,hi){
 }
 async function proceed(){
   busy=true;render();
-  if(run.at!==run.target){setTimeout(()=>puff(run.target),110);await sleep(REDUCED?0:140)}
+  if(run.at!==run.target){const j=run.target;setTimeout(()=>{puff(j);FXH.emit('place',{j})},110);await sleep(REDUCED?0:140)}
   if(run.at!==run.target&&!await stepTo(run.target))return;
   const g=gateFrom(run.at,exitsOf(run.at)); // the road touches the captain's gap: walk in and face him
   if(g>=0&&!await stepTo(g))return;
@@ -1494,8 +1515,9 @@ async function stepTo(i){
     updateCell(i);castHand();await sleep(STEP);
   }
   hero.classList.add('walk');
-  const up=rowOf(i)>rowOf(run.at);
+  const up=rowOf(i)>rowOf(run.at),from=run.at;
   run.at=i;placeHero(i);if(up)slide(true);
+  FXH.emit('step',{from,to:i,up});
   await sleep(STEP);
   tickSkills();stepMagic();stepToys();
   if(c.psn){run.pz={n:3,d:c.psn};c.psn=0;pop(i,'毒！','p-psn')}
@@ -1522,6 +1544,7 @@ function reach(r){ // a new row: every 10 a reward, every 20 a new land
     renderStats();
   }
   if(s>0&&s%10===0)run.reward=true;
+  FXH.emit('reach',{r,s});
 }
 async function battle(e,at,i){
   const hEl=elOf(at),eEl=elOf(i);
@@ -1534,6 +1557,7 @@ async function battle(e,at,i){
   const strike=async()=>{ // the knight hits; now and then a crit
     let d=A;const cr=Math.random()<qv('crit');if(cr)d*=2+qv('critx');hp-=d;
     lunge(dx,dy);setTimeout(()=>{struck(eEl);spark(i)},80);pop(i,cr?`-${d}!`:`-${d}`,cr?'p-crit':'p-deal');if(cr)shake(5);
+    FXH.emit('strike',{i,at,d,crit:cr,atk:A,foeHp:e.hp,boss:!!e.boss,king:!!e.king});
     if(tp&&hp>0){const t=toyDmg(tp);hp-=t;setTimeout(()=>pop(i,`-${t}`,'p-top'),170)} // the spinning top follows up
     await sleep(gap/2+(REDUCED?0:60));
   };
@@ -1541,7 +1565,7 @@ async function battle(e,at,i){
     if(first){await strike();if(hp<=0)break}
     let b=back;if(b&&block>0){b=0;block--}else if(b&&bubbleBlock(at))b=0;
     run.hp-=b; // the toy hits
-    pop(at,b?`-${b}`:'0',b?'p-hurt':'p-guard');if(b){hurt();shake(e.boss?7:4)}
+    pop(at,b?`-${b}`:'0',b?'p-hurt':'p-guard');if(b){hurt();shake(e.boss?7:4);FXH.emit('hurt',{at,b,boss:!!e.boss})}
     renderStats();
     if(run.hp<=0)return false;
     if(b&&ref){const r=Math.ceil(b*ref);hp-=r;setTimeout(()=>{pop(i,`-${r}`,'p-ref');struck(eEl)},120)} // the mirror throws it back
@@ -1702,6 +1726,7 @@ function useSkill(k,x){
   if(typeof shown==='string'){render();return say(shown)}
   s.cd=Math.max(1,d.ct-qv('cdr'));sel=-1;save();render();say(d.n+'！');
   if(shown)shown();
+  FXH.emit('skill',{id:d.id});
   afterAction();
 }
 
@@ -1911,6 +1936,7 @@ function hitBoard(i,d,cls,dl,gm){ // a toy weapon hits something on the field; t
     if(x.foe)x.foe=null;else x.tile.e=e.king?{k:'gear',g:pickGear(SLOTS[rnd(3)].k,Math.min(4,dimOf(rowOf(i))+2),true).id}:null;
     updateCell(i);breakToy(i,e);pop(i,`+${g}`,'p-gold',dl);fly(i,SPR.coin,$('i-gold'),dl);if(e.boss)shake(8);
   }else{updateCell(i);pop(i,`-${d}`,cls,dl);setTimeout(()=>{spark(i);struck(elOf(i))},dl)}
+  FXH.emit('toyhit',{i,d,cls});
 }
 async function toysAct(){ // after each block: the paper planes and the boomerang fly on their own, before the field toys act
   const pl=itLv('plane'),bm=itLv('boomer');if(!pl&&!bm)return;
@@ -1936,6 +1962,7 @@ async function toysAct(){ // after each block: the paper planes and the boomeran
 }
 function boom(R,d,gm){ // the marble bomb: everything around the knight, and the toys waiting in the hand
   const a=spot(run.at);if(a&&!REDUCED){bits(a.x,a.y,22,['#a8d8f3','#ee88ac','#ffe58a','#fff'],a.w*(1+R*.6),6);shake(5)}
+  FXH.emit('boom',{at:run.at,R});
   const r0=rowOf(run.at),c0=colOf(run.at);let n=0;
   for(let r=r0-R;r<=r0+R;r++)for(let c=c0-R;c<=c0+R;c++){if(c<0||c>=W||r<0)continue;const i=idOf(r,c);if(boardFoe(cellAt(i))){hitBoard(i,d,'p-toy',n*70,gm);n++}}
   let h=false;run.hand.forEach((t,k)=>{const e=t&&t.e;if(e&&e.k==='foe'){if(gm>1&&e.hp<=d)e.gold*=gm;handHit(k,d,'mag');h=true}});
@@ -2294,6 +2321,20 @@ drawerIn.addEventListener('click',e=>{const b=e.target.closest('.skill');if(b)ta
 $('s-over').addEventListener('click',e=>{if(!e.target.closest('button'))skipCount()});
 $('sh-gear').addEventListener('click',e=>{const t=e.target.closest('[data-slot]');if(t){gearSlot=t.dataset.slot;info('');return renderGear()}const b=e.target.closest('.gi');if(b)tapGear(b.dataset.g)});
 window.addEventListener('resize',()=>{if(run)renderBoard()});
+
+/* test only: open with #fxtest to reach the internals from a test script (PQ.jump(step) puts the knight on that step) */
+if(/fxtest/.test(location.hash))window.PQ={get run(){return run},FXH,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,
+  jump(step,col){const r=step+1,c=col==null?colOf(run.at):col;while(run.made<r+40){run.made++;newRow(run.made)}
+    const x=cellAt(idOf(r,c));x.rock=0;x.foe=null;x.tile={m:15,e:null,c:0};run.at=idOf(r,c);run.top=r;run.phase='build';grow();render();return run.at}};
+
+/* ===== fx module A: panels — agent A writes only between these two lines ===== */
+/* ===== end of fx module A ===== */
+
+/* ===== fx module B: motion — agent B writes only between these two lines ===== */
+/* ===== end of fx module B ===== */
+
+/* ===== fx module C: life — agent C writes only between these two lines ===== */
+/* ===== end of fx module C ===== */
 
 showTitle();
 })();
