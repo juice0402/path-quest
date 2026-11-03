@@ -256,6 +256,11 @@ button{font:inherit;color:inherit}
 /* the cross block is the trump card: a golden road, twinkling stars, a warm glow, and a pop when one is drawn */
 .tw{transform-box:fill-box;transform-origin:center;animation:tw 1.6s ease-in-out infinite}
 .tw2{animation-delay:.8s}
+/* things to pick up (marbles, coins, potions, gear) bob and twinkle; obstacles stay still */
+.loot{transform-box:fill-box;transform-origin:50% 100%;animation:lootbob 1.1s ease-in-out var(--d,0s) infinite alternate}
+@keyframes lootbob{from{transform:translateY(3%)}to{transform:translateY(-10%) scale(1.05)}}
+.lglow{opacity:.3;animation:lglow 1.1s ease-in-out var(--d,0s) infinite alternate}
+@keyframes lglow{to{opacity:.75}}
 @keyframes tw{0%,100%{transform:scale(.45);opacity:.35}50%{transform:scale(1.1);opacity:1}}
 .slot.ace:not(.dull){filter:drop-shadow(0 0 3px #ffd95e) drop-shadow(0 0 7px rgba(255,196,70,.8))}
 .cell.laid.ace svg{filter:drop-shadow(0 0 4px rgba(255,210,90,.9))}
@@ -300,10 +305,9 @@ button{font:inherit;color:inherit}
 .record{min-height:14px;font-size:14px;color:var(--dim)}
 /* with the Canva art: the title sits on the painted block kingdom, logo up top, buttons at the bottom */
 body.art #s-title{ /* the picture stops above the buttons so the little knight stays in view; felt grass fills the rest */
-  --tb:150px;
+  --tb:104px;
   background:linear-gradient(to bottom,rgba(199,228,173,0) calc(100% - var(--tb) - 70px),#c7e4ad calc(100% - var(--tb) + 6px)),var(--t-title) center top/max(100vw,calc((100vh - var(--tb)) * .6667)) auto no-repeat,#c7e4ad;
   background:linear-gradient(to bottom,rgba(199,228,173,0) calc(100% - var(--tb) - 70px),#c7e4ad calc(100% - var(--tb) + 6px)),var(--t-title) center top/max(100vw,calc((100dvh - var(--tb)) * .6667)) auto no-repeat,#c7e4ad}
-body.art #s-title:has(#t-cont:not([hidden])){--tb:206px}
 body.art #s-title .title{height:100%;gap:12px}
 body.art #s-title .demo{display:none}
 body.art #s-title .lead{margin-bottom:auto;padding:6px 14px;border-radius:14px;background:rgba(255,250,246,.88);box-shadow:0 2px 0 rgba(230,195,209,.8);color:var(--ink)}
@@ -338,7 +342,7 @@ body.art #s-title .record:empty{display:none}
 
 @media (prefers-reduced-motion:reduce){
   .hero,.slot,.drawer,.pull svg{transition:none}
-  .pull.hint,.slot.aim::before,.cell.aim::after,.tw,.slot.acein{animation:none}
+  .pull.hint,.slot.aim::before,.cell.aim::after,.tw,.slot.acein,.loot,.lglow{animation:none}
   .hero.walk svg,.cell.fit::after,.dice.hint,.slot.deal{animation:none}
   .blocks s{animation:none;opacity:.6}
   .board .toy,.board .eye,.hero:not(.walk) svg,.hero.down svg{animation:none}
@@ -382,7 +386,6 @@ body.art #s-title .record:empty{display:none}
 .t-best{margin-top:-2px}
 .t-best:empty{display:none}
 .t-foot{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:auto}
-.t-row{display:flex;justify-content:center;gap:14px}
 .stars{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .stars i{position:absolute;width:14px;height:14px;background:#fff;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:twinkle2 2.4s ease-in-out infinite}
 #s-title .title{position:relative;z-index:1}
@@ -601,9 +604,7 @@ body.art #s-title .record:empty{display:none}
     <p class="lead">光るマスに積み木を置いて、<br>どこまでものぼろう</p>
     <div class="demo" id="demo"></div>
     <div class="t-foot">
-      <button class="btn main play" id="t-cont" type="button" hidden>つづき</button>
       <button class="btn main play" id="t-new" type="button">あそぶ</button>
-      <div class="t-row"><button class="ibtn wide" id="t-shop" type="button" aria-label="強化"><span id="t-shop-i"></span><span>強化<b class="num" id="t-bank">0</b></span><i class="dot" id="t-dot" hidden></i></button></div>
     </div>
   </div>
 </div>
@@ -881,11 +882,12 @@ function roadSVG(m,sh,lo,hi,ace){ // on the field the road runs past the block i
   return `<path d="${d}" stroke="${sh}" stroke-width="36" fill="none"/><circle cx="50" cy="${RC}" r="18" fill="${sh}"/><path d="${d}" stroke="${ace?'#fff0a0':'#fffdf8'}" stroke-width="28" fill="none"/><circle cx="50" cy="${RC}" r="14" fill="${ace?'#fff0a0':'#fffdf8'}"/><path d="${d}" stroke="${ace?'#e8a520':sh}" stroke-width="3.5" stroke-dasharray="7 7" fill="none"/>`;
 }
 const tileArt=(t,inTray)=>{const c=t.c|0,ace=t.m===15&&!t.gate;return blockSVG(c)+(inTray?roadSVG(t.m,BLOCKS[c][1],4,96,ace):roadSVG(t.m,BLOCKS[c][1],undefined,undefined,ace))+(t.kg&&!t.e&&HAS_ART?U('portal',14,-6,72,86):'')+evSVG(t.e)+(ace?`<g class="tw">${STAR(86,12,9)}</g><g class="tw tw2">${STAR(13,82,7)}</g>`:'')};
+const LOOT=(s,i,glow)=>{const d=`style="--d:-${((i|0)*7%11)/10}s"`;return (glow?`<circle class="lglow" cx="50" cy="54" r="23" fill="#fff3a8" ${d}/>`:'')+`<g class="loot" ${d}>${s}</g><g class="tw">${STAR(79,26,6)}</g><g class="tw tw2">${STAR(23,68,4.5)}</g>`}; // treasure: it bobs and twinkles
 function evSVG(e){
   if(!e)return '';
   if(e.k==='foe')return `<g transform="translate(50 50) scale(.7) translate(-50 -50)"><g class="toy">${SPR[e.t]||SPR.soldier}</g></g>`; // smaller, so the road under the toy shows
-  if(e.k==='gear')return (GEAR_ID[e.g]||{}).art||'';
-  return SPR[e.k]||'';
+  if(e.k==='gear')return LOOT((GEAR_ID[e.g]||{}).art||'');
+  return SPR[e.k]?LOOT(SPR[e.k]):'';
 }
 function deco(i){
   const h=((i+7)*2654435761)>>>0,r=h%9,set=DECO[areaOf(rowOf(i)).k];
@@ -1232,7 +1234,7 @@ function cellHTML(i,F){
   else if(c.rock){cls+=' rock'+(aim&&aim.kind==='rock'&&c.rock!==2&&rowOf(i)>=rowOf(run.at)?' aim':'');inner=svg(c.rock===3?SPR.brick:SPR.ob[a])}
   else if(c.tile){cls+=' laid'+(i===justPlaced?' new':'')+(c.tile.m===15&&!c.tile.gate?' ace':'');inner=svg(tileArt(c.tile))+badge(c.tile.e);if(c.tile.e&&c.tile.e.k==='foe')tab=` style="--d:-${(i*7%23)/5}s"`}
   else{
-    inner=svg(deco(i)+(c.psn?SPR.psn:'')+(c.gem?SPR.gem:'')+(c.coin?SPR.coin:''));
+    inner=svg(deco(i)+(c.psn?SPR.psn:'')+(c.gem||c.coin?LOOT((c.gem?SPR.gem:'')+(c.coin?SPR.coin:''),i,1):''));
     if(c.psn&&aim&&aim.kind==='rock'&&rowOf(i)>=rowOf(run.at))cls+=' aim';
     if(F&&F.has(i)){cls+=' front'+(sel>=0&&fits(run.hand[sel],i,F)?' fit':'');tab=' tabindex="0" role="button" aria-label="道の先"'}
   }
@@ -2046,10 +2048,6 @@ function showTitle(){
   const demo=['',SPR.ob.grass,B(3,5,''), SPR.gem,B(0,6,SPR.soldier),B(2,9,SPR.sword), '',B(1,5,SPR.coin),'', '',SPR.start+SPR.hero,''];
   const laid=[4,5,7];
   $('demo').innerHTML=demo.map((s,i)=>`<div class="cell${laid.includes(i)?' laid':''}">${s?svg(s):''}</div>`).join('');
-  $('t-cont').hidden=!run;
-  if(run)$('t-cont').innerHTML=`つづき <small>${placeName(rowOf(run.at))}</small>`;
-  $('t-new').textContent=run?'はじめから':'あそぶ';$('t-new').classList.toggle('sub',!!run);$('t-new').classList.toggle('main',!run);
-  $('t-shop-i').innerHTML=ico(ICON_UP_F());$('t-bank').textContent=nf(meta.bank);$('t-dot').hidden=!affordable();
   $('t-best').innerHTML=meta.far?`${ico(SPR.flag)}<b>${meta.far}</b>`:'';
   const st=$('t-stars');if(!st.children.length)st.innerHTML=[[18,30],[78,24],[64,44],[30,52],[86,58],[12,66],[52,34]].map(([x,y],k)=>`<i style="left:${x}%;top:${y}%;animation-delay:${(k*.37).toFixed(2)}s"></i>`).join('');
   show('s-title');
@@ -2248,9 +2246,7 @@ $('r-list').addEventListener('click',e=>{ // "?" shows the details; a card is ch
   b.classList.add('pick');L.classList.add('picked');const a=mid(b);if(a)bits(a.x,a.y,18,['#ffe58a','#fff','#ff9ec7','#a8e6ff'],a.w*1.2,5);
   setTimeout(()=>takeReward(+b.dataset.i),REDUCED?0:380);
 });
-$('t-new').addEventListener('click',()=>{if(run){meta.bank+=run.gold;saveMeta()}store.del(SAVE);newRun()});
-$('t-cont').addEventListener('click',()=>{if(run)resume()});
-$('t-shop').addEventListener('click',()=>showShop());
+$('t-new').addEventListener('click',()=>{if(run)resume();else newRun()}); // one button: a saved climb carries on, otherwise a new one starts
 $('o-shop').addEventListener('click',()=>showShop(lastFound?'gear':''));
 $('o-again').addEventListener('click',newRun);
 $('o-title').addEventListener('click',showTitle);
