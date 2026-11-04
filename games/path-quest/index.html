@@ -2165,7 +2165,7 @@ function tapCell(i){
 }
 function place(j,hi){
   if(busy||!run||run.phase!=='build')return;
-  if(fpick>=0)hidePick();
+  if(pick>=0||fpick>=0)hidePick(); // a skill's paper or a toy's paper closes (a drag does not pass the slots)
   const t=run.hand[hi];
   if(!t)return;
   const F=frontier();if(!fits(t,j,F)){flashCell(j);flashSlot(hi);return}
@@ -2176,6 +2176,18 @@ function place(j,hi){
   run.phase='walk';run.target=j;save(); // saved before the walk, so reloading mid-walk replays it instead of undoing it
   proceed();
 }
+function takeGear(i,e){ // a piece of gear reaches the knight: a new one goes home to the collection (an empty slot takes it for the next climb), one he has turns into gold
+  const g=gearOf(e);if(!g)return false;
+  if(owned(g.id)){pop(i,`+${addGold(dupGold(g))}`,'p-gold');fly(i,SPR.coin,$('i-gold'))}
+  else{
+    meta.gear.own.push(g.id);(meta.newg=meta.newg||[]).push(g.id);if(!meta.gear.eq[g.s])meta.gear.eq[g.s]=g.id;saveMeta();
+    (run.found=run.found||[]).push(g.id);
+    note(`${g.n}を見つけた`,'good');fly(i,g.art,$('quit'));
+  }
+  return true;
+}
+const kingGear=i=>({k:'gear',g:pickGear(SLOTS[rnd(3)].k,Math.min(4,dimOf(rowOf(i))+2),true).id}); // the king leaves a piece of the next dimension's rarest gear
+const kingDrop=i=>takeGear(i,kingGear(i)); // the king falls from afar: the piece comes to the knight at once
 function hammerHit(j){ // the cell in front first, then the sides, then behind
   const ord=[1,...shuffle([2,8]),4];
   for(const b of ord){const n=nbr(j,b),c=n>=0&&cellAt(n);if(!c||c.foe||c.tile||!(c.rock===1||c.rock===3))continue;
@@ -2184,7 +2196,7 @@ function hammerHit(j){ // the cell in front first, then the sides, then behind
 }
 function spStep(i,t){ // a special block does its thing the first time the knight stands on it
   if(t.sp==='gold'){const g=addGold(3+lvOf(rowOf(i)));pop(i,`+${g}`,'p-gold');fly(i,SPR.coin,$('i-gold'));return true}
-  if(t.sp==='heal'){const h=Math.min(Math.max(2,Math.ceil(run.maxHp*.15)),run.maxHp-run.hp);if(h<=0)return false;run.hp+=h;pop(i,`+${h}`,'p-heal');fly(i,SPR.heart,$('hp'));return true}
+  if(t.sp==='heal'){const h=Math.min(Math.max(2,Math.ceil(run.maxHp*.15)),run.maxHp-run.hp);if(h<=0){note('HPは まんたん');return false}run.hp+=h;pop(i,`+${h}`,'p-heal');fly(i,SPR.heart,$('hp'));return true}
   if(t.sp==='guard'){FX().half=1;note('つぎの戦いはダメージ半分','good');return true}
   return false;
 }
@@ -2221,7 +2233,7 @@ async function stepTo(i){
     hero.classList.remove('walk');
     if(!await battle(foe,run.at,hi)){await knockOut();busy=false;gameOver('hp');return false}
     if(hi!==i){h.tile.e=null;updateCell(hi)}
-    c.tile.e=foe.king?{k:'gear',g:pickGear(SLOTS[rnd(3)].k,Math.min(4,dimOf(rowOf(i))+2),true).id}:null; // the king leaves a piece of the next dimension's rarest gear
+    c.tile.e=foe.king?kingGear(i):null; // the king leaves a piece of the next dimension's rarest gear
     updateCell(i);castHand();await sleep(STEP);
   }
   hero.classList.add('walk');
@@ -2256,7 +2268,7 @@ function reach(r){ // a new row: every 10 a reward, every 20 a new land
     renderStats();
   }
   if(s>0&&s%10===0)run.reward=true;
-  if(s%SPAN===SPAN-1&&run.rolls<2){note(`広場でリロール+${2-run.rolls}`,'good');run.rolls=2;renderStats()}
+  if(((s+1)%SPAN===0||(s+1)%DIM_LEN===0)&&run.rolls<2){note(`広場でリロール+${2-run.rolls}`,'good');run.rolls=2;renderStats()}
   FXH.emit('reach',{r,s});
 }
 async function battle(e,at,i){
@@ -2303,14 +2315,7 @@ function resolve(i){
     c.tile.e=null;hit=true;
     if(e.k==='coin'){pop(i,`+${addGold(e.v)}`,'p-gold');fly(i,SPR.coin,$('i-gold'))}
     else if(e.k==='potion'){const h=Math.min(e.v,run.maxHp-run.hp);run.hp+=h;pop(i,`+${h}`,'p-heal');fly(i,SPR.heart,$('hp'))}
-    else{const g=gearOf(e);if(g){
-      if(owned(g.id)){pop(i,`+${addGold(dupGold(g))}`,'p-gold');fly(i,SPR.coin,$('i-gold'))}
-      else{ // a new piece goes home to the collection; an empty slot takes it for the next climb
-        meta.gear.own.push(g.id);(meta.newg=meta.newg||[]).push(g.id);if(!meta.gear.eq[g.s])meta.gear.eq[g.s]=g.id;saveMeta();
-        (run.found=run.found||[]).push(g.id);
-        note(`${g.n}を見つけた`,'good');fly(i,g.art,$('quit'));
-      }
-    }}
+    else takeGear(i,e);
   }
   if(c.coin&&run.hp>0){const v=c.coin;c.coin=0;pop(i,`+${addGold(v)}`,'p-gold',e?420:0);fly(i,SPR.coin,$('i-gold'),e?420:0);hit=true}
   if(c.gem&&run.hp>0){const v=c.gem;c.gem=0;pop(i,`+${addGold(v)}`,'p-gold',e?420:0);fly(i,SPR.gem,$('i-gold'),e?420:0);hit=true}
@@ -2414,15 +2419,15 @@ function rescue(F){ // a ready skill that can open the way again
     if(ready('box')||(ready('cross')&&run.hand.some(Boolean)))return true;
     if(ready('turn')&&run.hand.some(t=>t&&anyFit({m:rot(t.m)},F)))return true;
   }
-  if(ready('clear')){const m=exitsOf(run.at)&~DOWN;for(const b of BITS)if(m&b){const j=nbr(run.at,b),c=j>=0&&cellAt(j);if(c&&(c.rock===1||c.rock===3||c.foe))return true}}
+  if(ready('clear')&&F.rock&&F.rock.size)return true; // an obstacle where the road goes on (a spring's landing too)
   return false;
 }
 function targets(kind){ // the hand blocks (or the cells) a skill can be pointed at
   if(kind==='rock'){const a=[];for(let r=rowOf(run.at);r<=win.hi;r++)for(let c=0;c<W;c++){const x=cellAt(idOf(r,c));if(x&&(x.rock===1||x.rock===3||x.foe||(x.psn&&!x.tile)))a.push(idOf(r,c))}return a}
-  return run.hand.map((t,i)=>{const foe=!!(t&&t.e&&t.e.k==='foe');return t&&(kind==='tile'||(kind==='foe')===foe)?i:-1}).filter(i=>i>=0);
+  return run.hand.map((t,i)=>{const foe=!!(t&&t.e&&t.e.k==='foe');return t&&(kind==='tile'||(kind==='free'?!t.e&&!t.sp:foe))?i:-1}).filter(i=>i>=0);
 }
 const AIM_SAY={turn:'回す積み木をえらぶ',cross:'十字にする積み木をえらぶ',clear:'どかす物を盤でえらぶ',bugle:'追い出す敵の積み木をえらぶ',treasure:'装備をのせる積み木をえらぶ'};
-const NO_AIM={rock:'近くに どかせる物がない',foe:'手持ちに敵がいない',free:'敵のいない積み木がない',tile:'積み木がない'};
+const NO_AIM={rock:'近くに どかせる物がない',foe:'手持ちに敵がいない',free:'何ものっていない積み木がない',tile:'積み木がない'};
 function tapSkill(k){
   if(busy||!run||run.phase!=='build')return;
   const s=run.sk&&run.sk[k],d=s&&SKILL_ID[s.id];if(!d)return;
@@ -2434,8 +2439,8 @@ function tapSkill(k){
 const dealFx=x=>()=>{const el=handEl.children[x],a=mid(el);if(!el)return;el.classList.add('deal');if(a)bits(a.x,a.y-a.w*.1,6,['#fff','#ffe58a'],a.w*.4,4)};
 function visible(f){for(let r=Math.max(win.lo,rowOf(run.at));r<=win.hi;r++)for(let c=0;c<W;c++){const i=idOf(r,c),x=cellAt(i);if(x)f(i,x)}}
 const SK_DO={ // each changes the climb and gives back what to show once it is drawn, or words when it cannot be used now
-  turn:x=>{run.hand[x].m=rot(run.hand[x].m);return dealFx(x)},
-  cross:x=>{run.hand[x].m=15;aceNew=[x];return null},
+  turn:x=>{const t=run.hand[x];if(rot(t.m)===t.m)return '回しても同じ形';t.m=rot(t.m);return dealFx(x)},
+  cross:x=>{if(run.hand[x].m===15)return 'もう十字の積み木';run.hand[x].m=15;aceNew=[x];return null},
   bugle:x=>{run.hand[x].e=null;return dealFx(x)},
   treasure:(x,lv)=>{run.hand[x].e=makeGear(SLOTS[rnd(3)].k,lv);return dealFx(x)},
   clear:x=>{const c=cellAt(x);c.rock=0;c.foe=null;c.psn=0;return ()=>{puff(x);spark(x)}},
@@ -2469,7 +2474,7 @@ const SK_DO={ // each changes the climb and gives back what to show once it is d
     visible((i,x)=>{if(x.tile&&x.tile.e&&x.tile.e.k==='foe')hits.push({i,e:x.tile.e,on:x.tile});if(x.foe)hits.push({i,e:x.foe,stand:x})});
     run.hand.forEach((t,k)=>{if(t&&t.e&&t.e.k==='foe')hits.push({k,e:t.e,on:t})});
     if(!hits.length)return '画面に 敵がいない';
-    for(const h of hits){h.e.hp-=dmg;if(h.e.hp<=0){h.dead=true;h.g=addGold(h.e.gold);if(h.stand)h.stand.foe=null;else h.on.e=null}}
+    for(const h of hits){h.e.hp-=dmg;if(h.e.hp<=0){h.dead=true;h.g=addGold(h.e.gold);if(h.stand)h.stand.foe=null;else{h.on.e=null;if(h.e.king&&h.i!=null)kingDrop(h.i)}}}
     return ()=>{shake(7);FXH.emit('cannon',{hits:hits.map((h,n)=>h.i!=null?{i:h.i,dead:!!h.dead,dl:n*90}:null).filter(Boolean)});hits.forEach((h,n)=>setTimeout(()=>{
       if(h.i!=null){
         if(h.dead){breakToy(h.i,h.e);pop(h.i,`+${h.g}`,'p-gold');fly(h.i,SPR.coin,$('i-gold'))}
@@ -2528,7 +2533,7 @@ async function foesAct(){ // after each block: archers shoot, mages cast, clowns
     const x=cellAt(i),e=x&&x.foe;if(!e)continue;
     struck(elOf(i));
     if(e.t==='archer'||e.t==='mage'){
-      let d=FX().guard?0:e.t==='mage'?e.atk:Math.max(0,e.atk-run.def);if(d&&bubbleBlock(run.at))d=0;
+      let d=e.t==='mage'?e.atk:Math.max(0,e.atk-run.def);if(d&&bubbleBlock(run.at))d=0; // the hard shield waits for the next fight; shots are not fights
       shoot(i,run.at,e.t==='mage'?SPR.orb:SPR.arrow);await sleep(REDUCED?60:330);
       run.hp-=d;pop(run.at,d?`-${d}`:'0',d?'p-hurt':'p-guard');if(d){hurt();shake(4);FXH.emit('hurt',{at:run.at,b:d,boss:false,i,src:'shot',max:run.maxHp})}
       renderStats();
@@ -2575,7 +2580,7 @@ function stepMagic(){ // each step: spell books poison, poison bites, magic stic
       if(c<0||c>=W||r<0)continue;const i=idOf(r,c),x=cellAt(i);if(!x)continue;
       const e=x.foe||(x.tile&&x.tile.gate&&x.tile.e);if(!e)continue;
       e.hp-=M;const d=n++*70;
-      if(e.hp<=0){const g=addGold(e.gold);if(x.foe)x.foe=null;else x.tile.e=null;updateCell(i);breakToy(i,e);pop(i,`+${g}`,'p-gold',d);fly(i,SPR.coin,$('i-gold'),d)}
+      if(e.hp<=0){const g=addGold(e.gold);if(x.foe)x.foe=null;else{x.tile.e=null;if(e.king)kingDrop(i)}updateCell(i);breakToy(i,e);pop(i,`+${g}`,'p-gold',d);fly(i,SPR.coin,$('i-gold'),d)}
       else{updateCell(i);pop(i,`-${M}`,'p-mag',d);setTimeout(()=>spark(i),d)}
     }
   }
@@ -2696,7 +2701,7 @@ function hitBoard(i,d,cls,dl,gm){ // a toy weapon hits something on the field; t
   e.hp-=d;
   if(e.hp<=0){
     const g=addGold(e.gold*(gm||1));
-    if(x.foe)x.foe=null;else x.tile.e=e.king?{k:'gear',g:pickGear(SLOTS[rnd(3)].k,Math.min(4,dimOf(rowOf(i))+2),true).id}:null;
+    if(x.foe)x.foe=null;else{x.tile.e=null;if(e.king)kingDrop(i)}
     updateCell(i);breakToy(i,e);pop(i,`+${g}`,'p-gold',dl);fly(i,SPR.coin,$('i-gold'),dl);if(e.boss)shake(8);
   }else{updateCell(i);pop(i,`-${d}`,cls,dl);setTimeout(()=>{spark(i);struck(elOf(i))},dl)}
   FXH.emit('toyhit',{i,d,cls});
