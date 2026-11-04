@@ -1073,6 +1073,8 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .skn .sb-t .fd-c{display:inline-flex;align-items:center;gap:4px;margin:0;font:800 13px/1.3 var(--round)}
 .cell.fsel{outline:3px solid #fff8e8;outline-offset:-3px}
 .bboss .bb-tag{display:none}
+.skn .sb-t .fd-g{display:inline-flex;align-items:center;gap:3px;margin:0 0 0 10px;font:800 13px/1.3 var(--round);color:#b07a10}
+.skn .fd-g svg{width:16px;height:16px;display:block}
 /* ===== end of 11/4 ===== */
 /* ===== Canva UI 11/4 ===== */
 /* wood planks, a wooden frame with paper inside, the wooden wall — made in Canva (「PATH QUEST 素材（作業用）」17〜19ページ), built by tools/ui/build_ui_1104.py */
@@ -1293,6 +1295,17 @@ function tintOf(r){ // over the 8 rows after the king the ground takes on the ne
   return tintCache[key]=`--tint:rgba(${col.join(',')},${al})`; // a variable: the panel's own shadows and light stay under it
 }
 const lvOf=r=>1+Math.floor(stepOf(r)/8)+2*dimOf(r); // how far along the climb is: gold, rewards, which toys turn up
+/* the balance numbers in one place (11/4). [a,b] means a + b × level. a test page (#fxtest) can try others from localStorage 'pq.bal' */
+const BAL={
+  knight:{hp:10,atk:2,rolls:3,hand:4},
+  ob:[.11,.002,.28],gem:.025,gemV:[5,2],stand:[.03,.025,.0002,.12], // obstacles: base, per step, most; gems; standing toys: base, per dimension, per step, most
+  ev:{foe:[.16,.012,.3],coin:.09,potion:.07,wpn:.04,shd:.04,chm:.03},coinV:[2,.4],potV:[3,.34], // what rides on a block
+  foe:{hp:[2,1],atk:[1,.5],gold:[4,1.2]}, // the toys give most of the gold: about three times the coins on the blocks
+  boss:{hp:[8,4.4],atk:[2,1.1],gold:[12,3]}, // each captain is a wall of strength: about ten climbs of upgrades for each one (tools/test/sim.py)
+  king:{hp:[5,2.5],atk:[1,.7],gold:[30,4]},
+  cost:1.5 // all upgrade prices are multiplied by this
+};
+if(/fxtest/.test(location.hash))try{const o=JSON.parse(localStorage.getItem('pq.bal')||'{}');for(const k in o)BAL[k]=typeof o[k]==='object'&&!Array.isArray(o[k])?{...BAL[k],...o[k]}:o[k]}catch(e){}
 const DIM_X=2; // each dimension the toys get about twice as strong, and the knight doubles too as he steps through
 const dimX=d=>Math.pow(DIM_X,Math.max(0,d));
 const foeLv=r=>{const d=dimOf(r);return 1+Math.floor(Math.max(0,stepOf(r)-d*DIM_LEN)/8)+4*d}; // inside a dimension the toys grow from its start, then the dimension multiplies them
@@ -1469,9 +1482,9 @@ function makeFoe(f,r){ // f: how far the climb is (gold, which toys turn up); r:
   const pool=FOES.filter(x=>x.from<=f);
   const t=pool.length>1&&Math.random()<.55?pool[pool.length-1]:pool[rnd(pool.length)];
   const L=foeLv(r),x=dimX(dimOf(r));
-  return {k:'foe',t:t.t,name:t.name,hp:Math.round(Math.max(2,2+L+t.hp)*x),atk:Math.round(Math.max(1,1+Math.floor((L-1)/2)+t.atk)*x),gold:3+Math.floor(f*.8)};
+  const B=BAL.foe;return {k:'foe',t:t.t,name:t.name,hp:Math.round(Math.max(2,B.hp[0]+B.hp[1]*L+t.hp)*x),atk:Math.round(Math.max(1,B.atk[0]+Math.floor((L-1)*B.atk[1])+t.atk)*x),gold:Math.round(B.gold[0]+B.gold[1]*f)};
 }
-function makeKing(f,r){const L=foeLv(r),x=dimX(dimOf(r));return {k:'foe',t:'king',name:'おもちゃの王さま',hp:Math.round((8+L*1.6)*x),atk:(1+Math.floor(L/2))*x,gold:30+4*f,boss:true,king:true}}
+function makeKing(f,r){const L=foeLv(r),x=dimX(dimOf(r)),B=BAL.king;return {k:'foe',t:'king',name:'おもちゃの王さま',hp:Math.round((B.hp[0]+L*B.hp[1])*x),atk:Math.round((B.atk[0]+Math.floor(L*B.atk[1]))*x),gold:Math.round(B.gold[0]+B.gold[1]*f),boss:true,king:true}}
 /* toys that act from where they stand, one more kind each dimension. they only stand on the field.
    each time a block is laid, the ones within reach of the knight act: arrows (the shield's guard counts), magic (no guard), a poison puddle, a wall */
 const SHOOTERS={
@@ -1484,21 +1497,21 @@ function standFoe(f,r){ // a toy standing on the ground: in the way until magic 
   const e=Object.assign(makeFoe(f,r),{stand:1}),d=dimOf(r),ks=Object.keys(SHOOTERS).filter(k=>SHOOTERS[k].dim<=d);
   if(ks.length&&Math.random()<.6){
     const k=Math.random()<.5?ks[ks.length-1]:ks[rnd(ks.length)],s=SHOOTERS[k],L=foeLv(r),x=dimX(d);
-    Object.assign(e,{t:k,name:s.name,hp:Math.round(Math.max(2,2+L+s.hp)*x),atk:Math.round(Math.max(1,1+Math.floor((L-1)/2)+s.atk)*x)});
+    const B=BAL.foe;Object.assign(e,{t:k,name:s.name,hp:Math.round(Math.max(2,B.hp[0]+B.hp[1]*L+s.hp)*x),atk:Math.round(Math.max(1,B.atk[0]+Math.floor((L-1)*B.atk[1])+s.atk)*x)});
   }
   return e;
 }
-function makeBoss(f,r){const L=foeLv(r),x=dimX(dimOf(r));return {k:'foe',t:'boss',name:'兵隊長',hp:Math.round((4+L*1.2)*x),atk:(1+Math.floor(L/2))*x,gold:10+2*f,boss:true}}
+function makeBoss(f,r){const L=foeLv(r),x=dimX(dimOf(r)),B=BAL.boss;return {k:'foe',t:'boss',name:'兵隊長',hp:Math.round((B.hp[0]+L*B.hp[1])*x),atk:Math.round((B.atk[0]+Math.floor(L*B.atk[1]))*x),gold:Math.round(B.gold[0]+B.gold[1]*f),boss:true}}
 function makeEvent(f){ // what rides on a block; the deck upgrades tilt it
   const u=meta.up,g=1+.3*(u.dg|0),p=1+.4*(u.dp|0);
-  const a=[['foe',Math.min(.3,.16+.012*f)],['coin',.13*g],['potion',.07*p],['wpn',.04*g],['shd',.04*g],['chm',.03*g]];
+  const E=BAL.ev,a=[['foe',Math.min(E.foe[2],E.foe[0]+E.foe[1]*f)],['coin',E.coin*g],['potion',E.potion*p],['wpn',E.wpn*g],['shd',E.shd*g],['chm',E.chm*g]];
   const tot=a.reduce((s,x)=>s+x[1],0),sc=tot>.9?.9/tot:1;
   let x=Math.random();
   for(const [k,w] of a){
     if((x-=w*sc)>=0)continue;
     if(k==='foe')return makeFoe(f);
-    if(k==='coin')return {k:'coin',v:2+Math.floor(f/2)};
-    if(k==='potion')return {k:'potion',v:(3+Math.floor(f/3))*PM()};
+    if(k==='coin')return {k:'coin',v:BAL.coinV[0]+Math.floor(f*BAL.coinV[1])};
+    if(k==='potion')return {k:'potion',v:(BAL.potV[0]+Math.floor(f*BAL.potV[1]))*PM()};
     return makeGear(k,f);
   }
   return null;
@@ -1517,7 +1530,7 @@ const makeTile=(f,m)=>{
 const FX=()=>run.fx||(run.fx={wind:0,guard:0}); // what the skills left running: the wound spring (steps of double attack) and the raised shield
 const atkNow=()=>run.atk*(FX().wind>0?2:1);
 function dmgFor(e){ // the hp a fight costs, crits not counted: the toy hits, then the knight, until the toy falls
-  const A=atkNow(),back=FX().guard?0:Math.ceil(Math.max(0,e.atk-run.def)/(FX().half?2:1)),ref=qv('ref'),first=qv('first');
+  const A=atkNow(),back=FX().guard&&!e.boss?0:Math.ceil(Math.max(0,e.atk-run.def)/((FX().half?2:1)*(FX().guard?2:1))),ref=qv('ref'),first=qv('first');
   const tl=itLv('top'),T2=tl?toyDmg(isEvo('top')?100:L5(TOY.top.p,tl)):0;
   let hp=e.hp,block=qv('block')+(isEvo('top')?1:0)+(run.bub|0),taken=0;
   for(let n=0;n<300&&hp>0;n++){
@@ -1636,7 +1649,7 @@ const SKILLS=[ // aim: what the skill is pointed at — any block, a block with 
   {id:'box',n:'おもちゃ箱',d:'手持ちを全部、いまつながる積み木に入れかえる',ct:12,cost:90},
   {id:'cannon',n:'大砲どーん',d:'画面の中の敵ぜんぶに 攻撃力ぶんのダメージ',ct:15,cost:100},
   {id:'wind',n:'ぜんまい全開',d:'つぎの3マスは 攻撃が2倍',ct:12,cost:60},
-  {id:'guard',n:'かたい盾',d:'つぎの戦い1回は ダメージ0',ct:10,cost:40},
+  {id:'guard',n:'かたい盾',d:'つぎの戦い1回は ダメージ0（大将・王さまは半分）',ct:10,cost:40},
   {id:'bugle',n:'おどかしラッパ',d:'手持ちの積み木の敵を1体 追い出す',ct:8,cost:40,aim:'foe'},
   {id:'rain',n:'金貨の雨',d:'前の空き地に 金貨を3つふらせる',ct:12,cost:60},
   {id:'magnet',n:'じしゃく',d:'画面の中の金貨とビー玉を ぜんぶ集める',ct:12,cost:50},
@@ -1697,6 +1710,7 @@ const UPS=[
   {k:'ds',deck:1,name:'はじめの十字',desc:'冒険のはじめ、手持ちに十字が1こ（2つで2こ）',art:SK_ART.cross+STAR(18,84,10),max:2,cost:l=>60+60*l},
   ...SPK.map(([sp,k,n,,d])=>({k,deck:1,sp,name:n,desc:d,art:spBlock(sp),max:3,cost:l=>(sp==='ghost'||sp==='spring'?45:35)+30*l}))
 ];
+if(BAL.cost!==1)UPS.forEach(u=>{const c=u.cost;u.cost=l=>Math.round(c(l)*BAL.cost)});
 let meta=store.get(META)||{};
 {
   const u=meta.up||{};
@@ -1729,7 +1743,7 @@ const cellAt=i=>{const row=run.rows[rowOf(i)];return row?row[colOf(i)]:null};
 
 function newRun(){
   const u=meta.up,q=gearSum(meta.gear.eq); // the gear is fixed when the climb starts
-  run={maxHp:10+2*u.hp+q.hp,hp:10+2*u.hp+q.hp,atk:2+u.atk+q.atk,def:u.def+q.def,gold:0,handSize:4+u.hand,rolls:3+u.roll+q.roll,q,found:[],sk:setSkills(),fx:{wind:0,guard:0},best:meta.far,rows:{},made:-1,spine:2,at:idOf(1,2),top:1,target:-1,reward:false,phase:'build'};
+  const K=BAL.knight;run={maxHp:K.hp+2*u.hp+q.hp,hp:K.hp+2*u.hp+q.hp,atk:K.atk+u.atk+q.atk,def:u.def+q.def,gold:0,handSize:K.hand+u.hand,rolls:K.rolls+u.roll+q.roll,q,found:[],sk:setSkills(),fx:{wind:0,guard:0},best:meta.far,rows:{},made:-1,spine:2,at:idOf(1,2),top:1,target:-1,reward:false,phase:'build'};
   grow();
   run.dp=0;
   run.hand=Array.from({length:run.handSize},()=>makeTile(1));
@@ -1749,15 +1763,16 @@ function newRow(r){ // a free "spine" runs through every row, so the way up is n
     row[b].tile={m:15,e:s%DIM_LEN===0?makeKing(lvOf(r),r):makeBoss(lvOf(r),r),c:0,gate:1,anc:1,pz,bi:pz[0],kg:s%DIM_LEN===0?1:0}; // kg: the king's gap opens into a portal once he falls
     Object.assign(row[nb],{rock:0,gem:0,foe:null,tile:{m:15,e:null,c:0,gate:1,pz,bi:pz[0]}});
   }else{
-    const p=Math.min(.3,.13+s*.002);
-    row.forEach(c=>{if(Math.random()<p)c.rock=1;else if(Math.random()<.035)c.gem=5+2*lvOf(r)});
+    const p=Math.min(BAL.ob[2],BAL.ob[0]+s*BAL.ob[1]);
+    row.forEach(c=>{if(Math.random()<p)c.rock=1;else if(Math.random()<BAL.gem)c.gem=BAL.gemV[0]+BAL.gemV[1]*lvOf(r)});
     for(let k=0,free=row.filter(c=>!c.rock).length;free<3&&k<30;k++){const c=row[rnd(W)];if(c.rock){c.rock=0;free++}}
     row[b].rock=0;
-    const fp=s>4?Math.min(.12,.03+.025*dimOf(r)+s*.0002):0; // toys standing on the field, more of them in later dimensions
+    const fp=s>4?Math.min(BAL.stand[3],BAL.stand[0]+BAL.stand[1]*dimOf(r)+s*BAL.stand[2]):0; // toys standing on the field, more of them in later dimensions
     row.forEach((c,k)=>{if(k!==b&&!c.rock&&!c.gem&&Math.random()<fp&&row.filter(x=>!x.rock&&!x.foe).length>3)c.foe=standFoe(lvOf(r),r)});
   }
   if(prev[b].rock===1)prev[b].rock=0;
   prev[b].foe=null;
+  if(row.some(c=>c.tile&&c.tile.anc))for(const c of prev){if(c.rock===1||c.rock===3)c.rock=0;c.foe=null} // the row in front of the captain's square is an open yard: the way to him is never walled off
   const sq=prev.find(c=>c.tile&&c.tile.anc); // the top half of the captain's square
   if(sq)for(const id of sq.tile.pz)if(rowOf(id)===r)Object.assign(row[colOf(id)],{rock:0,gem:0,foe:null,tile:{m:15,e:null,c:0,gate:2,pz:sq.tile.pz,bi:sq.tile.bi}});
   run.spine=b;
@@ -2144,16 +2159,17 @@ function reach(r){ // a new row: every 10 a reward, every 20 a new land
     renderStats();note(`${dimName(dimOf(r))}へ！`);note(`攻撃・守り・HPが${DIM_X}倍`,'good');note(`敵も${DIM_X}倍になった`,'bad');note(`★${topR()}の装備も見つかる`,'good');
   }
   if(s>0&&(s%SPAN===0||s%DIM_LEN===0)){
-    run.rolls=3+meta.up.roll+Q().roll;run.chest=true; // the captain (or the king) is down: his chest opens if a toy can evolve
+    run.rolls=BAL.knight.rolls+meta.up.roll+Q().roll;run.chest=true; // the captain (or the king) is down: his chest opens if a toy can evolve
     const h=Math.min((2*meta.up.bag+Q().bag)*PM(),run.maxHp-run.hp);if(h>0){run.hp+=h;pop(run.at,`+${h}`,'p-heal')}
     renderStats();
   }
   if(s>0&&s%10===0)run.reward=true;
+  if(s%SPAN===SPAN-1&&run.rolls<2){note(`広場でリロール+${2-run.rolls}`,'good');run.rolls=2;renderStats()}
   FXH.emit('reach',{r,s});
 }
 async function battle(e,at,i){
   const hEl=elOf(at),eEl=elOf(i);
-  const back=FX().guard?0:Math.ceil(Math.max(0,e.atk-run.def)/(FX().half?2:1)),A=atkNow(),ref=qv('ref'),first=qv('first'),est=Math.ceil(e.hp/A);
+  const back=FX().guard&&!e.boss?0:Math.ceil(Math.max(0,e.atk-run.def)/((FX().half?2:1)*(FX().guard?2:1))),A=atkNow(),ref=qv('ref'),first=qv('first'),est=Math.ceil(e.hp/A);
   const gap=REDUCED?80:est<=4?340:Math.max(170,1400/est);
   let hp=e.hp,block=qv('block')+(isEvo('top')?1:0); // the tornado top takes the first hit
   const tl=itLv('top'),tp=tl?(isEvo('top')?100:L5(TOY.top.p,tl)):0;
@@ -2183,7 +2199,7 @@ async function battle(e,at,i){
   const lf=Math.min(qv('leech')*PM(),run.maxHp-run.hp);if(lf>0){run.hp+=lf;setTimeout(()=>pop(at,`+${lf}`,'p-heal'),200)}
   const hl=itLv('honey');if(hl){const h=Math.min(Math.max(1,Math.ceil(run.maxHp*.03*hl)),run.maxHp-run.hp);if(h>0){run.hp+=h;setTimeout(()=>pop(at,`+${h}`,'p-heal'),lf>0?420:200)}}
   breakToy(i,e);if(e.boss)shake(8);
-  pop(i,`+${addGold(e.gold)}`,'p-gold');fly(i,SPR.coin,$('i-gold'),120);renderStats();
+  {const g=addGold(e.gold);pop(i,`+${g}`,'p-gold');fly(i,SPR.coin,$('i-gold'),120);note(`${e.name}をたおした！ 金貨+${nf(g)}`,'good')}renderStats();
   await sleep(REDUCED?0:320);
   return true;
 }
@@ -2278,7 +2294,7 @@ function showFoe(i,e){
   const hp=x=>`<i class="st-h"><b class="ic"></b>${x}</i>`;
   let what;
   if(c.foe){const s=SHOOTERS[e.t];what=s&&FOE_DO[e.t]?FOE_DO[e.t](s.rng):'道をふさいでいる'}
-  else{const d=dmgFor(e);what=d?`<span class="fd-c">戦うと${hp('-'+nf(d))}</span>`:'戦ってもダメージなし'}
+  else{const d=dmgFor(e);what=(d?`<span class="fd-c">戦うと${hp('-'+nf(d))}</span>`:'戦ってもダメージなし')+`<span class="fd-g">たおすと${ico(SPR.coin)}+${nf(gainOf(e.gold))}</span>`}
   const el=$('skbar');
   el.innerHTML=`<span class="sb-ic fd-ic${e.boss||e.king?'':' sm'}">${svg(SPR[e.t]||SPR.soldier)}</span><div class="sb-t"><b><span class="fd-n">${e.name}</span><span class="fd-st"><i class="st-a"><b class="ic"></b>${nf(e.atk)}</i>${hp(nf(e.hp))}</span></b><span>${what}</span></div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
   el.hidden=false;
@@ -2339,7 +2355,7 @@ const SK_DO={ // each changes the climb and gives back what to show once it is d
   },
   candy:()=>{const h=Math.min(3*PM(),run.maxHp-run.hp);if(h<=0)return 'HPは まんたん';run.hp+=h;return ()=>{pop(run.at,`+${h}`,'p-heal');fly(run.at,SPR.heart,$('hp'));note(`HP${nf(h)}回復`,'good')}},
   wind:()=>{run.fx.wind=3;return ()=>{note('3マスのあいだ攻撃力2倍','good');spark(run.at)}},
-  guard:()=>{run.fx.guard=1;return ()=>note('つぎの戦いはダメージ0','good')},
+  guard:()=>{run.fx.guard=1;return ()=>note('つぎの戦いはダメージ0（大将は半分）','good')},
   rain:lv=>{
     const r0=rowOf(run.at),a=[];
     for(let r=r0+1;r<=Math.min(win.hi-1,r0+5);r++)for(let c=0;c<W;c++){const i=idOf(r,c),x=cellAt(i);if(x&&!x.rock&&!x.tile&&!x.start&&!x.gem&&!x.coin)a.push(i)}
@@ -3103,7 +3119,7 @@ window.addEventListener('resize',()=>{if(run)renderBoard()});
 
 
 /* test only: open with #fxtest to reach the internals from a test script (PQ.jump(step) puts the knight on that step) */
-if(/fxtest/.test(location.hash))window.PQ={get run(){return run},get busy(){return busy},get sel(){return sel},get meta(){return meta},frontier,fits,anyFit,FXH,openReward,showShop,note,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,
+if(/fxtest/.test(location.hash))window.PQ={get run(){return run},get busy(){return busy},get sel(){return sel},get meta(){return meta},frontier,fits,anyFit,place,reroll,useSkill,takeReward,newRun,saveMeta,rescue,gateFrom,dmgFor,targets,UPS,SKILL_ID,stepOf,lvOf,cellAtSafe:i=>cellAt(i),FXH,openReward,showShop,note,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,
   jump(step,col){const r=step+1,c=col==null?colOf(run.at):col;while(run.made<r+40){run.made++;newRow(run.made)}
     const x=cellAt(idOf(r,c));x.rock=0;x.foe=null;x.tile={m:15,e:null,c:0};run.at=idOf(r,c);run.top=r;run.phase='build';grow();render();return run.at}};
 
