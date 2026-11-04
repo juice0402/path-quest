@@ -38,3 +38,8 @@ rep("""function newRun(){
   if(HS){HS.base='front';HS.bflip=false;heroPose('front',0,false)} // HS is set further down the page
   const u=meta.up,q=gearSum(meta.gear.eq); // the gear is fixed when the climb starts""")
 open(P, 'w', encoding='utf-8').write(s); print('ok newRun')
+# a staff's magic picks toys it can hurt (the rubber duck is not one)
+s = open(P, encoding='utf-8').read()
+rep("const k=shuffle(run.hand.map((t,k)=>t&&t.e&&t.e.k==='foe'?k:-1).filter(k=>k>=0)).slice(0,N);",
+    "const k=shuffle(run.hand.map((t,k)=>t&&t.e&&t.e.k==='foe'&&!(QK[t.e.t]||{}).nomag?k:-1).filter(k=>k>=0)).slice(0,N);")
+open(P, 'w', encoding='utf-8').write(s); print('ok staff')

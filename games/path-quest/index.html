@@ -1641,7 +1641,7 @@ const QK={
   king:{d:'ぜんまい巻き直し：HPが3割になると1回だけ回復',wind:.4}
 };
 const QM={bear:[2,.5],ghost:[.55,1.8],mouse:[.7,1],skel:[.8,1],imp:[1.1,1]}; // [hp, attack] for the kinds built that way
-const tuneFoe=o=>{const m=QM[o.t];if(m){o.hp=Math.max(2,Math.round(o.hp*m[0]));o.atk=Math.max(1,Math.round(o.atk*m[1]))}return o};
+const tuneFoe=o=>{const m=QM[o.t];if(m){o.hp=Math.max(2,Math.round(o.hp*m[0]));o.atk=Math.max(1,Math.round(o.atk*m[1]))}o.mhp=o.hp;return o};
 function makeFoe(f,r){ // f: how far the climb is (gold, which toys turn up); r: the row, which sets how strong it is
   if(r==null)r=run?rowOf(run.at):1;
   const pool=FOES.filter(x=>x.from<=f),land=LAND_FOES[areaOf(r).k]||[];
@@ -1649,7 +1649,7 @@ function makeFoe(f,r){ // f: how far the climb is (gold, which toys turn up); r:
   const L=foeLv(r),x=dimX(dimOf(r));
   const B=BAL.foe;return tuneFoe({k:'foe',t:t.t,name:t.name,hp:Math.round(Math.max(2,B.hp[0]+B.hp[1]*L+t.hp)*x),atk:Math.round(Math.max(1,B.atk[0]+Math.floor((L-1)*B.atk[1])+t.atk)*x),gold:Math.round(B.gold[0]+B.gold[1]*f)});
 }
-function makeKing(f,r){const L=foeLv(r),x=dimX(dimOf(r)),B=BAL.king;return {k:'foe',t:'king',name:'おもちゃの王さま',hp:Math.round((B.hp[0]+L*B.hp[1])*x),atk:Math.round((B.atk[0]+Math.floor(L*B.atk[1]))*x),gold:Math.round(B.gold[0]+B.gold[1]*f),boss:true,king:true}}
+function makeKing(f,r){const L=foeLv(r),x=dimX(dimOf(r)),B=BAL.king;return {k:'foe',t:'king',name:'おもちゃの王さま',hp:Math.round((B.hp[0]+L*B.hp[1])*x),atk:Math.round((B.atk[0]+Math.floor(L*B.atk[1]))*x),gold:Math.round(B.gold[0]+B.gold[1]*f),boss:true,king:true,mhp:Math.round((B.hp[0]+L*B.hp[1])*x)}}
 /* toys that act from where they stand, one more kind with each land (11/4: from: the step they first turn up). they only stand on the field.
    each time a block is laid, the ones within reach of the knight act: arrows (the shield's guard counts), magic (no guard), a poison puddle, a wall */
 const SHOOTERS={
@@ -1662,11 +1662,11 @@ function standFoe(f,r){ // a toy standing on the ground: put a block on it to fi
   const e=Object.assign(makeFoe(f,r),{stand:1}),d=dimOf(r),st=stepOf(r),ks=Object.keys(SHOOTERS).filter(k=>SHOOTERS[k].from<=st);
   if(ks.length&&Math.random()<(d?.6:.4)){
     const k=Math.random()<.5?ks[ks.length-1]:ks[rnd(ks.length)],s=SHOOTERS[k],L=foeLv(r),x=dimX(d);
-    const B=BAL.foe;Object.assign(e,{t:k,name:s.name,hp:Math.round(Math.max(2,B.hp[0]+B.hp[1]*L+s.hp)*x),atk:Math.round(Math.max(1,B.atk[0]+Math.floor((L-1)*B.atk[1])+s.atk)*x)});
+    const B=BAL.foe;Object.assign(e,{t:k,name:s.name,hp:Math.round(Math.max(2,B.hp[0]+B.hp[1]*L+s.hp)*x),atk:Math.round(Math.max(1,B.atk[0]+Math.floor((L-1)*B.atk[1])+s.atk)*x)});e.mhp=e.hp;
   }
   return e;
 }
-function makeBoss(f,r){const L=foeLv(r),x=dimX(dimOf(r)),B=BAL.boss;return {k:'foe',t:'boss',name:'兵隊長',hp:Math.round((B.hp[0]+L*B.hp[1])*x),atk:Math.round((B.atk[0]+Math.floor(L*B.atk[1]))*x),gold:Math.round(B.gold[0]+B.gold[1]*f),boss:true}}
+function makeBoss(f,r){const L=foeLv(r),x=dimX(dimOf(r)),B=BAL.boss;return {k:'foe',t:'boss',name:'兵隊長',hp:Math.round((B.hp[0]+L*B.hp[1])*x),atk:Math.round((B.atk[0]+Math.floor(L*B.atk[1]))*x),gold:Math.round(B.gold[0]+B.gold[1]*f),boss:true,mhp:Math.round((B.hp[0]+L*B.hp[1])*x)}}
 function makeEvent(f){ // what rides on a block; the deck upgrades tilt it
   const u=meta.up,g=1+.3*(u.dg|0),p=1+.4*(u.dp|0);
   const E=BAL.ev,a=[['foe',Math.min(E.foe[2],E.foe[0]+E.foe[1]*f)],['coin',E.coin*g],['potion',E.potion*p],['wpn',E.wpn*g],['shd',E.shd*g],['chm',E.chm*g]];
@@ -1696,7 +1696,7 @@ const FX=()=>run.fx||(run.fx={wind:0,guard:0}); // what the skills left running:
 const atkNow=()=>run.atk*(FX().wind>0?2:1);
 function fightRules(e){ // one fight with toy e: its hp as the fight goes, and what its habit does (QK)
   const q=QK[e.t]||{},guard=!!FX().guard&&!e.boss,div=(FX().half?2:1)*(FX().guard?2:1);
-  return {q,hp:e.hp,max:e.hp,n:0,kn:0,mul:1,up:0,wound:0,
+  return {q,hp:e.hp,max:Math.max(e.hp,e.mhp||0),n:0,kn:0,mul:1,up:0,wound:0,
     back(){ // the toy's hit in this round, before the knight's blocks
       if(guard)return 0;
       let a=e.atk*this.mul+(q.grow?Math.ceil(e.atk*q.grow)*this.n:0);if(q.first2&&this.n===0)a*=2;
@@ -2452,7 +2452,7 @@ async function battle(e,at,i){
       setTimeout(()=>{struck(eEl);spark(i)},80);pop(i,cr?`-${d}!`:`-${d}`,cr?'p-crit':'p-deal');if(cr)shake(5);
       FXH.emit('strike',{i,at,d,crit:cr,atk:A,hpBefore:was,hpMax:e.hp,boss:!!e.boss,king:!!e.king});
       if(tp&&R.hp>0){const t=toyDmg(tp);R.hp-=t;setTimeout(()=>pop(i,`-${t}`,'p-top'),170)} // the spinning top follows up
-      if(h.thorn){run.hp-=h.thorn;setTimeout(()=>{pop(at,`-${h.thorn}`,'p-hurt');hurt()},160);renderStats();if(run.hp<=0)return false}
+      if(h.thorn){run.hp-=h.thorn;renderStats();if(run.hp<=0){pop(at,`-${h.thorn}`,'p-hurt');hurt();return false}setTimeout(()=>{pop(at,`-${h.thorn}`,'p-hurt');hurt()},160)}
     }
     await sleep(gap/2+(REDUCED?0:60));
     await habit();
@@ -2486,7 +2486,7 @@ async function battle(e,at,i){
   }
   breakToy(i,e);if(e.boss)shake(8);
   {const g=addGold(e.gold);pop(i,`+${g}`,'p-gold');fly(i,SPR.coin,$('i-gold'),120);note(`${e.name}をたおした！ 金貨+${nf(g)}`,'good')}
-  if(R.q.spore){run.pz={n:R.q.spore,d:Math.max(1,Math.ceil(e.atk/3))};hero.classList.add('psn');setTimeout(()=>puff(at),120);note('胞子をすって 毒状態になった','bad')}
+  if(R.q.spore){const o=run.pz&&run.pz.n>0?run.pz:{n:0,d:0};run.pz={n:Math.max(o.n,R.q.spore),d:Math.max(o.d,Math.max(1,Math.ceil(e.atk/3)))};hero.classList.add('psn');setTimeout(()=>puff(at),120);note('胞子をすって 毒状態になった','bad')}
   heroPose(e.boss?'cheer':'raise',e.boss?900:420);if(e.boss)heroHop();
   renderStats();
   await sleep(REDUCED?0:320);
@@ -2575,7 +2575,7 @@ function showFoe(i,e){
   hidePick();fpick=i;const c=cellAt(i),pz=c.tile&&c.tile.pz;(pz||[i]).forEach(x=>{fsel.add(x);const el=elOf(x);if(el)el.classList.add('fsel')});
   const hp=x=>`<i class="st-h"><b class="ic"></b>${x}</i>`;
   let what;
-  {const s=c.foe&&SHOOTERS[e.t],d=dmgFor(e);what=(s&&FOE_DO[e.t]?`<span class="fd-do">${FOE_DO[e.t](s.rng)}</span>`:'')+(QK[e.t]?`<span class="fd-do">${QK[e.t].d}</span>`:'')+(d?`<span class="fd-c">戦うと${hp('-'+nf(d))}</span>`:'戦ってもダメージなし')+`<span class="fd-g">たおすと${ico(SPR.coin)}+${nf(gainOf(e.gold))}</span>`}
+  {const s=c.foe&&SHOOTERS[e.t],d=dmgFor(e);what=(s&&FOE_DO[e.t]?`<span class="fd-do">${FOE_DO[e.t](s.rng)}</span>`:'')+(QK[e.t]?`<span class="fd-do">${QK[e.t].d}</span>`:'')+(d?`<span class="fd-c">戦うと${hp('-'+nf(d))}</span>`:'戦ってもダメージなし')+`<span class="fd-g">たおすと${ico(SPR.coin)}+${nf(gainOf(e.gold))}${(QK[e.t]||{}).flee?`（にげると+${nf(gainOf(Math.ceil(e.gold/2)))}）`:''}</span>`}
   const el=$('skbar');
   el.innerHTML=`<span class="sb-ic fd-ic${e.boss||e.king?'':' sm'}">${svg(SPR[e.t]||SPR.soldier)}</span><div class="sb-t"><b><span class="fd-n">${e.name}</span><span class="fd-st"><i class="st-a"><b class="ic"></b>${nf(e.atk)}</i>${hp(nf(e.hp))}</span></b><span>${what}</span></div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
   el.hidden=false;
@@ -2753,7 +2753,7 @@ function handHit(k,dmg,cls){ // a toy in the hand takes damage; it may break
 }
 function castHand(){ // a staff: after each fight, magic hits toys waiting in the hand
   const N=handN(),M=magDmg();if(!N)return;
-  const k=shuffle(run.hand.map((t,k)=>t&&t.e&&t.e.k==='foe'?k:-1).filter(k=>k>=0)).slice(0,N);if(!k.length)return;
+  const k=shuffle(run.hand.map((t,k)=>t&&t.e&&t.e.k==='foe'&&!(QK[t.e.t]||{}).nomag?k:-1).filter(k=>k>=0)).slice(0,N);if(!k.length)return;
   k.forEach(x=>handHit(x,M,'mag'));renderHand();renderStats();
 }
 function stepMagic(){ // each step: spell books poison, poison bites, magic sticks hit what stands around the knight
@@ -3041,7 +3041,7 @@ function takeReward(i){
   if(x.k==='gold')gotG=addGold(N);
   rewardNotes(x,b0,gotG);
   run.rewards=null;if(pending())return openReward();
-  run.chest=false;run.phase='build';hideSheets();render();afterAction();
+  run.chest=false;run.phase='build';hideSheets();render();heroRest();afterAction();
 }
 
 /* ---------- end of run: the gold comes home, the upgrades stay, and the next climb starts from the toy box ---------- */
@@ -3282,7 +3282,7 @@ function resume(){
   hideSheets();
   if(run.phase==='reward'&&run.rewards){render();return showReward()}
   if(run.phase==='walk'&&run.target>=0)return proceed();
-  run.phase='build';busy=false;render();afterAction();
+  run.phase='build';busy=false;render();heroRest();afterAction();
 }
 
 /* ---------- input: one pointer path for tap and drag (touch, pen, mouse) ---------- */
@@ -3523,7 +3523,7 @@ if(HAS_ART)drawHero('front',false); // the knight: a little taller, with his lon
 setInterval(()=>{ // while he waits: now and then he looks around, up the road, lifts his sword or hops
   if(!HAS_ART||REDUCED||!run||run.phase!=='build'||busy||document.hidden||HS.base!=='front'||HS.tok!==HS.rest)return;
   if(++HS.idle<7)return;HS.idle=0;const r=Math.random();
-  if(r<.3){heroPose('side',700,false);const t=HS.tok;setTimeout(()=>{if(HS.tok===t)heroPose('side',700,true)},700)}
+  if(r<.3){heroPose('side',1400,false);const t=HS.tok;setTimeout(()=>{if(HS.tok===t)heroPose('side',700,true)},700)}
   else if(r<.55)heroPose('back',1200);
   else if(r<.75)heroPose('raise',800);
   else if(r<.9){heroPose('jump',450);heroHop()}
