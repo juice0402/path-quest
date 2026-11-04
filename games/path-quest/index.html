@@ -1802,7 +1802,7 @@ let meta=store.get(META)||{};
   for(const s of SLOTS){const id=g.eq&&g.eq[s.k];eq[s.k]=id&&own.includes(id)&&GEAR_ID[id].s===s.k?id:null}
   const k=meta.sk,sown=k&&Array.isArray(k.own)?k.own.filter(id=>SKILL_ID[id]):['turn'],seq=[null,null,null]; // the first climb starts with the quarter turn learned and set
   if(!k)seq[0]='turn';else [0,1,2].forEach(j=>{const id=k.eq&&k.eq[j];if(id&&sown.includes(id)&&!seq.includes(id))seq[j]=id});
-  meta={bank:meta.bank|0,best:meta.best|0,far:meta.far|0,up:Object.fromEntries(UPS.map(x=>[x.k,u[x.k]|0])),gear:{own,eq},sk:{own:sown,eq:seq},newg:(Array.isArray(meta.newg)?meta.newg:[]).filter(id=>GEAR_ID[id])};
+  meta={bank:meta.bank|0,best:meta.best|0,far:meta.far|0,seen:meta.seen|0,up:Object.fromEntries(UPS.map(x=>[x.k,u[x.k]|0])),gear:{own,eq},sk:{own:sown,eq:seq},newg:(Array.isArray(meta.newg)?meta.newg:[]).filter(id=>GEAR_ID[id])};
 }
 const saveMeta=()=>store.set(META,meta);
 
@@ -2181,7 +2181,7 @@ function takeGear(i,e){ // a piece of gear reaches the knight: a new one goes ho
   if(owned(g.id)){pop(i,`+${addGold(dupGold(g))}`,'p-gold');fly(i,SPR.coin,$('i-gold'))}
   else{
     meta.gear.own.push(g.id);(meta.newg=meta.newg||[]).push(g.id);if(!meta.gear.eq[g.s])meta.gear.eq[g.s]=g.id;saveMeta();
-    (run.found=run.found||[]).push(g.id);
+    (run.found=run.found||[]).push(g.id);save(); // the climb is saved with it, so a reload does not take it again as one he has
     note(`${g.n}を見つけた`,'good');fly(i,g.art,$('quit'));
   }
   return true;
@@ -2209,7 +2209,7 @@ async function proceed(){
   const g=gateFrom(run.at,exitsOf(run.at)); // the road touches the captain's gap: walk in and face him
   if(g>=0&&!await stepTo(g))return;
   grow();
-  await toysAct();
+  if(run.ta!==run.at){run.ta=run.at;await toysAct()} // once for each block, also when a reload replays the walk
   if(!await foesAct())return;
   busy=false;
   if(pending())return openReward();
@@ -2227,7 +2227,7 @@ async function stepTo(i){
   if(c.foe&&c.tile){ // a block put on a standing toy: fight it from here, then walk on (11/4)
     const e=c.foe;hero.classList.remove('walk');
     if(!await battle(e,run.at,i)){await knockOut();busy=false;gameOver('hp');return false}
-    c.foe=null;updateCell(i);await sleep(STEP);
+    c.foe=null;updateCell(i);castHand();await sleep(STEP);
   }
   if(foe){ // fight from the cell in front of the toy
     hero.classList.remove('walk');
@@ -2578,7 +2578,7 @@ function stepMagic(){ // each step: spell books poison, poison bites, magic stic
     const r0=rowOf(run.at),c0=colOf(run.at);let n=0;
     for(let r=r0-R;r<=r0+R;r++)for(let c=c0-R;c<=c0+R;c++){
       if(c<0||c>=W||r<0)continue;const i=idOf(r,c),x=cellAt(i);if(!x)continue;
-      const e=x.foe||(x.tile&&x.tile.gate&&x.tile.e);if(!e)continue;
+      const e=x.foe||(x.tile&&x.tile.gate&&x.tile.e);if(!e||e.k!=='foe')continue; // not the piece the king left
       e.hp-=M;const d=n++*70;
       if(e.hp<=0){const g=addGold(e.gold);if(x.foe)x.foe=null;else{x.tile.e=null;if(e.king)kingDrop(i)}updateCell(i);breakToy(i,e);pop(i,`+${g}`,'p-gold',d);fly(i,SPR.coin,$('i-gold'),d)}
       else{updateCell(i);pop(i,`-${M}`,'p-mag',d);setTimeout(()=>spark(i),d)}
@@ -2875,7 +2875,7 @@ function ovRoad(step,far0){ // the way to the next captain: a block for each ste
 }
 function gameOver(why){
   if(!run)return;
-  const step=stepOf(run.top),far0=meta.far,best=step>far0&&step>0,gold=run.gold,found=(run.found||[]).slice();
+  const step=stepOf(run.top),far0=run.best|0,best=step>far0&&step>0,gold=run.gold,found=(run.found||[]).slice();
   meta.bank+=gold;meta.far=Math.max(meta.far,step);saveMeta();
   const p=(dimOf(run.top)?dimName(dimOf(run.top))+' ':'')+areaOf(rowOf(run.at)).n,home=why==='quit';
   const head={hp:`${p}で力つきた`,dead:`${p}で行き止まり`,nofit:`${p}で道がとぎれた`,quit:`${p}から帰還`};
@@ -3047,8 +3047,8 @@ function renderShop(fresh){
   if(shopTab==='skill')$('sh-skill').innerHTML=skillHTML();
   const d=$('sh-det'),dh=detailHTML();d.innerHTML=dh;d.hidden=!dh;
   if(fresh)$('sh-body').scrollTop=0;
-  shopMarks();
   if(shopTab==='gear'&&meta.newg&&meta.newg.includes(shopSel.gear)){meta.newg=meta.newg.filter(x=>x!==shopSel.gear);saveMeta()} // seen: the NEW goes after this look
+  shopMarks();
 }
 function choose(key){ // a tap on the list: only the pinned paper changes
   if(shopSel[shopTab]===key)return;
