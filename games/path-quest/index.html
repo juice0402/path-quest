@@ -1783,7 +1783,7 @@ GEAR.push(
   {id:'cc2',s:'chm',n:'会心のお守り',r:2,crit:.15},
   {id:'cm2',s:'chm',n:'魔法の水晶',r:2,mag:1},
   {id:'ct2',s:'chm',n:'時計のお守り',r:2,cdr:2},
-  {id:'cp3',s:'chm',n:'毒の小びん',r:3,psn:1,pint:-1},
+  {id:'cp3',s:'chm',n:'毒の小びん',r:3,pint:-1},
   {id:'cr3',s:'chm',n:'鏡のかけら',r:3,ref:.4},
   {id:'cx3',s:'chm',n:'黄金の十字',r:3,cross:2,roll:1},
   {id:'ca3',s:'chm',n:'いかりの宝石',r:3,crit:.25,critx:1},
@@ -1811,10 +1811,10 @@ const pct=x=>Math.round(x*100)+'%';
 function gearDesc(g){
   const a=[];
   if(g.atk)a.push(`攻撃+${g.atk}`);if(g.def)a.push(`守り+${g.def}`);if(g.hp)a.push(`最大HP+${g.hp}`);
-  if(g.mag&&g.hand)a.push(`戦うたび 手持ちの敵${g.hand+(g.rng||0)}体に魔法${g.mag}`);
+  if(g.mag&&g.hand)a.push(`戦うたび 手持ちの敵${g.hand+(g.rng||0)}体を魔法でたおす`);
   if(g.mag&&g.area)a.push(`歩くたび まわり${g.area+(g.rng||0)}マスの敵に魔法${g.mag}`);
   if(g.mag&&!g.hand&&!g.area)a.push(`魔法+${g.mag}`);if(g.rng&&!g.hand&&!g.area)a.push(`魔法の範囲+${g.rng}`);
-  if(g.pint>0)a.push(`${g.pint}マスごとに 手持ちの敵1体を毒に（毎マス${g.psn||1}）`);else{if(g.psn)a.push(`毒+${g.psn}`);if(g.pint<0)a.push(`毒にする間かく${g.pint}マス`)}
+  if(g.pint>0)a.push(`${g.pint}マスごとに 手持ちの敵1体を毒でたおす`);else{if(g.psn)a.push(`毒+${g.psn}`);if(g.pint<0)a.push(`毒にする間かく${g.pint}マス`)}
   if(g.crit)a.push(`会心${pct(g.crit)}`);if(g.critx)a.push(`会心のダメージ+${g.critx}倍`);
   if(g.ref)a.push(`受けたダメージの${pct(g.ref)}をはね返す`);if(g.block)a.push(`戦いの最初の${g.block}回はダメージ0`);
   if(g.first)a.push('先に攻撃する');if(g.leech)a.push(`たおすとHP+${g.leech}`);
@@ -2743,11 +2743,11 @@ async function foesAct(){ // after each block: archers shoot, mages cast, clowns
 }
 
 /* ---------- magic and poison from the gear ---------- */
-function handHit(k,dmg,cls){ // a toy in the hand takes damage; it may break
+function handHit(k,dmg,cls){ // a toy in the hand that is hit is beaten for good: the block goes back to a plain path
   const t=run.hand[k],e=t&&t.e;if(!e||e.k!=='foe')return;
   const el=handEl.children[k],a=mid(el);
   if((QK[e.t]||{}).nomag&&(cls==='mag'||cls==='psn')){e.psn=0;bump(el);return} // the rubber duck shrugs it off
-  e.hp-=dmg;
+  e.hp=0;
   if(e.hp<=0){const g=addGold(e.gold);t.e=null;if(a)bits(a.x,a.y,10,TOYBITS[e.t]||TOYBITS.soldier,a.w*.7,4);fly(el,SPR.coin,$('i-gold'),120);return g}
   if(a)bits(a.x,a.y-a.w*.1,6,cls==='psn'?['#b48be0','#8b5fbf']:['#c9b6ff','#fff','#a8e6ff'],a.w*.4,4);bump(el);
 }
@@ -2759,7 +2759,7 @@ function castHand(){ // a staff: after each fight, magic hits toys waiting in th
 function stepMagic(){ // each step: spell books poison, poison bites, magic sticks hit what stands around the knight
   let hand=false;
   const P=pintN();
-  if(P){run.pc=(run.pc|0)+1;if(run.pc%P===0){const c=run.hand.filter(t=>t&&t.e&&t.e.k==='foe'&&!t.e.psn&&!(QK[t.e.t]||{}).nomag);if(c.length){c[rnd(c.length)].e.psn=Math.max(1,qv('psn'))*PM()*(run.pmag||1);hand=true}}}
+  if(P){run.pc=(run.pc|0)+1;if(run.pc%P===0){const c=run.hand.map((t,k)=>t&&t.e&&t.e.k==='foe'&&!(QK[t.e.t]||{}).nomag?k:-1).filter(k=>k>=0);if(c.length){handHit(c[rnd(c.length)],1,'psn');hand=true}}}
   run.hand.forEach((t,k)=>{if(t&&t.e&&t.e.k==='foe'&&t.e.psn){handHit(k,t.e.psn,'psn');hand=true}});
   const R=areaR(),M=magDmg();
   if(R){
@@ -2809,7 +2809,7 @@ const TOY={ // the numbers per level
   plane:{n:[1,1,2,2,3],p:[50,60,70,80,100]},
   top:{p:[20,30,40,50,70]},
   bomb:{e:[5,4,4,3,3],r:[1,1,2,2,2],p:[80,100,120,140,180]},
-  boomer:{n:[1,1,2,2,3],p:[40,50,60,70,90]},
+  boomer:{e:[3,2,2,1,1],n:[1,1,2,2,3]},
   bubble:{e:[6,5,4,3,3],m:[1,1,1,2,2]}
 };
 const toyDmg=p=>Math.max(1,Math.ceil(atkNow()*p/100));
@@ -2819,7 +2819,7 @@ function itDesc(id,lv){
     case 'plane':return `置くたび、近くの敵へ${g(t.n)}機（攻撃${g(t.p)}%）`;
     case 'top':return `たたくたび追い打ち（攻撃${g(t.p)}%）`;
     case 'bomb':return `${g(t.e)}マスごとに爆発。まわり${g(t.r)}マスに攻撃${g(t.p)}%`;
-    case 'boomer':return `置くたび、手持ちの敵${g(t.n)}体へ（攻撃${g(t.p)}%）`;
+    case 'boomer':return `${g(t.e)>1?g(t.e)+'回置くごとに':'置くたび、'}手持ちの敵${g(t.n)}体をたおす`;
     case 'bubble':return `${g(t.e)}マスごとにシャボン。攻撃を1回ふせぐ`;
     case 'spring':return '攻撃+25%';
     case 'block':return '守り+25%';
@@ -2836,7 +2836,7 @@ const EVO_DESC={
   plane:'2倍の数がとび、ぜんぶ会心',
   top:'追い打ち100%。最初の1回はダメージなし',
   bomb:'2マスごとに大爆発（攻撃220%）。金貨2倍',
-  boomer:'手持ちの敵ぜんぶへ（攻撃150%）',
+  boomer:'置くたび、手持ちの敵ぜんぶをたおす',
   bubble:'2マスごとにシャボン。割れるとHP回復'
 };
 function evoHint(x){ // the "?" also says which pair makes the big evolution
@@ -2904,15 +2904,15 @@ async function toysAct(){ // after each block: the paper planes and the boomeran
       const i=nearFoe();
       if(i>=0){shoot(run.at,i,SPR.i_plane,240);await sleep(REDUCED?30:200);hitBoard(i,d,ev?'p-crit':'p-toy',0);hit=true;continue}
       const hs=handFoes();if(!hs.length)break;
-      const k=hs[rnd(hs.length)];toss(spot(run.at),mid(handEl.children[k]),SPR.i_plane,240);await sleep(REDUCED?30:200);handHit(k,d,'mag');renderHand();hit=true;
+      const k=hs[rnd(hs.length)];toss(spot(run.at),mid(handEl.children[k]),SPR.i_plane,240);await sleep(REDUCED?30:200);handHit(k,d,'toy');renderHand();hit=true;
     }
   }
   if(bm){
-    const ev=isEvo('boomer'),d=toyDmg(ev?150:L5(TOY.boomer.p,bm));
-    let ks=shuffle(handFoes());if(!ev)ks=ks.slice(0,L5(TOY.boomer.n,bm));
-    if(ks.length){
+    const ev=isEvo('boomer'),d=toyDmg(100);run.bmc=(run.bmc|0)+1;
+    let ks=ev||run.bmc>=L5(TOY.boomer.e,bm)?shuffle(handFoes()):[];if(!ev)ks=ks.slice(0,L5(TOY.boomer.n,bm));
+    if(ks.length){run.bmc=0;
       ks.forEach((k,j)=>setTimeout(()=>toss(spot(run.at),mid(handEl.children[k]),SPR.i_boomer,300,true),REDUCED?0:j*70));
-      await sleep(REDUCED?30:300+ks.length*70);ks.forEach(k=>handHit(k,d,'mag'));renderHand();hit=true;
+      await sleep(REDUCED?30:300+ks.length*70);ks.forEach(k=>handHit(k,d,'toy'));renderHand();hit=true;
     }
   }
   if(hit){renderStats();save();await sleep(REDUCED?0:140)}
@@ -2922,7 +2922,7 @@ function boom(R,d,gm){ // the marble bomb: everything around the knight, and the
   FXH.emit('boom',{at:run.at,R});
   const r0=rowOf(run.at),c0=colOf(run.at);let n=0;
   for(let r=r0-R;r<=r0+R;r++)for(let c=c0-R;c<=c0+R;c++){if(c<0||c>=W||r<0)continue;const i=idOf(r,c);if(boardFoe(cellAt(i))){hitBoard(i,d,'p-toy',n*70,gm);n++}}
-  let h=false;run.hand.forEach((t,k)=>{const e=t&&t.e;if(e&&e.k==='foe'){if(gm>1&&e.hp<=d)e.gold*=gm;handHit(k,d,'mag');h=true}});
+  let h=false;run.hand.forEach((t,k)=>{const e=t&&t.e;if(e&&e.k==='foe'){if(gm>1)e.gold*=gm;handHit(k,d,'toy');h=true}});
   if(h)renderHand();renderStats();
 }
 function bubbleFx(on){
@@ -3435,7 +3435,7 @@ window.addEventListener('resize',()=>{if(run)renderBoard()});
 
 
 /* test only: open with #fxtest to reach the internals from a test script (PQ.jump(step) puts the knight on that step) */
-if(/fxtest/.test(location.hash))window.PQ={get run(){return run},get busy(){return busy},get sel(){return sel},get meta(){return meta},frontier,fits,anyFit,place,reroll,useSkill,takeReward,newRun,gameOver,saveMeta,rescue,gateFrom,dmgFor,targets,heroPose,heroBase,toyAct,fightRules,QK,UPS,SKILL_ID,stepOf,lvOf,cellAtSafe:i=>cellAt(i),FXH,openReward,showShop,note,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,
+if(/fxtest/.test(location.hash))window.PQ={get run(){return run},get busy(){return busy},get sel(){return sel},get meta(){return meta},frontier,fits,anyFit,place,reroll,useSkill,takeReward,newRun,gameOver,saveMeta,rescue,gateFrom,dmgFor,targets,heroPose,heroBase,toyAct,toysAct,fightRules,QK,UPS,SKILL_ID,stepOf,lvOf,cellAtSafe:i=>cellAt(i),FXH,openReward,showShop,note,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,
   jump(step,col){const r=step+1,c=col==null?colOf(run.at):col;while(run.made<r+40){run.made++;newRow(run.made)}
     const x=cellAt(idOf(r,c));x.rock=0;x.foe=null;x.tile={m:15,e:null,c:0};run.at=idOf(r,c);run.top=r;run.phase='build';grow();render();return run.at}};
 
