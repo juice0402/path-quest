@@ -1085,6 +1085,9 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 @keyframes hlow{50%{background:#c81e3c}}
 .hp.low .blocks i{background:#f3c2cc}
 @media (prefers-reduced-motion:reduce){.hp.low>span>svg,.hp.low .blocks u{animation:none}.hp.low .blocks u{background:#c81e3c}}
+/* the fallen knight on the result: a flat shadow under him */
+.ov-hero{position:relative}
+.ov-hero .ov-sh{position:absolute;left:15%;right:15%;bottom:6%;height:15%;border-radius:50%;background:rgba(30,14,24,.42);filter:blur(1.5px)}
 /* ===== end of 11/4 ===== */
 /* ===== Canva UI 11/4 ===== */
 /* wood planks, a wooden frame with paper inside, the wooden wall — made in Canva (「PATH QUEST 素材（作業用）」17〜19ページ), built by tools/ui/build_ui_1104.py */
@@ -2780,7 +2783,8 @@ function gameOver(why){
   const p=(dimOf(run.top)?dimName(dimOf(run.top))+' ':'')+areaOf(rowOf(run.at)).n;
   const head={hp:`${p}で力つきた`,dead:`${p}で行き止まり`,nofit:`${p}で道がとぎれた`,quit:`${p}から帰還`};
   $('o-head').textContent=head[why]||head.quit;
-  $('o-hero').innerHTML=svg(SPR.hero);$('o-hero').classList.toggle('home',why==='quit');
+  $('o-hero').innerHTML=why==='quit'?svg(SPR.hero):'<i class="ov-sh" aria-hidden="true"></i>'+svg(SPR.hero.replace(/^<ellipse[^>]*\/>/,'')); // fallen: his shadow lies flat under him, it does not turn with him
+  $('o-hero').classList.toggle('home',why==='quit');
   $('o-new').hidden=!best;$('o-best').innerHTML=best?'':`${ico(SPR.flag)} ${meta.far}`;
   lastFound=found.length;
   $('o-found').innerHTML=found.slice(0,8).map(id=>{const g=GEAR_ID[id];return g?`<i style="--rc:${['','var(--r1)','var(--r2)','var(--r3)','#f2b632'][g.r]}">${ico(g.art)}</i>`:''}).join('');
@@ -3132,7 +3136,7 @@ window.addEventListener('resize',()=>{if(run)renderBoard()});
 
 
 /* test only: open with #fxtest to reach the internals from a test script (PQ.jump(step) puts the knight on that step) */
-if(/fxtest/.test(location.hash))window.PQ={get run(){return run},get busy(){return busy},get sel(){return sel},get meta(){return meta},frontier,fits,anyFit,place,reroll,useSkill,takeReward,newRun,saveMeta,rescue,gateFrom,dmgFor,targets,UPS,SKILL_ID,stepOf,lvOf,cellAtSafe:i=>cellAt(i),FXH,openReward,showShop,note,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,
+if(/fxtest/.test(location.hash))window.PQ={get run(){return run},get busy(){return busy},get sel(){return sel},get meta(){return meta},frontier,fits,anyFit,place,reroll,useSkill,takeReward,newRun,gameOver,saveMeta,rescue,gateFrom,dmgFor,targets,UPS,SKILL_ID,stepOf,lvOf,cellAtSafe:i=>cellAt(i),FXH,openReward,showShop,note,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,
   jump(step,col){const r=step+1,c=col==null?colOf(run.at):col;while(run.made<r+40){run.made++;newRow(run.made)}
     const x=cellAt(idOf(r,c));x.rock=0;x.foe=null;x.tile={m:15,e:null,c:0};run.at=idOf(r,c);run.top=r;run.phase='build';grow();render();return run.at}};
 
