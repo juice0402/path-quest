@@ -1089,6 +1089,9 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 @keyframes ovSh{from{transform:scaleX(.4)}}
 .ov-hero.home svg{transform:none;filter:none;animation:floaty 1.6s ease-in-out infinite}
 .ov-hero.home{top:-101px}
+.ov-hero{z-index:1}
+.ov-road[hidden],.ov-to[hidden]{display:none}
+.ov-to[hidden]+.ov-led{margin-top:22px}
 #ov .ov-sub .btn{white-space:nowrap}
 .ov-main{position:relative;width:100%;display:flex;justify-content:center;margin-top:4px}
 .ov-big{display:flex;align-items:baseline;gap:4px;font:400 66px/1 var(--disp);color:var(--ink);font-variant-numeric:tabular-nums;text-shadow:0 3px 0 rgba(176,111,60,.22)}
@@ -1133,7 +1136,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 /* a short phone: a smaller knight, number and gear so the card and the planks fit */
 @media (max-height:760px){
   .ov{gap:10px}.ov-card{margin-top:72px;padding:30px 8px 10px}
-  .ov-hero{top:-84px;width:90px;height:68px;margin-left:-45px}.ov-hero.home{top:-81px}
+  .ov-hero{top:-92px;width:90px;height:68px;margin-left:-45px}.ov-hero.home{top:-88px}
   .ov-big{font-size:52px}.ov-big span{font-size:20px}.ov-stamp{width:76px;height:76px;top:-10px}.ov-stamp span{font-size:17px}
   .ov-road{margin-top:16px}.ov-led{margin-top:10px;gap:6px}.ov-led b{font-size:19px}.ov-led svg{width:21px;height:21px}
   .ov-found{margin-top:10px}.ov-cap{margin-bottom:6px}.ov-gear i{width:40px;height:40px}.ov-gear i svg{width:34px;height:34px}
@@ -2858,6 +2861,7 @@ function ovRoad(step,far0){ // the way to the next captain: a block for each ste
     :document.getElementById('a-boss')?`<svg viewBox="2 -22 96 134" aria-hidden="true">${U('boss',4,-20,92,110)}</svg>`:svg(SPR.boss);
   $('o-road').innerHTML=`<div class="rd-pips">${h}</div><b class="rd-boss">${art}</b>`;
   $('o-to').textContent=`${king?'王さま':'兵隊長'}まで あと${z-step}段`;
+  const met=(meta.seen|0)>=z||far0>=z;$('o-road').hidden=$('o-to').hidden=!met; // no spoilers: not before he has been seen on the field
 }
 function gameOver(why){
   if(!run)return;
@@ -2883,6 +2887,14 @@ function gameOver(why){
   ovAt(1000,()=>countUp($('o-gold').querySelector('b'),gold,700,'+'));
   if(best)ovAt(1450,confetti,1); // the stamp has come down
 }
+FXH.add('render',()=>{ // remember the next captain once his square is on the screen (the result screen may then name him)
+  if(!run)return;let g=stepOf(run.top)+1;while(!isGate(g))g++;
+  if((meta.seen|0)>=g)return;
+  const row=run.rows[g+1],k=row?row.findIndex(c=>c.tile&&c.tile.anc):-1;if(k<0)return;
+  const el=elOf(idOf(g+1,k));if(!el)return;
+  const a=el.getBoundingClientRect(),v=view.getBoundingClientRect(),top=Math.max(v.top,document.querySelector('.hud').getBoundingClientRect().bottom);
+  if(a.bottom>top+a.height*.4&&a.top<v.bottom){meta.seen=g;saveMeta()}
+});
 
 const ICON_UP_F=()=>SPR.sword+'<circle cx="66" cy="66" r="11" fill="#2f9e5f" stroke="#fff" stroke-width="3"/><path d="M66 71V61M61 65.5l5-5 5 5" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
 const affordable=()=>{const b=meta.bank;return UPS.some(u=>meta.up[u.k]<u.max&&u.cost(meta.up[u.k])<=b)||SKILLS.some(k=>!meta.sk.own.includes(k.id)&&k.cost<=b)};
