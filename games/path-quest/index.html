@@ -1207,6 +1207,15 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .hero.jump>svg:not(.hsh){animation:hjump .38s ease-out}
 @keyframes hjump{0%{translate:0 0}45%{translate:0 -70%}100%{translate:0 0}}
 @media (prefers-reduced-motion:reduce){.hero.jump>svg{animation:none}}
+/* enemies on the field: attack and life under each one */
+.badge.b-st{left:50%;right:auto;bottom:2px;translate:-50% 0;display:flex;align-items:center;gap:5px;padding:1px 5px;white-space:nowrap;color:var(--ink)}
+.b-st i{display:inline-flex;align-items:center;gap:1px;font-style:normal}
+.b-st svg{position:static!important;inset:auto;flex:none;width:11px;height:11px;display:block;margin:0;transform:none}
+.b-st .st-a{color:#6b4a3a}.b-st .st-h{color:var(--foe)}
+.badge.b-st.sm{gap:3px;padding:1px 3px;font-size:9.5px;letter-spacing:-.02em}
+.b-st.sm svg{width:9px;height:9px}
+.bboss .badge.b-st{bottom:4px;gap:8px;padding:2px 8px;font-size:14px}
+.bboss .b-st svg{width:14px;height:14px}
 /* ===== end of 11/4 ===== */
 /* ===== Canva UI 11/4 ===== */
 /* wood planks, a wooden frame with paper inside, the wooden wall — made in Canva (「PATH QUEST 素材（作業用）」17〜19ページ), built by tools/ui/build_ui_1104.py */
@@ -1963,9 +1972,13 @@ const elOf=i=>{const r=rowOf(i);return i<0||r<win.lo||r>win.hi?null:board.childr
 const hero=document.createElement('div');hero.className='hero';hero.innerHTML=svg(SPR.hero);
 $('hpicon').innerHTML=ico(SPR.heart);
 $('rollicon').innerHTML=svg('<path d="M20 12h60" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".45"/>'+[[31,31],[69,31],[50,50],[31,69],[69,69]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="8.5" fill="#fff"/>`).join(''));
+function foeTags(e){ // a toy on the field: its attack and its life, side by side under it (11/4)
+  const a=nf(e.atk),h=nf(e.hp);
+  return `<span class="badge b-st${(a+h).length>5?' sm':''}"><i class="st-a">${ico(SPR.sword)}${a}</i><i class="st-h">${ico(SPR.heart)}${h}</i></span>`;
+}
 function badge(e){
   if(!e)return '';
-  if(e.k==='foe'){const d=dmgFor(e);return `<span class="badge ${d?'b-foe':'b-zero'}">-${nf(d)}</span>`}
+  if(e.k==='foe')return foeTags(e);
   if(e.k==='coin')return `<span class="badge b-coin">+${e.v}</span>`;
   if(e.k==='potion')return `<span class="badge b-heal">+${e.v}</span>`;
   const g=gearOf(e);if(g)return owned(g.id)?`<span class="badge b-coin">+${gainOf(dupGold(g))}</span>`:'<span class="badge b-new">NEW</span>';
@@ -1976,7 +1989,7 @@ function cellHTML(i,F){
   if(!c){}
   else if(c.start){cls+=' start';inner=svg(SPR.start)}
   else if(c.rock===2){cls+=' fence';inner=svg(SPR.fence)}
-  else if(c.foe){cls+=' rock stand'+(aim&&aim.kind==='rock'&&rowOf(i)>=rowOf(run.at)?' aim':'')+(reachOf(i,c.foe)?' threat':'');inner=svg(HAS_ART?toyStand(i,c.foe.t):`<g class="toy">${SPR[c.foe.t]||SPR.soldier}</g>`)+`<span class="badge b-life">♥${nf(c.foe.hp)}</span>`;tab=` style="--d:-${(i*7%23)/5}s"`}
+  else if(c.foe){cls+=' rock stand'+(aim&&aim.kind==='rock'&&rowOf(i)>=rowOf(run.at)?' aim':'')+(reachOf(i,c.foe)?' threat':'');inner=svg(HAS_ART?toyStand(i,c.foe.t):`<g class="toy">${SPR[c.foe.t]||SPR.soldier}</g>`)+`${foeTags(c.foe)}`;tab=` style="--d:-${(i*7%23)/5}s"`}
   else if(c.rock){cls+=' rock'+(aim&&aim.kind==='rock'&&c.rock!==2&&rowOf(i)>=rowOf(run.at)?' aim':'');inner=svg(c.rock===3?brickArt(i):obArt(i,a));
     if(F&&F.rock&&F.rock.has(i)&&sel>=0&&fits(run.hand[sel],i,F)){cls+=' front fit';inner+=`<div class="gh">${svg(tileArt(run.hand[sel],false))}</div>`}}
   else if(c.tile){cls+=' laid'+(i===justPlaced?' new':'')+(c.tile.m===15&&!c.tile.gate?' ace':'')+(c.tile.sp?' sp-'+c.tile.sp:'');inner=svg(tileArt(c.tile,false,i))+badge(c.tile.e)+(c.tile.over?`<div class="gho">${svg(c.tile.over===3?brickArt(i):obArt(i,a))}</div>`:'');if(c.tile.e&&c.tile.e.k==='foe')tab=` style="--d:-${(i*7%23)/5}s"`}
@@ -3406,7 +3419,7 @@ const MO=(()=>{
     const org=`transform-origin:${cx/2}% 86%`;
     o.innerHTML=`<svg class="bb-art bb-g" viewBox="0 0 200 200" style="${org}" aria-hidden="true"><ellipse cx="${cx}" cy="171" rx="${en.king?64:58}" ry="14" fill="rgba(214,51,79,.28)"/><ellipse cx="${cx}" cy="171" rx="${en.king?50:44}" ry="8.5" fill="rgba(90,20,40,.4)"/>${typeof SHAD==='function'?`<g transform="matrix(1 0 .5 .5 -86.5 86.5)"><g transform="translate(${(cx-50*k).toFixed(1)} ${(173-foot*k).toFixed(1)}) scale(${k})">${SHAD(art)}</g></g>`:''}</svg>`+
       `<div class="bb-drop" style="${org}"><svg class="bb-art bb-b" viewBox="0 0 200 200" aria-hidden="true"><g class="bb-body" style="--d:-${(en.i*7%23)/10}s"><g transform="translate(${(cx-50*k).toFixed(1)} ${(173-foot*k).toFixed(1)}) scale(${k})">${art}</g></g></svg>`+
-      (en.dieT!=null?'':`<div class="bb-tag" style="left:${(w-g.offsetWidth)/2}px;bottom:0;width:${g.offsetWidth}px;height:${g.offsetHeight}px">${badge(en.e)}</div>`)+'</div>';
+      (en.dieT!=null?'':`<div class="bb-tag" style="left:0;bottom:0;width:${w}px;height:${g.offsetHeight}px">${badge(en.e)}</div>`)+'</div>';
     board.appendChild(o); // after the cells, never before them (elOf counts the board's children)
     if(REDUCED)return;
     const dr=o.querySelector('.bb-drop'),gr=o.firstElementChild;
