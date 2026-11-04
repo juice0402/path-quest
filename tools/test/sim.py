@@ -21,7 +21,7 @@ POLICY = r"""
 window.SIM=(()=>{
   const W=6,wait=ms=>new Promise(f=>setTimeout(f,ms));
   const nb=(j,b)=>{const r=PQ.rowOf(j)+(b===1?1:b===4?-1:0),c=PQ.colOf(j)+(b===2?1:b===8?-1:0);return c<0||c>=W||r<0?-1:PQ.idOf(r,c)};
-  const free=c=>c&&!c.rock&&!c.foe&&!c.tile&&!c.start;
+  const free=c=>c&&!c.rock&&!c.tile&&!c.start; // a standing toy can be fought, so it is a way on too
   async function idle(){for(let k=0;k<6000;k++){const r=PQ.run;if(!r)return 'over';if(r.phase==='reward'&&r.rewards)return 'reward';if(!PQ.busy&&r.phase==='build')return 'build';await wait(40)}return 'timeout'}
   function score(t,k,j,F){
     const r=PQ.run,c=PQ.cellAtSafe(j);let s=10*PQ.rowOf(j),open=0,two=0;
@@ -32,6 +32,7 @@ window.SIM=(()=>{
       if(e&&e.k==='foe'){const d=PQ.dmgFor(e);s+=d>=r.hp?-600:60-d*2}else s+=40}
     else if(!open)s-=1000;
     s+=open*4+Math.min(two,4)*2;
+    if(c&&c.foe){const d=PQ.dmgFor(c.foe);s+=d>=r.hp?-500:-d*(r.hp<r.maxHp*.4?6:2.5)+c.foe.gold*.8} // the toy standing on that cell
     const e=t.e;
     if(e&&e.k==='foe'){const d=PQ.dmgFor(e);s+=d>=r.hp?-500:-d*(r.hp<r.maxHp*.4?6:2.5)+e.gold*.8}
     if(e&&e.k==='coin')s+=e.v*.6;
@@ -78,6 +79,7 @@ window.SIM=(()=>{
       if(e&&e.k==='foe'){foeGold+=e.gold;kills++}
       if(e&&e.k==='coin')coinGold+=e.v;
       const c=PQ.cellAtSafe(m.j);if(c&&(c.coin||c.gem))coinGold+=(c.coin|0)+(c.gem|0);
+      if(c&&c.foe){foeGold+=c.foe.gold;kills++}
       const g=PQ.gateFrom(m.j,m.t.m);if(g>=0){const gc=PQ.cellAtSafe(g),bc=gc.tile.bi!=null?PQ.cellAtSafe(gc.tile.bi):gc,be=bc&&bc.tile&&bc.tile.e;if(be&&be.k==='foe'){foeGold+=be.gold;kills++}}
       PQ.place(m.j,m.k);steps++;await wait(10);
     }

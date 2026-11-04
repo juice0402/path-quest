@@ -1576,7 +1576,7 @@ const SHOOTERS={
   clown:{name:'毒まきピエロ',dim:3,rng:3,hp:0,atk:-1},
   mason:{name:'かべ職人',dim:4,rng:3,hp:2,atk:-1}
 };
-function standFoe(f,r){ // a toy standing on the ground: in the way until magic or the cannon breaks it
+function standFoe(f,r){ // a toy standing on the ground: put a block on it to fight it (magic and the cannon break it too)
   const e=Object.assign(makeFoe(f,r),{stand:1}),d=dimOf(r),ks=Object.keys(SHOOTERS).filter(k=>SHOOTERS[k].dim<=d);
   if(ks.length&&Math.random()<.6){
     const k=Math.random()<.5?ks[ks.length-1]:ks[rnd(ks.length)],s=SHOOTERS[k],L=foeLv(r),x=dimX(d);
@@ -1877,7 +1877,7 @@ function frontier(){
     for(const p of pz)for(const b of BITS){
       if(b===DOWN)continue;const j=nbr(p,b);if(j<0||pz.includes(j))continue;const c=cellAt(j);if(!c)continue;
       if((c.rock===1||c.rock===3)&&!c.foe&&!c.tile&&!c.start){if(!map.rock.has(j)){map.rock.set(j,OPP[b]);map.via.set(j,p)}continue}
-      if(c.rock||c.foe||c.tile||c.start||map.has(j))continue;
+      if(c.rock||c.tile||c.start||map.has(j))continue; // a standing toy: put a block there and fight it
       map.set(j,OPP[b]);map.via.set(j,p);
     }
     return map;
@@ -1889,7 +1889,7 @@ function frontier(){
     const c=j>=0&&cellAt(j);
     if(!c)continue;
     if((c.rock===1||c.rock===3)&&!c.foe&&!c.tile&&!c.start){map.rock.set(j,OPP[b]);continue}
-    if(c.rock||c.foe||c.tile||c.start)continue;
+    if(c.rock||c.tile||c.start)continue; // a standing toy: put a block there and fight it
     map.set(j,OPP[b]);
   }
   return map;
@@ -1940,7 +1940,8 @@ function cellHTML(i,F){
   if(!c){}
   else if(c.start){cls+=' start';inner=svg(SPR.start)}
   else if(c.rock===2){cls+=' fence';inner=svg(SPR.fence)}
-  else if(c.foe){cls+=' rock stand'+(aim&&aim.kind==='rock'&&rowOf(i)>=rowOf(run.at)?' aim':'')+(reachOf(i,c.foe)?' threat':'');inner=svg(HAS_ART?toyStand(i,c.foe.t):`<g class="toy">${SPR[c.foe.t]||SPR.soldier}</g>`);tab=` style="--d:-${(i*7%23)/5}s"`}
+  else if(c.foe){cls+=' rock stand'+(aim&&aim.kind==='rock'&&rowOf(i)>=rowOf(run.at)?' aim':'')+(reachOf(i,c.foe)?' threat':'');inner=svg(HAS_ART?toyStand(i,c.foe.t):`<g class="toy">${SPR[c.foe.t]||SPR.soldier}</g>`);tab=` style="--d:-${(i*7%23)/5}s"`;
+    if(F&&F.has(i)&&!c.tile){const ok=sel>=0&&fits(run.hand[sel],i,F);cls+=' front'+(ok?' fit':'');if(ok)inner+=`<div class="gh">${svg(tileArt(run.hand[sel],false))}</div>`;tab+=' tabindex="0" role="button" aria-label="道の先（敵）"'}}
   else if(c.rock){cls+=' rock'+(aim&&aim.kind==='rock'&&c.rock!==2&&rowOf(i)>=rowOf(run.at)?' aim':'');inner=svg(c.rock===3?brickArt(i):obArt(i,a));
     if(F&&F.rock&&F.rock.has(i)&&sel>=0&&fits(run.hand[sel],i,F)){cls+=' front fit';inner+=`<div class="gh">${svg(tileArt(run.hand[sel],false))}</div>`}}
   else if(c.tile){cls+=' laid'+(i===justPlaced?' new':'')+(c.tile.m===15&&!c.tile.gate?' ace':'')+(c.tile.sp?' sp-'+c.tile.sp:'');inner=svg(tileArt(c.tile,false,i))+badge(c.tile.e)+(c.tile.over?`<div class="gho">${svg(c.tile.over===3?brickArt(i):obArt(i,a))}</div>`:'');if(c.tile.e&&c.tile.e.k==='foe')tab=` style="--d:-${(i*7%23)/5}s"`}
@@ -2019,7 +2020,7 @@ function renderHp(){
 function previewFor(hi,j){ // the toy on the block, plus the captain when this block opens onto his gap
   const t=run.hand[hi];if(!t)return 0;
   let d=t.e&&t.e.k==='foe'?dmgFor(t.e):0;
-  if(j>=0&&fits(t,j,frontier())){const g=gateFrom(j,t.m),gc=g>=0&&cellAt(g),gh=gc&&gc.tile.bi!=null?cellAt(gc.tile.bi):gc,ge=gh&&gh.tile&&gh.tile.e;if(ge&&ge.k==='foe')d+=dmgFor(ge)}
+  if(j>=0&&fits(t,j,frontier())){const sc=cellAt(j);if(sc&&sc.foe)d+=dmgFor(sc.foe);const g=gateFrom(j,t.m),gc=g>=0&&cellAt(g),gh=gc&&gc.tile.bi!=null?cellAt(gc.tile.bi):gc,ge=gh&&gh.tile&&gh.tile.e;if(ge&&ge.k==='foe')d+=dmgFor(ge)}
   return d;
 }
 function setPreview(j){const d=sel>=0&&run&&run.phase==='build'?previewFor(sel,j):0;if(d!==preview){preview=d;renderHp()}}
@@ -2211,6 +2212,11 @@ function openReward(){ // the dimension power first, then the reward for every 1
 }
 async function stepTo(i){
   const c=cellAt(i),hi=c.tile&&c.tile.bi!=null?c.tile.bi:i,h=cellAt(hi)||c,foe=h.tile&&h.tile.e&&h.tile.e.k==='foe'?h.tile.e:null; // the captain stands in the middle of his square
+  if(c.foe&&c.tile){ // a block put on a standing toy: fight it from here, then walk on (11/4)
+    const e=c.foe;hero.classList.remove('walk');
+    if(!await battle(e,run.at,i)){await knockOut();busy=false;gameOver('hp');return false}
+    c.foe=null;updateCell(i);await sleep(STEP);
+  }
   if(foe){ // fight from the cell in front of the toy
     hero.classList.remove('walk');
     if(!await battle(foe,run.at,hi)){await knockOut();busy=false;gameOver('hp');return false}
@@ -2379,8 +2385,7 @@ function showFoe(i,e){
   hidePick();fpick=i;const c=cellAt(i),pz=c.tile&&c.tile.pz;(pz||[i]).forEach(x=>{fsel.add(x);const el=elOf(x);if(el)el.classList.add('fsel')});
   const hp=x=>`<i class="st-h"><b class="ic"></b>${x}</i>`;
   let what;
-  if(c.foe){const s=SHOOTERS[e.t];what=s&&FOE_DO[e.t]?FOE_DO[e.t](s.rng):'道をふさいでいる'}
-  else{const d=dmgFor(e);what=(d?`<span class="fd-c">戦うと${hp('-'+nf(d))}</span>`:'戦ってもダメージなし')+`<span class="fd-g">たおすと${ico(SPR.coin)}+${nf(gainOf(e.gold))}</span>`}
+  {const s=c.foe&&SHOOTERS[e.t],d=dmgFor(e);what=(s&&FOE_DO[e.t]?`<span class="fd-do">${FOE_DO[e.t](s.rng)}</span>`:'')+(d?`<span class="fd-c">戦うと${hp('-'+nf(d))}</span>`:'戦ってもダメージなし')+`<span class="fd-g">たおすと${ico(SPR.coin)}+${nf(gainOf(e.gold))}</span>`}
   const el=$('skbar');
   el.innerHTML=`<span class="sb-ic fd-ic${e.boss||e.king?'':' sm'}">${svg(SPR[e.t]||SPR.soldier)}</span><div class="sb-t"><b><span class="fd-n">${e.name}</span><span class="fd-st"><i class="st-a"><b class="ic"></b>${nf(e.atk)}</i>${hp(nf(e.hp))}</span></b><span>${what}</span></div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
   el.hidden=false;
@@ -2500,7 +2505,7 @@ function wayUp(){ // open ground still leads a few rows up from the knight's nex
   const F=frontier(),goal=rowOf(run.at)+4,seen=new Set(F.keys()),q=[...F.keys()];
   while(q.length){
     const i=q.shift();if(rowOf(i)>=goal||rowOf(i)>=run.made)return true;
-    for(const b of BITS){const j=nbr(i,b);if(j<0||seen.has(j))continue;const x=cellAt(j);if(!x||x.rock||x.foe||x.start||(x.tile&&!x.tile.gate))continue;seen.add(j);q.push(j)}
+    for(const b of BITS){const j=nbr(i,b);if(j<0||seen.has(j))continue;const x=cellAt(j);if(!x||x.rock||x.start||(x.tile&&!x.tile.gate))continue;seen.add(j);q.push(j)}
   }
   return false;
 }
