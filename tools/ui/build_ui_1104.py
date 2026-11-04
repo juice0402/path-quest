@@ -1,6 +1,7 @@
 # 11/4 Canva の木と紙で UI を作り直す（何度でも走らせてよい：印のあいだを入れかえる）
 # 素材は Canva「PATH QUEST 素材（作業用）」(DAHZ0_Lb0zA) の 17〜19 ページを PNG で書き出したもの
 #   17 UI 木の板（ふつう・ピンク・緑）→ planks.png   18 UI 木の額（中は紙）→ frame.png   19 UI 木の壁 → wall.png
+#   21 敵の攻撃とHPのアイコン（剣・ハート）→ tagicons.png   22 敵の攻撃とHPの札 → tag.png
 # usage: python3 tools/ui/build_ui_1104.py <書き出したPNGのフォルダ> [games/path-quest/index.html]
 import sys, os, io, base64, subprocess, tempfile
 import numpy as np
@@ -59,6 +60,27 @@ paper = b64(pp, quality=80, method=6)
 wl = Image.open(os.path.join(SRC, 'wall.png')).convert('RGB'); wl = wl.resize((640, round(wl.height * 640 / wl.width)), Image.LANCZOS)
 wall = b64(wl, quality=74, method=6)
 
+# ---------- the attack and life tag under each toy on the field (Canva 21・22ページ → tagicons.png, tag.png) ----------
+subprocess.run([sys.executable, os.path.join(HERE, 'slice.py'), os.path.join(SRC, 'tagicons.png'), '2', '1', 'ic_atk,ic_hp', cut, '26', '20'], check=True, stdout=subprocess.DEVNULL)
+subprocess.run([sys.executable, os.path.join(HERE, 'slice.py'), os.path.join(SRC, 'tag.png'), '1', '1', 'tag', cut, '26', '20'], check=True, stdout=subprocess.DEVNULL)
+tic = {}
+for n in ('ic_atk', 'ic_hp'):
+    im = tight(Image.open(os.path.join(cut, n + '.png')).convert('RGBA')); im.thumbnail((64, 64), Image.LANCZOS)
+    tic[n] = b64(im, quality=88, alpha_quality=92, method=6)
+tg = tight(erode(Image.open(os.path.join(cut, 'tag.png')).convert('RGBA')))
+TA = np.asarray(tg).astype(int); th, tw = TA.shape[:2]
+lum = lambda p: p[:3].mean()
+def inner(seq):  # px from the edge to the cream face (the first run of 8 cream pixels: a shine on the rim does not count)
+    ok = [p[3] > 200 and lum(p) > 200 for p in seq]
+    for k in range(len(ok) - 8):
+        if all(ok[k:k + 8]): return k
+    return 0
+rim = {'t': inner(TA[:, tw // 2]), 'b': inner(TA[::-1, tw // 2]), 'l': inner(TA[th // 2]), 'r': inner(TA[th // 2, ::-1])}
+TW = 600; ks = TW / tw; tg = tg.resize((TW, round(th * ks)), Image.LANCZOS)
+# the slice keeps the round corners whole: a bit more than the rim on each side
+TS = {k: round((v + (14 if k in 'tb' else 18)) * ks) for k, v in rim.items()}
+tag = b64(tg, quality=86, alpha_quality=92, method=6)
+
 U = lambda s: f'url("data:image/webp;base64,{s}")'
 CSS = f'''/* ===== Canva UI 11/4 ===== */
 /* wood planks, a wooden frame with paper inside, the wooden wall — made in Canva (「PATH QUEST 素材（作業用）」17〜19ページ), built by tools/ui/build_ui_1104.py */
@@ -99,6 +121,22 @@ CSS = f'''/* ===== Canva UI 11/4 ===== */
 .sh{{background:var(--ui-wall) center/cover,#b57336}}
 .sh-nav{{background:linear-gradient(rgba(52,24,6,.5),rgba(52,24,6,.5)),var(--ui-wall) center/cover;box-shadow:0 -3px 0 #3d1d07}}
 .tray{{background:var(--ui-wall) center/cover,#b57336}}
+/* the tag under each toy on the field: a cream plate in a brown rim, the Canva sword and heart, attack | life */
+:root{{--ui-tag:{U(tag)};--ui-ic-atk:{U(tic['ic_atk'])};--ui-ic-hp:{U(tic['ic_hp'])}}}
+.badge.b-st{{left:50%;right:auto;bottom:1px;translate:-50% 0;scale:var(--k,1);transform-origin:50% 100%;display:flex;align-items:center;gap:0;height:19px;box-sizing:border-box;padding:2px 5px 4px;
+  background:none;box-shadow:none;border-radius:0;border:0 solid transparent;
+  border-image-source:var(--ui-tag);border-image-slice:{TS['t']} {TS['r']} {TS['b']} {TS['l']} fill;border-image-width:4px 5px 6px 5px;border-image-repeat:stretch;
+  filter:drop-shadow(0 1.5px 0 rgba(48,22,6,.35));white-space:nowrap;font:800 12px/1 var(--round);font-variant-numeric:tabular-nums;letter-spacing:-.02em}}
+.b-st i{{display:inline-flex;align-items:center;gap:1px;font-style:normal}}
+.b-st .ic{{flex:none;width:12px;height:12px;background:var(--ui-ic-atk) center/contain no-repeat}}
+.b-st .st-h{{margin-left:3px;padding-left:3px;box-shadow:inset 1px 0 0 rgba(107,74,58,.28)}}
+.b-st .st-h .ic{{background-image:var(--ui-ic-hp);width:11.5px;height:11.5px}}
+.b-st .st-a{{color:#5a3826}}.b-st .st-h{{color:#d42a48}}
+.badge.b-st.two{{flex-direction:column;align-items:flex-start;justify-content:center;gap:0;height:auto;padding:3px 6px 5px;border-image-width:4px 5px 6px 5px;font-size:11.5px;line-height:.98}}
+.b-st.two .st-h{{margin:1px 0 0;padding:1px 0 0;align-self:stretch;box-shadow:inset 0 1px 0 rgba(107,74,58,.28)}}
+.bboss .badge.b-st{{bottom:3px;height:27px;padding:3px 10px 6px;border-image-width:5px 8px 8px 8px;font-size:16px;filter:drop-shadow(0 2px 0 rgba(48,22,6,.4))}}
+.bboss .b-st .ic{{width:18px;height:18px}}.bboss .b-st .st-h .ic{{width:17px;height:17px}}
+.bboss .b-st .st-h{{margin-left:7px;padding-left:7px}}
 /* ===== end of Canva UI ===== */
 '''
 s = open(P, encoding='utf-8').read()
