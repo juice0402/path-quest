@@ -15,13 +15,11 @@
 /* layout: a toy-block land seen from above, scrolled upward as the wind-up knight walks to the flag. the status floats over the field; under it one tray holds the blocks and a row of wide buttons. one column at every width */
 :root{
   color-scheme:light;
-  --page:#fbeaf0;
   --card:#fffaf6;
   --ink:#4a3541;
   --dim:#735766;
   --accent:#c4467a;
   --accent-deep:#8e2f57;
-  --edge:#e6c3d1;
   --sun:#ffe58a;
   --sun-deep:#f0b93a;
   --hp:#e8607e;
@@ -35,8 +33,7 @@
   --line:#b6dc98;
   --front:rgba(255,255,255,.95);
   --round:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
-  --disp:"Dela Gothic One","Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
-}
+  --disp:"Dela Gothic One","Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif}
 .app[data-area=forest]{--ground:#b9dca6;--line:#9fcb8b}
 .app[data-area=lake]{--ground:#f3e6c8;--line:#e2d0a9;--front:#e27aa3}
 .app[data-area=snow]{--ground:#eef3fb;--line:#d6e0f0;--front:#e27aa3}
@@ -49,10 +46,10 @@ button{font:inherit;color:inherit}
 
 /* phone: the field edge to edge with the status floating on its top edge, the toy box's front board stuck to the bottom.
    1100px and wider: the field on the left, the box lid on the right */
-.app{--slot:min(64px,calc((min(100vw,520px) - 40px)/7));--hudh:44px;position:relative;box-sizing:border-box;height:100%;max-width:520px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"field" "tray";padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.app{--hudh:44px;position:relative;box-sizing:border-box;height:100%;max-width:520px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"field" "tray";padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 
 /* the field */
-.field{grid-area:field;position:relative;min-height:220px;display:flex;overflow:hidden;background:var(--line)}
+.field{grid-area:field;position:relative;min-height:220px;display:flex;overflow:hidden}
 .view{position:relative;flex:1;min-height:0;overflow:hidden}
 /* the board holds only the rows near the knight and slides down a row each time the knight climbs, so the knight stays second from the bottom */
 .board{--w:6;position:absolute;left:0;right:0;bottom:0;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));grid-auto-rows:var(--cell,60px);gap:4px;padding:4px;transition:transform .17s linear;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
@@ -61,7 +58,6 @@ button{font:inherit;color:inherit}
    --tone (per panel), --chk (checker or a second material layer), --sheen (light from the upper left), --mat (material), --tex (the felt).
    the dimension tint (--tint) and the tile's edges (--ps) are inset shadows, so a panel lifted by the motion module keeps its sides */
 .cell{position:relative;min-width:0;min-height:0;border-radius:4px;--th:5px;--side:rgba(74,53,65,.18);
-  --ps:inset 0 calc(0px - var(--th)) 0 var(--side),inset 0 calc(-1.5px - var(--th)) 0 rgba(255,255,255,.32),inset 0 1.5px 0 rgba(255,255,255,.5),inset 1.5px 0 0 rgba(255,255,255,.2),inset -1.5px 0 0 rgba(74,53,65,.07);
   --sheen:linear-gradient(160deg,rgba(255,255,255,.2),rgba(255,255,255,0) 40%,rgba(74,53,65,0) 62%,rgba(74,53,65,.07));
   background-color:var(--ground);
   background-image:var(--hl,linear-gradient(#0000,#0000)),linear-gradient(var(--tone,#0000),var(--tone,#0000)),var(--chk,linear-gradient(#0000,#0000)),var(--sheen),var(--mat,linear-gradient(#0000,#0000)),var(--tex,none);
@@ -132,8 +128,8 @@ button{font:inherit;color:inherit}
 @keyframes twinkle{0%,100%{transform:scale(0);opacity:0}50%{transform:scale(1);opacity:.95}}
 
 /* bits of broken toys, dust and things flying to the counters live on top of everything */
-.bit{position:fixed;left:0;top:0;z-index:15;pointer-events:none;border-radius:2px}
-.fly{position:fixed;left:0;top:0;z-index:16;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(74,53,65,.25))}
+.bit{position:fixed;left:0;top:0;pointer-events:none;border-radius:2px}
+.fly{position:fixed;left:0;top:0;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(74,53,65,.25))}
 .fly svg{width:100%;height:100%;display:block}
 @keyframes hurt{30%{transform:translateX(-7%);filter:drop-shadow(0 0 5px var(--bad))}70%{transform:translateX(7%);filter:drop-shadow(0 0 5px var(--bad))}}
 
@@ -167,15 +163,12 @@ button{font:inherit;color:inherit}
 @keyframes hold{to{stroke-dashoffset:0}}
 
 /* the tray: the front board of the toy box. blocks keep one size whether there are 4 or 6; the die sits at the right end and is the one loud thing */
-.tray{grid-area:tray;position:relative;display:flex;align-items:center;gap:8px;padding:12px 6px 10px;background:var(--card);border-top:7px solid var(--edge);box-shadow:inset 0 2px 0 #fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.hand{--hs:4;flex:1;display:grid;grid-template-columns:repeat(var(--hs),var(--slot));justify-content:center;gap:4px}
-.slot{position:relative;aspect-ratio:1;max-width:100%;border-radius:3px;cursor:grab;transition:transform .1s}
+.tray{grid-area:tray;position:relative;display:flex;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.slot{max-width:100%}
 .slot svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .slot .badge{right:2px;bottom:5px;font-size:11px}
-.slot.sel{transform:translateY(-8px)}
-.slot.sel::before{content:"";position:absolute;inset:-4px;border:3px solid var(--accent);border-radius:3px}
 .slot.dull{opacity:.45;filter:saturate(.4)}
-.slot.none{box-sizing:border-box;border:2px dashed var(--edge);cursor:default}
+.slot.none{box-sizing:border-box}
 .slot.deal{animation:deal .3s ease-out backwards}
 .slot.deal:nth-child(2){animation-delay:.04s}.slot.deal:nth-child(3){animation-delay:.08s}.slot.deal:nth-child(4){animation-delay:.12s}.slot.deal:nth-child(5){animation-delay:.16s}.slot.deal:nth-child(6){animation-delay:.2s}
 @keyframes deal{from{transform:translateY(40%) scale(.7);opacity:0}}
@@ -189,14 +182,9 @@ button{font:inherit;color:inherit}
 @keyframes nudge{50%{transform:scale(1.08)}}
 
 /* the drawer: slides out from the right over the row behind the knight, holding the skills and the die */
-.drawer{--tabw:30px;--ds:min(calc(var(--cell,60px) - 12px),56px);position:absolute;right:0;bottom:4px;z-index:4;height:var(--cell,60px);display:flex;align-items:stretch;border-radius:3px 0 0 3px;background:var(--card);box-shadow:0 4px 0 var(--edge),inset 0 2px 0 #fff;transform:translateX(calc(100% - var(--tabw)));transition:transform .26s cubic-bezier(.3,1.25,.5,1);touch-action:none;user-select:none;-webkit-user-select:none}
+.drawer{--tabw:30px;--ds:min(calc(var(--cell,60px) - 12px),56px);position:absolute;right:0;bottom:4px;z-index:4;height:var(--cell,60px);align-items:stretch;border-radius:3px 0 0 3px;background:var(--card);box-shadow:0 4px 0 var(--edge),inset 0 2px 0 #fff;transform:translateX(calc(100% - var(--tabw)));transition:transform .26s cubic-bezier(.3,1.25,.5,1);touch-action:none;user-select:none;-webkit-user-select:none}
 .drawer.open{transform:none}
-.pull{flex:none;width:var(--tabw);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;border:0;border-radius:3px 0 0 3px;background:transparent;color:var(--accent);cursor:pointer}
-.pull svg{width:16px;height:16px;display:block;transition:transform .26s}
-.drawer.open .pull svg{transform:scaleX(-1)}
-.pull b{min-width:18px;height:18px;box-sizing:border-box;padding:0 5px;border-radius:3px;background:var(--accent);font:800 11px/18px var(--round);font-variant-numeric:tabular-nums;color:#fff}
-.pull:disabled b,.pull.out b{background:#dccbd2;color:var(--dim)}
-.pull.hint{animation:nudge .9s ease-in-out infinite}
+
 .drawer-in{display:flex;align-items:center;gap:6px;padding:0 8px 0 2px}
 .skill{position:relative;flex:none;width:var(--ds);height:var(--ds);padding:0;box-sizing:border-box;border:2px solid var(--sun-deep);border-radius:3px;background:#fff;box-shadow:0 3px 0 var(--edge);cursor:pointer;transition:transform .12s}
 .skill svg{position:absolute;inset:2px;width:calc(100% - 4px);height:calc(100% - 4px);display:block;pointer-events:none}
@@ -207,10 +195,10 @@ button{font:inherit;color:inherit}
 .skill.none{border:2px dashed #e3c6d2;background:#f8eef2;box-shadow:none;cursor:default}
 .skill:not(.none):not(.rest):active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
 /* a skill waiting for its target: the blocks or things it can take wear a dashed ring */
-.slot.aim::before{content:"";position:absolute;inset:-4px;border:3px dashed var(--accent);border-radius:3px;animation:glow .7s ease-in-out infinite alternate}
+.slot.aim::before{content:"";position:absolute;border:3px dashed var(--accent);border-radius:3px;animation:glow .7s ease-in-out infinite alternate}
 .cell.aim{cursor:pointer}
 .cell.aim::after{content:"";position:absolute;inset:4px 4px calc(var(--th,0px) + 4px);z-index:2;border:3px dashed var(--accent);border-radius:3px;pointer-events:none;animation:glow .7s ease-in-out infinite alternate}
-.say{position:absolute;left:50%;top:calc(var(--hudh) + 6px);z-index:7;transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);box-sizing:border-box;padding:7px 14px;border-radius:3px;background:rgba(255,250,246,.96);box-shadow:0 3px 0 var(--edge);font:800 14px/1.4 var(--round);color:var(--ink);text-align:center;pointer-events:none}
+.say{position:absolute;z-index:7;box-sizing:border-box;pointer-events:none}
 .hero.pow svg{filter:drop-shadow(0 0 3px #ffd95e) drop-shadow(0 0 3px #f0b93a)}
 .hero.guard svg{filter:drop-shadow(0 0 3px #a9d6f2) drop-shadow(0 0 3px #5fa8d8)}
 .hero.pow.guard svg{filter:drop-shadow(0 0 3px #ffd95e) drop-shadow(0 0 4px #5fa8d8)}
@@ -223,8 +211,6 @@ button{font:inherit;color:inherit}
 /* buttons are blocks too */
 .btn{padding:13px 16px;border:0;border-radius:3px;background:#fff;box-shadow:0 4px 0 var(--edge);font:800 16px/1.2 var(--round);color:var(--ink);cursor:pointer}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--edge)}
-.btn.main{background:var(--accent);color:#fff;box-shadow:0 4px 0 var(--accent-deep)}
-.btn.main:active{box-shadow:0 1px 0 var(--accent-deep)}
 .btn.link{padding:10px 4px;background:transparent;box-shadow:none;font-weight:500;color:var(--dim);text-decoration:underline;text-underline-offset:3px}
 .btn:disabled{opacity:.4;cursor:default}
 
@@ -236,33 +222,19 @@ button{font:inherit;color:inherit}
 .card p{margin:0;font-size:15px;line-height:1.6;color:var(--dim);white-space:pre-line}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .row .btn{flex:1}
-.choices{display:flex;flex-direction:column;gap:8px}
-.choice{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:8px 12px;border:0;border-radius:3px;background:#fff;box-shadow:0 3px 0 #e2cdb7;text-align:left;cursor:pointer}
-.choice svg{width:44px;height:44px;display:block}
-.choice b{display:block;font:800 16px/1.3 var(--round)}
-.choice small{display:block;margin-top:2px;font-size:12px;color:var(--dim)}
-.choice .cost{font:800 15px/1 var(--round);color:var(--gold);white-space:nowrap}
-.choice:active{transform:translateY(2px);box-shadow:0 1px 0 #e2cdb7}
-.choice:disabled{opacity:.45;cursor:default;transform:none}
+
 .pips{display:inline-flex;gap:3px;margin-left:6px;vertical-align:2px}
 .pips i{width:7px;height:7px;border-radius:2px;background:#e2cdb7}
 .pips i.on{background:var(--accent)}
 .bank{font-weight:800;color:var(--gold)}
-.tabs{display:flex;gap:4px;padding:4px;border-radius:3px;background:#efe2d0}
-.tabs button{flex:1;padding:9px 6px;border:0;border-radius:3px;background:transparent;font:800 15px/1.2 var(--round);color:var(--dim);cursor:pointer}
-.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 2px 0 #e2cdb7}
-.tabs small{margin-left:2px;font:700 12px/1 var(--round);color:var(--dim);font-variant-numeric:tabular-nums}
-.gearbox{display:flex;flex-direction:column;gap:10px}
-.gtable{display:grid;grid-template-columns:auto repeat(5,minmax(0,1fr));gap:8px 6px;align-items:center}
-.glabel{padding-right:2px;font:800 13px/1.2 var(--round);color:var(--dim);white-space:nowrap}
+
 .gi{position:relative;justify-self:center;width:100%;max-width:56px;aspect-ratio:1;box-sizing:border-box;padding:0;border:0;border-radius:3px;background:#fff;box-shadow:0 3px 0 #e2cdb7;cursor:pointer}
 .gi svg{position:absolute;inset:6%;width:88%;height:88%;display:block}
 .gi:active{transform:translateY(2px);box-shadow:0 1px 0 #e2cdb7}
-.gi.on{background:#fff4f8;box-shadow:0 0 0 3px var(--accent),0 3px 0 var(--accent-deep)}
+.gi.on{background:#fff4f8}
 .gi.on::after{content:"";position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.3 6.8 11 12 5' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat}
-.gi.lock{border:2px dashed #e3c6d2;background:#f8eef2;box-shadow:none;font:800 17px/1 var(--round);color:#d6b3c3}
-.card .ginfo{min-height:3.2em;font-size:14px;line-height:1.6;color:var(--ink)}
-.card .gnote{font-size:12px}
+.gi.lock{box-shadow:none;font:800 17px/1 var(--round);color:#d6b3c3}
+
 .b-new{background:var(--accent);color:#fff}
 /* the cross block is the trump card: a golden road, twinkling stars, a warm glow, and a pop when one is drawn */
 .tw{transform-box:fill-box;transform-origin:center;animation:tw 1.6s ease-in-out infinite}
@@ -273,7 +245,6 @@ button{font:inherit;color:inherit}
 .lglow{opacity:.3;animation:lglow 1.1s ease-in-out var(--d,0s) infinite alternate}
 @keyframes lglow{to{opacity:.75}}
 @keyframes tw{0%,100%{transform:scale(.45);opacity:.35}50%{transform:scale(1.1);opacity:1}}
-.slot.ace:not(.dull){filter:drop-shadow(0 0 3px #ffd95e) drop-shadow(0 0 7px rgba(255,196,70,.8))}
 .cell.laid.ace svg{filter:drop-shadow(0 0 4px rgba(255,210,90,.9))}
 .slot.acein{animation:acein .65s cubic-bezier(.3,1.6,.5,1)}
 @keyframes acein{0%{transform:scale(.4) rotate(-14deg)}60%{transform:scale(1.2) rotate(5deg)}100%{transform:none}}
@@ -285,35 +256,27 @@ button{font:inherit;color:inherit}
 .board .cell.stand.threat::before{inset:0;border:0;border-radius:inherit;box-shadow:inset 0 0 0 3px rgba(232,96,126,.8);animation:threat 1.1s ease-in-out infinite alternate} /* opacity only, so the glow runs off the main thread */
 @keyframes threat{to{opacity:.3}}
 .hero.psn svg{filter:drop-shadow(0 0 3px #b48be0) drop-shadow(0 0 3px #8b5fbf)}
-.uphead{margin:10px 4px 0;font:800 14px/1.3 var(--round);color:var(--ink,#4a3541)}.uphead small{margin-left:6px;font-weight:700;font-size:12px;color:var(--dim)}
+
 @media (prefers-reduced-motion:reduce){.board .cell.stand.threat::before{animation:none}}
 /* the gear tab: one slot at a time, four to a row, stars for rarity */
-.tabs.sub{padding:3px}
-.tabs.sub button{padding:7px 4px;font-size:14px}
-.ggrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 8px}
-.gi .rar{position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);padding:1px 4px;border-radius:3px;background:#fff;box-shadow:0 1px 0 #e2cdb7;font:800 9px/1.1 var(--round);font-style:normal;letter-spacing:-1px;white-space:nowrap;color:#e0a12a}
-.gi .rar.r3{color:#c4467a}.gi .rar.r4{color:#fff;background:linear-gradient(90deg,#f08a8a,#f2c14e,#8fcdb6,#93c3e4,#b4a3e8)}
+
 .gi.lock{font-size:15px}
 .skbar{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:3px;background:#efe2d0}
 .skbar>span{margin-right:auto;font:800 13px/1.2 var(--round);color:var(--dim)}
 .skbar i{position:relative;width:46px;height:46px;box-sizing:border-box;border-radius:3px;background:#fff;box-shadow:0 2px 0 #e2cdb7}
 .skbar i.none{border:2px dashed #e3c6d2;background:transparent;box-shadow:none}
 .skbar svg{position:absolute;inset:2px;width:calc(100% - 4px);height:calc(100% - 4px)}
-.skillbox{display:flex;flex-direction:column;gap:10px}
-.choice.on{background:#fff4f8;box-shadow:0 0 0 3px var(--accent),0 3px 0 var(--accent-deep)}
-.choice .cost.set{color:var(--accent);font-size:13px}
-.choice .cost.own{color:var(--dim);font-size:13px}
 
 .title{display:flex;flex-direction:column;align-items:center;gap:16px;width:min(100%,360px)}
 .logo{margin:0;display:flex;flex-direction:column;align-items:center;gap:7px}
 .logo span{display:flex;gap:6px}
-.logo i{display:grid;place-items:center;width:clamp(40px,12.5vw,54px);aspect-ratio:1;border-radius:3px;box-shadow:inset 0 -6px 0 rgba(74,53,65,.13);font:800 clamp(23px,7.4vw,32px)/1 var(--round);font-style:normal;color:var(--ink)}
+.logo i{display:grid;place-items:center;width:clamp(40px,12.5vw,54px);aspect-ratio:1;font:800 clamp(23px,7.4vw,32px)/1 var(--round);font-style:normal;color:var(--ink)}
 .c0{background:#f7c3d4}.c1{background:#bfe6d6}.c2{background:#fbe2a0}.c3{background:#d8cdf6}.c4{background:#c4e2f5}
 .lead{margin:0;font-size:15px;line-height:1.5;color:var(--dim);text-align:center}
 .demo{box-sizing:border-box;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;width:168px;border-radius:3px;background:var(--rim,var(--line))}
 .demo .cell{aspect-ratio:1}
 .title .btn{width:100%}
-.record{min-height:14px;font-size:14px;color:var(--dim)}
+
 /* with the Canva art: the title sits on the painted block kingdom, logo up top, buttons at the bottom */
 body.art #s-title{ /* the picture stops above the buttons so the little knight stays in view; felt grass fills the rest */
   --tb:104px;
@@ -321,11 +284,8 @@ body.art #s-title{ /* the picture stops above the buttons so the little knight s
   background:linear-gradient(to bottom,rgba(199,228,173,0) calc(100% - var(--tb) - 70px),#c7e4ad calc(100% - var(--tb) + 6px)),var(--t-title) center top/max(100vw,calc((100dvh - var(--tb)) * .6667)) auto no-repeat,#c7e4ad}
 body.art #s-title .title{height:100%;gap:12px}
 body.art #s-title .demo{display:none}
-body.art #s-title .lead{margin-bottom:auto;padding:6px 14px;border-radius:3px;background:rgba(255,250,246,.88);box-shadow:0 2px 0 rgba(230,195,209,.8);color:var(--ink)}
-body.art #s-title .logo i{box-shadow:inset 0 -6px 0 rgba(74,53,65,.13),0 3px 0 rgba(255,255,255,.7)}
+body.art #s-title .lead{margin-bottom:auto;padding:6px 14px;border-radius:3px;color:var(--ink)}
 body.art #s-title .btn:not(.main){background:rgba(255,255,255,.94)}
-body.art #s-title .record{padding:2px 10px;border-radius:3px;background:rgba(255,250,246,.82)}
-body.art #s-title .record:empty{display:none}
 
 /* wide screens: the field fills the left, the box lid on the right holds the status, the blocks in rows of three and the die */
 @media (min-width:1100px){
@@ -340,8 +300,8 @@ body.art #s-title .record:empty{display:none}
   .gear{margin-left:0;gap:20px}
   .gear span{gap:5px}
   .quit{margin-left:auto;width:48px;height:48px}
-  .tray{flex-direction:column;gap:18px;padding:14px 22px 24px;border-top:0;border-radius:0 0 3px 3px;box-shadow:0 8px 0 var(--edge)}
-  .hand{flex:none;grid-template-columns:repeat(3,var(--slot));gap:12px}
+  .tray{flex-direction:column;padding:14px 22px 24px;border-top:0;border-radius:0 0 3px 3px;box-shadow:0 8px 0 var(--edge)}
+  .hand{flex:none;gap:12px}
   .slot .badge{font-size:14px}
   .dice{width:84px;height:84px;border-radius:3px;box-shadow:0 6px 0 var(--accent-deep)}
   .dice b{min-width:28px;height:28px;border-radius:3px;font-size:16px;line-height:28px}
@@ -352,8 +312,8 @@ body.art #s-title .record:empty{display:none}
 }
 
 @media (prefers-reduced-motion:reduce){
-  .hero,.slot,.drawer,.pull svg{transition:none}
-  .pull.hint,.slot.aim::before,.cell.aim::after,.tw,.slot.acein,.loot,.lglow{animation:none}
+  .hero,.slot,.drawer{transition:none}
+  .slot.aim::before,.cell.aim::after,.tw,.slot.acein,.loot,.lglow{animation:none}
   .hero.walk svg,.cell.fit::after,.dice.hint,.slot.deal{animation:none}
   .blocks s{animation:none;opacity:.6}
   .board .toy,.board .eye,.hero:not(.walk) svg,.hero.down svg{animation:none}
@@ -373,19 +333,14 @@ body.art #s-title .record:empty{display:none}
 @keyframes floaty{50%{transform:translateY(-6px)}}
 @keyframes twinkle2{0%,100%{transform:scale(.3);opacity:0}50%{transform:scale(1);opacity:1}}
 /* the big play button: round, raised, breathing, a light sweeping over it */
-.btn.play{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;min-height:62px;border-radius:3px;font-size:22px;letter-spacing:.06em;animation:pulse 1.6s ease-in-out infinite}
+.btn.play{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;min-height:62px;font-size:22px;letter-spacing:.06em}
 .btn.play::before{content:"";width:0;height:0;border-left:16px solid currentColor;border-top:10px solid transparent;border-bottom:10px solid transparent}
-.btn.play::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:shine 2.6s ease-in-out infinite}
+.btn.play::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;animation:shine 2.6s ease-in-out infinite}
 .btn.play small{font-size:13px;font-weight:700;opacity:.9;letter-spacing:0}
 .btn.play.sub{min-height:46px;font-size:16px;animation:none;background:rgba(255,255,255,.94);color:var(--ink);box-shadow:0 4px 0 var(--edge)}
 .btn.play.sub::after{display:none}.btn.play.sub::before{border-left-width:12px;border-top-width:8px;border-bottom-width:8px}
 /* small square icon buttons with a caption and a red dot when something is waiting */
-.ibtn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:68px;height:68px;padding:4px 8px;border:0;border-radius:3px;background:rgba(255,255,255,.95);box-shadow:0 4px 0 var(--edge);font:800 12px/1.1 var(--round);color:var(--ink);cursor:pointer}
-.ibtn svg{width:34px;height:34px;display:block}
-.ibtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--edge)}
-.ibtn .num{color:var(--gold);font-size:14px;font-variant-numeric:tabular-nums}
-.dot{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:#ff3b5c;box-shadow:0 0 0 2.5px #fff;animation:pulse 1s ease-in-out infinite}
-.dot[hidden]{display:none!important}
+
 .pill{display:inline-flex;align-items:center;gap:4px;padding:4px 12px 4px 6px;border-radius:3px;background:rgba(255,255,255,.94);box-shadow:0 3px 0 var(--edge);font:800 16px/1 var(--round);font-variant-numeric:tabular-nums}
 .pill svg{width:26px;height:26px;display:block}
 
@@ -394,59 +349,39 @@ body.art #s-title .record:empty{display:none}
 #s-title .logo i{animation:drop .6s cubic-bezier(.3,1.5,.5,1) backwards}
 #s-title .logo span:first-child i:nth-child(1){animation-delay:.05s}#s-title .logo span:first-child i:nth-child(2){animation-delay:.12s}#s-title .logo span:first-child i:nth-child(3){animation-delay:.19s}#s-title .logo span:first-child i:nth-child(4){animation-delay:.26s}
 #s-title .logo span+span i:nth-child(1){animation-delay:.36s}#s-title .logo span+span i:nth-child(2){animation-delay:.43s}#s-title .logo span+span i:nth-child(3){animation-delay:.5s}#s-title .logo span+span i:nth-child(4){animation-delay:.57s}#s-title .logo span+span i:nth-child(5){animation-delay:.64s}
-.t-best{margin-top:-2px}
-.t-best:empty{display:none}
+
 .t-foot{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:auto}
 .stars{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .stars i{position:absolute;width:14px;height:14px;background:#fff;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:twinkle2 2.4s ease-in-out infinite}
 #s-title .title{position:relative;z-index:1}
 
 /* the reward: the screen dims, three cards fly up one after another; the dimension power wears gold */
-.sheet.reward{background:radial-gradient(ellipse at 50% 46%,rgba(255,236,170,.32),rgba(40,22,34,.82) 62%)}
-.rw{width:min(100%,440px);display:flex;flex-direction:column;align-items:center;gap:16px}
-.rw-head{display:flex;align-items:center;gap:8px;color:#fff;text-shadow:0 2px 0 rgba(74,53,65,.6)}
-.rw-head svg{width:44px;height:44px;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25))}
-.rw-head h2{margin:0;font:800 30px/1.1 var(--round)}
+.rw{display:flex;flex-direction:column;align-items:center}
+.rw-head{display:flex;align-items:center;color:#fff;text-shadow:0 2px 0 rgba(74,53,65,.6)}
+.rw-head svg{filter:drop-shadow(0 2px 0 rgba(0,0,0,.25))}
+.rw-head h2{margin:0}
 .rw-head small{display:block;font:800 13px/1.2 var(--round);opacity:.85;letter-spacing:.1em}
-.rw-cards{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.rcard{--kc:var(--k-gold);position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:178px;padding:14px 4px 10px;border:0;border-radius:3px;background:linear-gradient(#fffaf6,#fbf1e4);box-shadow:0 0 0 4px var(--kc),0 7px 0 4px rgba(0,0,0,.18);cursor:pointer;animation:popin .48s cubic-bezier(.3,1.3,.5,1) backwards;animation-delay:calc(var(--n) * 110ms)}
-.rcard .rc-art{width:72px;height:72px;margin:2px 0 4px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--kc) 30%,#fff),transparent 70%)}
-.rcard .rc-art svg{width:100%;height:100%;display:block}
-.rcard b{font:800 28px/1 var(--round);color:var(--kc);font-variant-numeric:tabular-nums;-webkit-text-stroke:0;text-shadow:0 2px 0 #fff}
-.rcard .rc-name{font:800 14px/1.2 var(--round);color:var(--ink);text-align:center}
-.rcard .rc-q{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:2px;background:#f1e4d4;color:var(--dim);font:800 14px/24px var(--round);font-style:normal}
-.rcard.k-atk{--kc:var(--k-atk)}.rcard.k-def{--kc:var(--k-def)}.rcard.k-hp{--kc:var(--k-hp)}.rcard.k-roll{--kc:var(--k-roll)}.rcard.k-mag{--kc:var(--k-mag)}
-.rw.power .rcard{background:linear-gradient(#fff8e1,#ffeef6);box-shadow:0 0 0 4px #f2b632,0 0 18px 6px rgba(255,210,90,.75),0 7px 0 4px rgba(0,0,0,.18)}
-.rw.power .rcard::before{content:"";position:absolute;inset:-4px;z-index:-1;border-radius:3px;background:var(--rainbow);animation:spin 3s linear infinite}
+.rw-cards{width:100%;grid-template-columns:repeat(3,minmax(0,1fr))}
+
 .rw.power .rw-head h2{background:linear-gradient(90deg,#ffe58a,#fff,#ffd0e6);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 2px 0 rgba(74,53,65,.6))}
-.rcard.pick{z-index:2;animation:bounce .35s ease-out forwards;box-shadow:0 0 0 5px #fff,0 0 30px 10px rgba(255,230,140,.95)}
-.rw-cards.picked .rcard:not(.pick){opacity:.25;transform:scale(.9);transition:opacity .2s,transform .2s}
+
 .rw-info{min-height:2.8em;margin:0;padding:8px 14px;border-radius:3px;background:rgba(255,250,246,.92);font:700 14px/1.4 var(--round);color:var(--ink);text-align:center}
 .rw-info:empty{visibility:hidden}
 
 /* the toy box of this climb: a little tag, level dots, the evolution card and the six slots */
 .rw-cards.n1{grid-template-columns:minmax(0,150px);justify-content:center}
 .rw-cards.n2{grid-template-columns:repeat(2,minmax(0,150px));justify-content:center}
-.rcard .rc-tag{position:absolute;top:7px;left:7px;padding:1px 6px;border-radius:3px;background:var(--kc);color:#fff;font:800 10px/1.5 var(--round);font-style:normal}
-.rcard .rc-lv{display:flex;gap:3px;margin-top:4px}
-.rcard .rc-lv i{width:8px;height:8px;border-radius:2px;background:#efdbe4}
-.rcard .rc-lv i.on{background:var(--kc)}
-.rcard .rc-lv i.up{background:var(--kc);box-shadow:0 0 0 2px #fff,0 0 6px 2px var(--kc);animation:pulse .9s ease-in-out infinite}
-.rcard.evo{background:linear-gradient(#fff8e1,#ffeef6);box-shadow:0 0 0 4px #f2b632,0 0 18px 6px rgba(255,210,90,.75),0 7px 0 4px rgba(0,0,0,.18)}
-.rcard.evo::before{content:"";position:absolute;inset:-4px;z-index:-1;border-radius:3px;background:var(--rainbow);animation:spin 3s linear infinite}
-.rcard.evo .rc-art{animation:floaty 1.6s ease-in-out infinite}
+
 .rw.chest .rw-head h2{background:linear-gradient(90deg,#ffe58a,#fff,#ffd0e6);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 2px 0 rgba(74,53,65,.6))}
-.inv{display:flex;gap:7px;justify-content:center;align-items:center;flex-wrap:wrap}
+.inv{display:flex;justify-content:center;align-items:center;flex-wrap:wrap}
 .inv:empty{display:none}
 .inv .sep{width:2px;height:26px;margin:0 2px;border-radius:2px;background:rgba(255,255,255,.45)}
-.inv i{position:relative;width:38px;height:38px;border-radius:3px;background:#fffaf6;box-shadow:0 0 0 2.5px var(--kc,#fff);font-style:normal}
-.inv i svg{position:absolute;inset:3px;width:32px;height:32px}
-.inv i b{position:absolute;right:-6px;bottom:-6px;min-width:17px;padding:0 3px;border-radius:3px;background:var(--kc);color:#fff;font:800 10px/1.6 var(--round);text-align:center}
-.inv i.empty{background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 2px rgba(255,255,255,.45)}
+.inv i{position:relative;font-style:normal}
+.inv i svg{position:absolute}
+.inv i b{position:absolute;right:-6px;bottom:-6px;min-width:17px;padding:0 3px;border-radius:3px;color:#fff;font:800 10px/1.6 var(--round);text-align:center}
 .inv i.evo{box-shadow:0 0 0 2.5px #f2b632,0 0 9px 3px rgba(255,210,90,.85)}
 .inv i.evo b{background:#f2b632}
 .card .inv{margin:4px 0 12px}
-.card .inv i.empty{background:#f6edf1;box-shadow:inset 0 0 0 2px #e6d3dc}
 .card .inv .sep{background:#ecdde4}
 .p-top{color:#e8607e}.p-toy{color:#ff8a3d}
 /* the bubble wand: a soap bubble around the knight that takes one hit */
@@ -471,110 +406,41 @@ body.art #s-title .record:empty{display:none}
 .ov-found i svg{position:absolute;inset:4px;width:38px;height:38px}
 .ov-found i::after{content:"NEW";position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);padding:0 4px;border-radius:3px;background:var(--accent);font:800 9px/1.4 var(--round);font-style:normal;color:#fff}
 .ov .btn.play{width:100%;margin-top:6px}
-.ov-sub{display:flex;gap:14px;justify-content:center}
+.ov-sub{justify-content:center}
 .bump{animation:bounce .3s ease-out}
 
 /* the upgrade screen: the whole screen, coins up top, icon tabs at the bottom, cards in two columns */
-.sheet.shop{padding:0;background:var(--page);align-items:stretch}
-.sh{width:min(100%,520px);height:100%;margin:0 auto;display:flex;flex-direction:column;box-sizing:border-box;padding:max(10px,env(safe-area-inset-top,0px)) 12px 0}
-.sh-top{display:flex;align-items:center;gap:10px;padding:2px 0 10px}
-.sh-top h2{flex:1;margin:0;font:800 22px/1.2 var(--round)}
-.sh-top .ibtn{min-width:44px;width:44px;height:44px;border-radius:3px}
-.sh-top .ibtn svg{width:28px;height:28px}
-.sh-body{flex:1;min-height:0;overflow:auto;padding:4px 2px 12px;-webkit-overflow-scrolling:touch}
-.ugrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.ucard{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr);grid-template-rows:auto auto auto;column-gap:8px;align-items:center;padding:10px 10px 10px 8px;border:0;border-radius:3px;background:#fff;box-shadow:0 4px 0 #e2cdb7;text-align:left;cursor:pointer}
-.ucard .uc-art{grid-row:1/3;width:52px;height:52px}
-.ucard .uc-foot{grid-column:1/3;display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
-.ucard .uc-art svg{width:100%;height:100%;display:block}
-.ucard .uc-name{font:800 14px/1.2 var(--round);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ucard .uc-val{font:800 18px/1.2 var(--round);color:var(--up);font-variant-numeric:tabular-nums}
-.ucard .uc-val::before{content:"▲";font-size:11px;margin-right:2px;vertical-align:2px}
-.ucard .uc-val.down{color:#d6334f}.ucard .uc-val.down::before{content:"▼"}
-.ucard .pips{margin:0;gap:2px}.ucard .pips i{width:6px;height:6px}
-.ucard .uc-cost{display:flex;flex:none;align-items:center;gap:2px;padding:2px 8px 2px 3px;border-radius:3px;background:#fff6dc;font:800 14px/1.2 var(--round);color:var(--gold);font-variant-numeric:tabular-nums}
-.ucard .uc-cost svg{width:18px;height:18px}
-.ucard.buy{box-shadow:0 0 0 3px var(--k-gold),0 4px 0 3px #e0a12a;animation:none}
-.ucard.buy .uc-cost{background:var(--k-gold);color:#fff}
-.ucard.buy::after{content:"";position:absolute;inset:0;border-radius:3px;overflow:hidden;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.7) 45%,transparent 60%) no-repeat;background-size:250% 100%;animation:sweep 2.8s ease-in-out infinite;pointer-events:none}
+
+
 @keyframes sweep{0%,55%{background-position:120% 0}100%{background-position:-60% 0}}
-.ucard.poor{background:#f7f0f3;box-shadow:0 3px 0 #ecdfe5}
-.ucard.poor .uc-art{filter:saturate(.35) opacity(.7)}
-.ucard.poor .uc-cost{background:#eee4e8;color:#a08893}
-.ucard.max .uc-cost{background:var(--accent);color:#fff;padding:2px 10px}
-.ucard.got{animation:bounce .35s ease-out}
-.ucard:active{transform:translateY(2px)}
-.deckbar{margin:0 0 12px;padding:10px;border-radius:3px;background:#fff;box-shadow:0 4px 0 #e2cdb7}
-.deckbar .bar{display:flex;height:40px;border-radius:3px;overflow:hidden;box-shadow:inset 0 0 0 2px #fff}
-.deckbar .bar i{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;transition:flex-grow .4s}
-.deckbar .bar i svg{width:30px;height:30px;flex:none}
-.deckbar .bar i.ace{background:linear-gradient(135deg,#ffe58a,#f2b632)!important}
-.deckbar .lg{display:flex;justify-content:space-around;margin-top:4px;font:800 12px/1 var(--round);color:var(--dim);font-variant-numeric:tabular-nums}
-.sh-info{min-height:2.9em;margin:0 0 8px;padding:8px 12px;border-radius:3px;background:#fff;box-shadow:0 2px 0 #e2cdb7;font:700 13.5px/1.45 var(--round);color:var(--ink);display:flex;align-items:center}
-.sh-info:empty::before{content:"👆 タップでくわしく";color:var(--dim)}
+
 .sh .btn.play{margin-bottom:10px;min-height:54px;font-size:19px}
-.sh-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:0 -12px;padding:6px 8px max(8px,env(safe-area-inset-bottom,0px));background:var(--card);border-top:4px solid var(--edge)}
-.sh-tabs button{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 0 2px;border:0;border-radius:3px;background:transparent;font:800 11px/1.2 var(--round);color:var(--dim);cursor:pointer}
-.sh-tabs button svg{width:36px;height:36px;display:block;transition:transform .15s}
-.sh-tabs button.on{background:#f6e7d2;color:var(--accent)}
-.sh-tabs button.on svg{transform:translateY(-3px) scale(1.12)}
-.sh-tabs .dot{top:0;right:calc(50% - 26px)}
+
 /* gear: the knight with his three slots, then the collection — owned in colour, the rest as shadows */
-.doll{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;padding:8px;border-radius:3px;background:linear-gradient(#fff,#fff4f8);box-shadow:0 4px 0 #e2cdb7}
-.doll .kn{width:64px;height:74px}
-.doll .kn svg{width:100%;height:100%;overflow:visible}
-.doll .sl{position:relative;width:54px;height:54px;border-radius:3px;background:#f8eef2;box-shadow:inset 0 0 0 3px var(--rc,#e3c6d2)}
-.doll .sl svg{position:absolute;inset:5px;width:44px;height:44px}
-.doll .sl.none{box-shadow:inset 0 0 0 2px #e3c6d2;border:0}
-.ggrid .gi{box-shadow:0 0 0 3px var(--rc,#e3c6d2),0 4px 0 2px #e2cdb7}
+
 .gi.r1{--rc:var(--r1)}.gi.r2{--rc:var(--r2)}.gi.r3{--rc:var(--r3)}
 .gi.r4{box-shadow:0 4px 0 2px #e2cdb7;background:linear-gradient(#fff,#fff) padding-box,var(--rainbow) border-box;border:3px solid transparent}
 .gi.lock{border:0;background:#f3eaee}
 .gi.lock svg{filter:brightness(0) opacity(.16)}
-.gi .gnew{position:absolute;top:-7px;left:-5px;padding:0 4px;border-radius:3px;background:#ff3b5c;font:800 9px/1.5 var(--round);font-style:normal;color:#fff;letter-spacing:.02em}
+
 .gi.on{box-shadow:0 0 0 3px var(--accent),0 0 12px 2px rgba(196,70,122,.45)}
 /* skills: three slots on top, a grid of skill cards */
-.kgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.kcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 8px;border:0;border-radius:3px;background:#fff;box-shadow:0 4px 0 #e2cdb7;cursor:pointer}
-.kcard svg{width:50px;height:50px;display:block}
-.kcard b{font:800 12px/1.2 var(--round);text-align:center;min-height:2.4em;display:flex;align-items:center}
-.kcard .ct{font:800 11px/1 var(--round);color:var(--dim)}
-.kcard .uc-cost{display:flex;align-items:center;gap:2px;padding:2px 8px 2px 3px;border-radius:3px;background:#fff6dc;font:800 13px/1.2 var(--round);color:var(--gold)}
-.kcard .uc-cost svg{width:16px;height:16px}
-.kcard.buy{box-shadow:0 0 0 3px var(--k-gold),0 4px 0 3px #e0a12a}
-.kcard.buy .uc-cost{background:var(--k-gold);color:#fff}
-.kcard.poor{background:#f7f0f3}.kcard.poor svg{filter:saturate(.3) opacity(.6)}
-.kcard.lockd svg{filter:brightness(0) opacity(.18)}
-.kcard.on{background:#fff4f8;box-shadow:0 0 0 3px var(--accent),0 4px 0 3px var(--accent-deep)}
-.kcard.on::after{content:"";position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.3 6.8 11 12 5' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat}
-.kcard.got,.gi.got{animation:bounce .35s ease-out}
+
+.gi.got{animation:bounce .35s ease-out}
 /* in play: how high, and how far to the next present */
-.prog{position:absolute;left:8px;top:calc(var(--hudh) - 2px);z-index:6;display:flex;align-items:center;gap:5px;padding:3px 8px 3px 4px;border-radius:3px;background:rgba(255,255,255,.88);box-shadow:0 2px 0 rgba(230,195,209,.8);font:800 14px/1 var(--round);font-variant-numeric:tabular-nums;color:var(--ink);pointer-events:none}
-.prog svg{width:20px;height:20px;display:block}
-.prog .pbar{width:54px;height:8px;border-radius:4px;background:#f3dfe7;overflow:hidden}
-.prog .pbar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#ffd36e,#f2a23a);transition:width .3s}
-.prog .gift{width:22px;height:22px}
-.prog.near .gift{animation:bounce .8s ease-in-out infinite}
-.say{top:calc(var(--hudh) + 30px)}
+
 /* the first climb: a finger shows where to tap */
 .finger{position:absolute;left:50%;top:46%;z-index:8;font-size:30px;line-height:1;pointer-events:none;transform:translateX(-36%);animation:poke .9s ease-in-out infinite;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
 @keyframes poke{0%,100%{translate:0 8px}45%{translate:0 0}55%{translate:0 0;scale:.94}}
-@media (min-width:1100px){.prog{top:12px}.say{top:calc(var(--hudh) + 6px)}}
+@media (min-width:1100px){.say{top:calc(var(--hudh) + 6px)}}
 @media (prefers-reduced-motion:reduce){
-  .btn.play,.btn.play::after,.dot,.rcard,.rw.power .rcard::before,.ov-big,.ov-new,.ucard.buy::after,#s-title .logo i,.stars i,.ov-hero.home svg,.finger,.prog.near .gift{animation:none}
+  .btn.play,.btn.play::after,.ov-big,.ov-new,#s-title .logo i,.stars i,.ov-hero.home svg,.finger{animation:none}
 }
 
 .bit{z-index:25}.fly{z-index:26}
-.ibtn.wide{flex-direction:row;gap:8px;min-width:150px;height:60px;padding:0 18px}
-.ibtn.wide svg{width:40px;height:40px}
-.ibtn.wide>span:nth-child(2){display:flex;flex-direction:column;align-items:flex-start;gap:2px;font-size:15px}
-.tabs.sub button{position:relative;display:flex;align-items:center;justify-content:center;gap:2px}
-.tabs.sub button svg{width:26px;height:26px;display:block}
-.deckbar .lg span{display:flex;flex-direction:column;align-items:center;gap:1px}
-.deckbar .lg svg{width:28px;height:28px}
+
 .skbar>span svg{width:26px;height:26px;display:block}
 .ov-best svg{width:18px;height:18px;vertical-align:-3px}
-.t-best b{color:var(--ink)}
 
 /* ---------- the look: wood and paper with square corners. buttons are wooden signs (cut corners, two nails);
    panels are cream paper in a dark-brown frame with a hard shadow; titles and numbers use the angular display face ---------- */
@@ -591,19 +457,17 @@ body.art #s-title .record:empty{display:none}
 .btn.play::after{background:linear-gradient(90deg,transparent,rgba(255,240,210,.32),transparent)}
 .btn:not(.main):not(.link),.btn.play.sub{border-radius:2px;background:var(--paper);color:var(--frame);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 4px 0 var(--frame)}
 .btn:not(.main):not(.link):active,.btn.play.sub:active{box-shadow:0 1px 0 var(--frame)}
-.card,.say,.rw-info,.sh-info{background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 5px 0 var(--frame)}
-.card h2,.rw-head h2,.sh-top h2,.ov-big,.ov-new,.rcard b,.logo i{font-family:var(--disp);font-weight:400}
-.pill,.prog,.ibtn,.quit,.ucard,.kcard,.doll,.deckbar,.tabs,.gi{outline:2px solid var(--frame);outline-offset:-2px}
-.pill,.prog,.ibtn,.quit{background:var(--paper)}
-.tabs button[aria-selected="true"],.tabs button.on{background:var(--paper);box-shadow:0 0 0 2px var(--frame)}
+.card,.say,.rw-info{background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 5px 0 var(--frame)}
+.card h2,.rw-head h2,.sh-top h2,.ov-big,.ov-new,.logo i{font-family:var(--disp);font-weight:400}
+.pill,.quit,.gi{outline:2px solid var(--frame);outline-offset:-2px}
+.pill,.quit{background:var(--paper)}
+
 .logo i{border-radius:2px;outline:2.5px solid var(--frame);outline-offset:-2.5px;box-shadow:inset 0 -6px 0 rgba(74,53,65,.16),0 4px 0 var(--frame)}
 body.art #s-title .logo i{box-shadow:inset 0 -6px 0 rgba(74,53,65,.16),0 4px 0 var(--frame)}
 body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 3px 0 var(--frame)}
-.rcard .rc-q{background:var(--paper);outline:1.5px solid var(--frame);outline-offset:-1.5px;color:var(--frame)}
-.rcard .rc-lv i{transform:rotate(45deg) scale(.85)}
+
 .inv i{border-radius:2px}
-.rcard{border-radius:2px}
-.sh-tabs button.on{background:var(--paper);color:var(--frame);outline:2px solid var(--frame);outline-offset:-2px}
+
 /* ===== fx css A: panels ===== */
 /* the tray the panels sit in: --rim shows in the gaps, --tray is the socket under a panel (seen when one hops up) */
 :root{--tray:#4f7a3e;--rim:#8bb672;--st:rgba(255,255,255,.36)}
@@ -671,7 +535,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .bboss{position:absolute;z-index:2;pointer-events:none}
 .bboss .bb-drop{position:absolute;inset:0;transform-origin:50% 94%}
 .bboss .bb-art{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible;transform-origin:50% 90%}
-.bboss .bb-sh{position:absolute;left:12%;right:12%;bottom:2%;height:16%;border-radius:50%;background:radial-gradient(closest-side,rgba(74,53,65,.6),rgba(74,53,65,0));opacity:0}
+
 .bboss .bb-tag{position:absolute}
 .bb-body{transform-box:fill-box;transform-origin:50% 100%;animation:bbbreathe 2.4s ease-in-out var(--d,0s) infinite alternate}
 @keyframes bbbreathe{to{transform:scale(1.03,.97)}}
@@ -689,8 +553,8 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .lf-c{width:var(--z,30%);aspect-ratio:1}
 .lf-c>b,.lf-c::before,.lf-c::after{position:absolute;content:""}
 .lf-c>b{inset:0;background:center/contain no-repeat}
-.lf-gr::before{left:16%;right:16%;bottom:-2%;height:16%;border-radius:50%;background:rgba(74,53,65,.16)}
-.lf-air::before{left:30%;right:30%;bottom:-36%;height:12%;border-radius:50%;background:rgba(74,53,65,.09)}
+.lf-gr::before{border-radius:50%}
+.lf-air::before{border-radius:50%}
 .lf-gold>b{filter:sepia(.9) saturate(2.4) hue-rotate(-8deg) brightness(1.1)}
 .lf-gold::after{right:-14%;top:-14%;width:40%;aspect-ratio:1;background:center/contain no-repeat;animation:tw 1.4s ease-in-out infinite}
 /* how each critter moves: the outer piece walks its path, the inner picture flaps, hops or rocks */
@@ -709,7 +573,6 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 @keyframes lfHpX{0%,20%{transform:translateX(0) scaleX(1)}30%,46%{transform:translateX(60%) scaleX(1)}48%,70%{transform:translateX(60%) scaleX(-1)}80%,96%{transform:translateX(0) scaleX(-1)}98%,100%{transform:translateX(0) scaleX(1)}}
 @keyframes lfHpY{0%,20%,30%,33.5%,70%,80%,83.5%,100%{translate:0 0;scale:1 1}22%,72%{translate:0 0;scale:1.12 .86}25%,75%{translate:0 -42%;scale:.94 1.08}31.5%,81.5%{scale:1.1 .9}10%,12.5%,58%,60.5%{rotate:0deg}11%{rotate:-8deg}59%{rotate:7deg}}
 .mv-df{animation:lfDf 7s ease-in-out calc(var(--lfT,0s) + var(--sd,0s)) infinite}
-.mv-df>b{animation:lfFlick .1s steps(2) calc(var(--lfT,0s) + var(--sd,0s)) infinite}
 @keyframes lfDf{0%,16%{transform:translate(0,0) rotate(25deg)}22%,40%{transform:translate(70%,-34%) rotate(70deg)}46%,64%{transform:translate(22%,40%) rotate(-28deg)}70%,88%{transform:translate(-42%,-12%) rotate(-75deg)}94%,100%{transform:translate(0,0) rotate(25deg)}}
 @keyframes lfFlick{to{opacity:.72}}
 .mv-sn{animation-duration:34s}
@@ -858,15 +721,12 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 @keyframes lfInch{to{scale:1.07 .94}}
 @media (prefers-reduced-motion:reduce){.lsh,.lf-air::before,.lf-wb>b::before,.mv-sl,.mv-sl>b{animation:none!important}}
 /* the climb gauge under the status is gone: the status is one row */
-.prog{display:none!important}
-.say{top:calc(var(--hudh) + 6px)}
 /* ===== the shop (強化画面) =====
    a toy-shop counter: a paper price list on the wooden counter, the paper of the chosen thing pinned under it,
    and the shelf edge at the bottom with the four corners of the shop and the big sign to go out and play.
    a tap only chooses; the one button on the pinned paper buys, puts on, learns or sets */
-.sheet.shop{padding:0;background:var(--wood-deep);align-items:stretch}
-.sh{position:relative;width:min(100%,520px);height:100%;margin:0 auto;display:flex;flex-direction:column;box-sizing:border-box;
-  background:var(--grain),#bd7e4a;padding:max(8px,env(safe-area-inset-top,0px)) 0 0}
+.sheet.shop{padding:0;align-items:stretch}
+.sh{position:relative;width:min(100%,520px);height:100%;margin:0 auto;display:flex;flex-direction:column;box-sizing:border-box;padding:max(8px,env(safe-area-inset-top,0px)) 0 0}
 .sh-top{display:flex;align-items:center;gap:10px;padding:0 max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));min-height:48px}
 .sh-top h2{flex:1;margin:0;font:400 22px/1.1 var(--disp);color:#fff6e6;letter-spacing:.06em;text-shadow:0 2px 0 var(--wood-deep)}
 .sq-btn{flex:none;position:relative;width:44px;height:44px;padding:0;border:0;border-radius:2px;background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 4px 0 var(--frame);cursor:pointer}
@@ -959,7 +819,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .sk2.sel{background:#fff;box-shadow:0 0 0 3px var(--frame)}
 
 /* the pinned paper: what it is, what it does now and after, and the one button */
-.sh-det{flex:none;position:relative;margin:0 max(10px,env(safe-area-inset-right,0px)) 0 max(10px,env(safe-area-inset-left,0px));padding:10px 12px 12px;min-height:168px;box-sizing:border-box;
+.sh-det{flex:none;position:relative;margin:0 max(10px,env(safe-area-inset-right,0px)) 0 max(10px,env(safe-area-inset-left,0px));min-height:168px;box-sizing:border-box;
   display:grid;grid-template-columns:58px minmax(0,1fr);grid-template-rows:auto 1fr auto;column-gap:10px;row-gap:6px;
   background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 5px 0 var(--frame)}
 .sh-det::before,.sh-det::after{content:"";position:absolute;top:-5px;width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:inset -2px -2px 0 var(--accent-deep),0 2px 0 rgba(0,0,0,.25)}
@@ -983,24 +843,23 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .dt-ch .b.same{color:var(--ink)}
 .dt-foot{grid-column:1/3;display:flex;align-items:center;gap:10px;min-height:52px}
 .dt-foot .note{flex:1;min-width:0;font:700 13px/1.35 var(--round);color:var(--dim)}
-.dt-btn{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:150px;height:52px;padding:0 26px;border:0;border-radius:0;clip-path:var(--cut);cursor:pointer;
+.dt-btn{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:150px;height:52px;border:0;border-radius:0;clip-path:var(--cut);cursor:pointer;
   background:radial-gradient(circle at 14px 50%,#f3e2c4 0 2.6px,#5e3417 3px 4.4px,transparent 4.8px),radial-gradient(circle at calc(100% - 14px) 50%,#f3e2c4 0 2.6px,#5e3417 3px 4.4px,transparent 4.8px),var(--grain),#34a56a;
   box-shadow:inset 0 -5px 0 #1d6b41;color:#fff;font:400 18px/1 var(--disp);letter-spacing:.06em;text-shadow:0 2px 0 #1d6b41}
 .dt-btn svg{width:24px;height:24px;filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
 .dt-btn b{font:800 19px/1 var(--round);font-variant-numeric:tabular-nums}
-.dt-btn.alt{background:radial-gradient(circle at 14px 50%,#f3e2c4 0 2.6px,#5e3417 3px 4.4px,transparent 4.8px),radial-gradient(circle at calc(100% - 14px) 50%,#f3e2c4 0 2.6px,#5e3417 3px 4.4px,transparent 4.8px),var(--grain),var(--wood);box-shadow:inset 0 -5px 0 var(--wood-deep);text-shadow:0 2px 0 var(--wood-deep)}
+.dt-btn.alt{background:radial-gradient(circle at 14px 50%,#f3e2c4 0 2.6px,#5e3417 3px 4.4px,transparent 4.8px),radial-gradient(circle at calc(100% - 14px) 50%,#f3e2c4 0 2.6px,#5e3417 3px 4.4px,transparent 4.8px),var(--grain),var(--wood);box-shadow:inset 0 -5px 0 var(--wood-deep)}
 .dt-btn:disabled{cursor:default;background:#e6dbcf;box-shadow:inset 0 -4px 0 #cdbca9;color:#9c8774;text-shadow:none;font:800 16px/1 var(--round)}
 .dt-btn:not(:disabled):active{transform:translateY(2px);box-shadow:inset 0 3px 0 rgba(255,255,255,.2),inset 0 -2px 0 #1d6b41}
 .dt-sub:disabled{opacity:.4;cursor:default;box-shadow:none}
-.dt-sub{flex:none;height:44px;min-width:76px;padding:0 12px;border:0;border-radius:2px;background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 3px 0 var(--frame);font:800 14px/1 var(--round);color:var(--frame);cursor:pointer}
+.dt-sub{flex:none;min-width:76px;padding:0 12px;border:0;border-radius:2px;background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;font:800 14px/1 var(--round);color:var(--frame);cursor:pointer}
 .dt-sub:active{transform:translateY(2px);box-shadow:0 1px 0 var(--frame)}
 .sh-det.flash{animation:detin .22s ease-out}
 @keyframes detin{from{transform:translateY(4px);opacity:.6}}
 
 /* the shelf edge: four corners of the shop and the big sign in the middle */
-.sh-nav{flex:none;position:relative;display:grid;grid-template-columns:1fr 1fr 1.5fr 1fr 1fr;align-items:end;gap:2px;margin-top:22px;
-  padding:6px max(6px,env(safe-area-inset-right,0px)) max(6px,env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));
-  background:var(--grain),#7a4522;box-shadow:0 -3px 0 var(--wood-deep)}
+.sh-nav{flex:none;position:relative;display:grid;align-items:end;gap:2px;margin-top:22px;
+  padding:6px max(6px,env(safe-area-inset-right,0px)) max(6px,env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px))}
 .sh-nav [role=tab]{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;height:58px;padding:5px 0 3px;border:0;border-radius:2px;background:transparent;color:#f3dcc0;font:800 12px/1.1 var(--round);cursor:pointer}
 .sh-nav [role=tab] .ti svg{width:32px;height:32px;display:block}
 .sh-nav [role=tab][aria-selected=true]{background:var(--paper);color:var(--frame);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 -4px 0 var(--paper)}
@@ -1011,7 +870,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .sh-nav .go{position:relative;align-self:stretch;margin-top:-14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:0;clip-path:var(--cut);cursor:pointer;color:#fff6e6;
   background:radial-gradient(circle at 12px 14px,#f3e2c4 0 2.6px,#5e3417 3px 4.4px,transparent 4.8px),radial-gradient(circle at calc(100% - 12px) 14px,#f3e2c4 0 2.6px,#5e3417 3px 4.4px,transparent 4.8px),var(--grain),var(--accent);
   box-shadow:inset 0 -6px 0 var(--accent-deep)}
-.sh-nav .go-t{display:flex;align-items:center;gap:6px;font:400 19px/1 var(--disp);letter-spacing:.08em;text-shadow:0 2px 0 var(--accent-deep)}
+.sh-nav .go-t{display:flex;align-items:center;font:400 19px/1 var(--disp);letter-spacing:.08em;text-shadow:0 2px 0 var(--accent-deep)}
 .sh-nav .go-t::before{content:"";width:0;height:0;border-left:13px solid currentColor;border-top:8px solid transparent;border-bottom:8px solid transparent;filter:drop-shadow(0 2px 0 var(--accent-deep))}
 .sh-nav .go-s{font:800 10px/1.1 var(--round);opacity:.9;max-width:100%;padding:0 6px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sh-nav .go-s:empty{display:none}
@@ -1019,14 +878,10 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 @media (min-width:1100px){.sh{border-left:4px solid var(--wood-deep);border-right:4px solid var(--wood-deep)}}
 @media (prefers-reduced-motion:reduce){.pegs.swap .peg,.sh-det.flash{animation:none}}
 /* the title and the result screen: the way into the shop, with a coin when something can be bought */
-.ibtn .mk{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#f2b632;box-shadow:0 0 0 2px #fff,inset 0 -2px 0 #c98a12}
-.ibtn .mk[hidden]{display:none}
-.t-sub{display:flex;justify-content:center;gap:14px}
 
 /* ===== the toy shelf under the field: skills and the die on the top board, the hand in six sockets below ===== */
 .app{--slot:min(60px,calc((min(100vw,520px) - 16px - 30px) / 6))}
-.tray{flex-direction:column;align-items:stretch;gap:7px;padding:8px 8px max(8px,env(safe-area-inset-bottom,0px));border-top:0;
-  background:var(--grain),#bd7e4a;box-shadow:0 -4px 0 var(--wood-deep)}
+.tray{flex-direction:column;align-items:stretch;gap:7px;padding:8px 8px max(8px,env(safe-area-inset-bottom,0px));border-top:0;box-shadow:0 -4px 0 var(--wood-deep)}
 .kit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 60px;gap:6px}
 .kit .skill{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:auto;height:60px;padding:3px 2px 4px;box-sizing:border-box;border:0;border-radius:2px;
   background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 4px 0 var(--frame);cursor:pointer;color:var(--ink)}
@@ -1077,7 +932,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 @keyframes ghin{from{opacity:0;transform:translateY(-6%)}}
 
 /* the skill note: what the chosen skill does, pinned over the row behind the knight */
-.skn{position:absolute;left:6px;right:6px;bottom:4px;z-index:8;display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:var(--cell,60px);box-sizing:border-box;padding:6px 8px 6px 6px;
+.skn{position:absolute;left:6px;right:6px;bottom:4px;z-index:8;display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:var(--cell,60px);box-sizing:border-box;
   background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 4px 0 var(--frame);animation:skin .16s ease-out}
 @keyframes skin{from{transform:translateY(10px);opacity:0}}
 .skn .sb-ic{width:46px;height:46px}
@@ -1088,11 +943,10 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .skn .sb-t span.do{color:var(--accent)}
 .skn .sb-b{display:flex;gap:6px}
 .skn button{height:44px;border:0;border-radius:2px;font:800 14px/1 var(--round);cursor:pointer}
-.skn .sb-x{min-width:58px;padding:0 10px;background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 3px 0 var(--frame);color:var(--frame)}
-.skn .sb-go{min-width:68px;padding:0 14px;clip-path:var(--cut);background:var(--grain),#34a56a;box-shadow:inset 0 -4px 0 #1d6b41;color:#fff;font:400 16px/1 var(--disp);letter-spacing:.06em;text-shadow:0 2px 0 #1d6b41}
+.skn .sb-x{min-width:58px;padding:0 10px;background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;color:var(--frame)}
+.skn .sb-go{min-width:68px;clip-path:var(--cut);background:var(--grain),#34a56a;box-shadow:inset 0 -4px 0 #1d6b41;color:#fff;font:400 16px/1 var(--disp);letter-spacing:.06em;text-shadow:0 2px 0 #1d6b41}
 .skn button:active{transform:translateY(2px)}
-.drawer,.pull{display:none!important}
-.say{top:calc(var(--hudh) + 6px)}
+.drawer{display:none!important}
 
 /* ===== the reward: three toys on a shelf, one row each; a tap chooses, the sign below takes it ===== */
 .sheet.reward{background:rgba(40,22,10,.78)}
@@ -1143,7 +997,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .rw-go{width:100%;height:54px;border:0;border-radius:0;clip-path:var(--cut);cursor:pointer;
   background:radial-gradient(circle at 18px 50%,#f3e2c4 0 3px,#5e3417 3.5px 5px,transparent 5.5px),radial-gradient(circle at calc(100% - 18px) 50%,#f3e2c4 0 3px,#5e3417 3.5px 5px,transparent 5.5px),var(--grain),#34a56a;
   box-shadow:inset 0 -6px 0 #1d6b41;color:#fff;font:400 20px/1 var(--disp);letter-spacing:.1em;text-shadow:0 2px 0 #1d6b41}
-.rw-go:disabled{cursor:default;background:var(--paper);box-shadow:none;outline:2px dashed rgba(107,74,58,.6);outline-offset:-4px;color:var(--frame);text-shadow:none;font:800 15px/1 var(--round);letter-spacing:.04em}
+.rw-go:disabled{cursor:default;background:var(--paper);box-shadow:none;outline-offset:-4px}
 .rw-go:not(:disabled):active{transform:translateY(2px)}
 .rw-info{display:none}
 /* taking it: the chosen toy rises, the others tumble off the shelf */
@@ -1178,12 +1032,12 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .ov-sub .btn::after{display:none}
 .ov .bi svg{display:block;width:34px;height:34px;filter:drop-shadow(0 2px 0 var(--wood-deep))}
 .ov-sub .bi svg{width:28px;height:28px}
-.ov .ov-go .mk{position:absolute;top:9px;right:34px;width:14px;height:14px;border-radius:50%;background:#f2b632;box-shadow:0 0 0 2px var(--wood-deep),inset 0 -2px 0 #c98a12}
+.ov .ov-go .mk{top:9px;right:34px;width:14px;height:14px;border-radius:50%;background:#f2b632;box-shadow:0 0 0 2px var(--wood-deep),inset 0 -2px 0 #c98a12}
 .ov .ov-go .mk[hidden]{display:none}
 /* shop: the pinned paper is away until something is chosen */
 .sh-det[hidden]{display:none}
 /* the message window under the status: a framed paper strip with an inner line, ▶ in front */
-.say{left:8px;right:8px;top:calc(var(--hudh) + 4px);transform:none;width:auto;max-width:none;display:flex;flex-direction:column;align-items:stretch;gap:3px;min-height:38px;padding:8px 14px;border-radius:2px;
+.say{left:8px;right:8px;top:calc(var(--hudh) + 4px);transform:none;width:auto;max-width:none;display:flex;flex-direction:column;align-items:stretch;gap:3px;min-height:38px;border-radius:2px;
   background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:inset 0 0 0 4px var(--paper),inset 0 0 0 5.5px var(--edge),0 4px 0 var(--frame);
   font:800 15px/1.3 var(--round);color:var(--ink);text-align:left;white-space:nowrap}
 .say[hidden]{display:none}
@@ -1242,7 +1096,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .ov-sub .btn{--capw:26px;padding:8px 4px}
 .ov .ov-go .mk{position:static;align-self:flex-start;margin:6px 0 0 -2px;flex:none}
 /* paper: the cream paper from inside the frame */
-.card,.sh-sheet,.rrow,.pill,.ibtn,.quit,.dt-sub,.skn .sb-x,.kit .skill,.btn:not(.main):not(.link),.sh-nav [role=tab][aria-selected=true]{background-image:var(--ui-paper);background-size:cover;background-position:center}
+.card,.sh-sheet,.rrow,.pill,.quit,.dt-sub,.skn .sb-x,.kit .skill,.btn:not(.main):not(.link),.sh-nav [role=tab][aria-selected=true]{background-image:var(--ui-paper);background-size:cover;background-position:center}
 /* framed paper: the pinned paper of the shop, the message window and the skill paper on the field */
 .sh-det,.say,.skn{outline:0;background:none;box-shadow:none;border-style:solid;border-color:transparent;border-image-source:var(--ui-frame);border-image-slice:30 fill;border-image-repeat:stretch}
 .sh-det{border-width:16px;border-image-width:16px;padding:2px 6px 6px;filter:drop-shadow(0 5px 0 rgba(48,22,6,.45))}
@@ -1281,7 +1135,6 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
     <div class="view" id="view"><div class="board" id="board" aria-label="積み木の国の地図"></div></div>
     <div class="weather" id="weather" aria-hidden="true"></div>
     <div class="say" id="say" role="status" hidden></div>
-    <div class="prog" id="prog" aria-hidden="true"><span id="p-flag"></span><b id="p-step">0</b><span class="pbar"><i id="p-bar"></i></span><span class="gift" id="p-gift"></span></div>
     <div class="skn" id="skbar" hidden></div>
   </div>
   <div class="tray">
@@ -1530,7 +1383,6 @@ Object.assign(SPR,{ // the field toys that act from afar, and what they throw (t
   chest:''
 });
 SPR.chest=SPR.coin;SPR.flag='<path d="M36 24v52" stroke="#8e6a4f" stroke-width="5" stroke-linecap="round"/><path d="M38 26h30l-8 10 8 10H38z" fill="#e8607e"/>';SPR.portal=SPR.gem;SPR.door=SPR.start;SPR.box=SPR.start;
-const ICON=n=>U(n,28,30,44,44);
 if(HAS_ART)document.body.classList.add('art');
 const RC=HAS_ART?43:47; // the middle of a block's top face, where its roads meet // a pickup on a block; the same box shows nicely in the 22..78 icon window
 if(HAS_ART){
@@ -1960,7 +1812,7 @@ const anyFit=(t,F)=>{if(!t)return false;for(const j of F.keys())if(t.m&F.get(j))
 
 /* ---------- rendering ---------- */
 const app=$('app'),view=$('view'),board=$('board'),handEl=$('hand'),rollBtn=$('roll');
-const drawerIn=$('drawer-in'),drawer=drawerIn,pullBtn=document.createElement('button');
+const drawerIn=$('drawer-in'),drawer=drawerIn;
 let drawerOpen=false,drawerAuto=false,drawerTimer=0; // auto: opened by itself at a dead end, so it closes by itself once a block fits again
 const skillEls=[...drawerIn.querySelectorAll('.skill')];
 function setDrawer(open,auto){ // the skills are always on the shelf now: at a dead end the ones that can help bounce
@@ -2077,7 +1929,6 @@ function renderStats(){
   $('i-atk').innerHTML=ico(SPR.sword)+`<b>${nf(atkNow())}</b>`;
   $('i-def').innerHTML=ico(SPR.shield)+`<b>${nf(run.def)}</b>`;
   $('i-gold').innerHTML=ico(SPR.coin)+`<b>${nf(run.gold)}</b>`;
-  {const st=stepOf(run.top),nx=st%10;$('p-step').textContent=st;$('p-bar').style.width=nx*10+'%';$('prog').classList.toggle('near',nx>=8);if(!$('p-flag').firstChild){$('p-flag').innerHTML=ico(SPR.flag);$('p-gift').innerHTML=ico(SPR.chest)}}
   diceFace(run.rolls);
   rollBtn.disabled=busy||run.phase!=='build'||run.rolls<=0;
   $('quit').disabled=busy;hero.classList.toggle('bub',(run.bub|0)>0);
@@ -2952,7 +2803,6 @@ function mixAt(over){ // the share of each kind of block (0..1), with some upgra
   return MIXG.map(([f])=>W.filter(x=>f(x[0])).reduce((a,x)=>a+x[1],0)/tot);
 }
 const pc=x=>Math.round(x*100)+'%';
-const SKILL_AIM={tile:'ねらう：手持ちの積み木',rock:'ねらう：じゃまな物',foe:'ねらう：敵がのった積み木',free:'ねらう：何ものっていない積み木'};
 const GCMP=[['atk','攻撃',x=>x],['def','守り',x=>x],['hp','最大HP',x=>x],['crit','会心',pct],['mag','魔法',x=>x],['gold','金貨',x=>'+'+pct(x)],['roll','リロール',x=>x],['bag','回復',x=>x],['cdr','スキルの休み',x=>'-'+x]];
 let shopTab='up',gearSlot='wpn',lastFound=0,swap=null,visit=[],detT=0;
 const shopSel={up:null,gear:null,skill:null,deck:null};
@@ -3188,7 +3038,6 @@ document.addEventListener('keydown',e=>{
 
 /* ---------- buttons ---------- */
 rollBtn.addEventListener('click',reroll);
-pullBtn.addEventListener('click',()=>setDrawer(!drawerOpen,false));
 { // a tap asks first; holding until the ring fills goes home at once
   const q=$('quit');let t=0,held=false;
   const stop=()=>{clearTimeout(t);q.classList.remove('hold')};
@@ -3254,7 +3103,7 @@ window.addEventListener('resize',()=>{if(run)renderBoard()});
 
 
 /* test only: open with #fxtest to reach the internals from a test script (PQ.jump(step) puts the knight on that step) */
-if(/fxtest/.test(location.hash))window.PQ={get run(){return run},FXH,openReward,showShop,note,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,
+if(/fxtest/.test(location.hash))window.PQ={get run(){return run},get busy(){return busy},get sel(){return sel},get meta(){return meta},frontier,fits,anyFit,FXH,openReward,showShop,note,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,
   jump(step,col){const r=step+1,c=col==null?colOf(run.at):col;while(run.made<r+40){run.made++;newRow(run.made)}
     const x=cellAt(idOf(r,c));x.rock=0;x.foe=null;x.tile={m:15,e:null,c:0};run.at=idOf(r,c);run.top=r;run.phase='build';grow();render();return run.at}};
 
@@ -3685,12 +3534,6 @@ const LF=(()=>{
     if(h%1000>=(night?120:75))return null;
     const L=S.land[areaOf(r).k]||S.land.grass,list=night?['ffly','ffly','ffly'].concat(L):L;
     return list[(h>>>10)%list.length];
-  }
-  function critterHTML(i,k){
-    const h=H(i,11),[mv,z,air]=KIND[k],m=MV[mv.split(' ')[0]],gold=(h>>>20)%36===0;
-    const bw=z*(1+m[1]+m[0]),bh=z*(1+m[3]+m[2]),u1=((h>>>3)&127)/127,u2=((h>>>13)&127)/127;
-    const L=8+u1*Math.max(0,84-bw)+m[0]*z,T=12+u2*Math.max(0,80-bh)+m[2]*z;
-    return `<i class="lf-c mv-${mv} lf-s-${k}${air===1?' lf-air':air?'':' lf-gr'}${gold?' lf-gold':''}${CR_WB.has(k)?' lf-wb':''}" style="left:${L.toFixed(1)}%;top:${T.toFixed(1)}%;--z:${z}%;--sd:-${(h%977/10).toFixed(1)}s"><b></b></i>`;
   }
   /* the obstacle's pose: module A turns, sizes and nudges each obstacle (obArt); the small lives follow the same pose */
   function pose(i,a){
