@@ -2425,9 +2425,10 @@ function tapSlot(i){
   if(aim){if(aim.kind!=='rock'&&targets(aim.kind).includes(i))useSkill(aim.k,i);else flashSlot(i);return}
   if(pick>=0||fpick>=0)hidePick();
   const t=run.hand[i];if(!t)return;
-  if(sel!==i&&!anyFit(t,frontier()))return flashSlot(i);
+  if(sel!==i&&!anyFit(t,frontier())){if(hpick===i)hidePick();else slotPaper(i);return flashSlot(i)} /* 11/5: it cannot go anywhere now, but what is on it still shows */
   sel=sel===i?-1:i;
   renderHand();refreshMarks();setPreview(-1);hintFinger(frontier());
+  if(sel===i)slotPaper(i);else if(hpick>=0)hidePick();
 }
 function tapCell(i){
   FXH.emit('tap',{i});
@@ -2441,7 +2442,7 @@ function tapCell(i){
 }
 function place(j,hi){
   if(busy||!run||run.phase!=='build')return;
-  if(pick>=0||fpick>=0)hidePick(); // a skill's paper or a toy's paper closes (a drag does not pass the slots)
+  if(pick>=0||fpick>=0||hpick>=0)hidePick(); // a skill's paper or a toy's paper closes (a drag does not pass the slots)
   const t=run.hand[hi];
   if(!t)return;
   const F=frontier();if(!fits(t,j,F)){SND('nope');flashCell(j);flashSlot(hi);return}
@@ -2636,7 +2637,7 @@ function resolve(i){
 function reroll(){
   if(busy||!run||run.phase!=='build'||run.rolls<=0)return;SND('dice');
   const lv=lvOf(rowOf(run.at));
-  run.intro=0;run.hand=run.hand.map(()=>makeTile(lv));
+  if(hpick>=0)hidePick();run.intro=0;run.hand=run.hand.map(()=>makeTile(lv));
   aceNew=run.hand.map((t,k)=>t.m===15?k:-1).filter(k=>k>=0);
   run.rolls--;sel=-1;aim=null;hidePick();render();
   [...handEl.children].forEach(s=>s.classList.add('deal'));
@@ -2689,7 +2690,7 @@ function renderSkills(){
 }
 let pick=-1; // the skill whose note is pinned
 let fpick=-1;const fsel=new Set(); // the toy whose paper is open, and its panels (the captain has four)
-function hidePick(){pick=-1;if(fpick>=0||fsel.size){fpick=-1;fsel.clear();document.querySelectorAll('.cell.fsel').forEach(x=>x.classList.remove('fsel'))}const el=$('skbar');if(el)el.hidden=true}
+function hidePick(){pick=-1;hpick=-1;if(fpick>=0||fsel.size){fpick=-1;fsel.clear();document.querySelectorAll('.cell.fsel').forEach(x=>x.classList.remove('fsel'))}const el=$('skbar');if(el)el.hidden=true}
 function foeAt(i){ // the toy a tap on this panel means: one standing here, one riding a block, or the captain of this square
   const c=cellAt(i);if(!c)return null;if(c.foe)return c.foe;
   const t=c.tile;if(!t)return null;
@@ -2697,13 +2698,38 @@ function foeAt(i){ // the toy a tap on this panel means: one standing here, one 
   return t.e&&t.e.k==='foe'?t.e:null;
 }
 const FOE_DO={archer:r=>`${r}マス以内に矢をうつ`,mage:r=>`${r}マス以内に魔法（守りは効かない）`,clown:()=>'近くに毒の水たまりをまく',mason:()=>'近くにかべを作る'};
+function foeWhat(e,s){ /* what a toy does, costs and gives: the field (s: it shoots from where it stands) and the hand share it */
+  const hp=x=>`<i class="st-h"><b class="ic"></b>${x}</i>`,d=dmgFor(e);
+  return (s&&FOE_DO[e.t]?`<span class="fd-do">${FOE_DO[e.t](s.rng)}</span>`:'')+(QK[e.t]?`<span class="fd-do">${QK[e.t].d}</span>`:'')+(d?`<span class="fd-c">戦うと${hp('-'+nf(d))}</span>`:'戦ってもダメージなし')+`<span class="fd-g">たおすと${ico(SPR.coin)}+${nf(gainOf(e.gold))}${(QK[e.t]||{}).flee?`（にげると+${nf(gainOf(Math.ceil(e.gold/2)))}）`:''}</span>`;
+}
+function foePaper(e,what){
+  const hp=x=>`<i class="st-h"><b class="ic"></b>${x}</i>`;
+  return `<span class="sb-ic fd-ic${e.boss||e.king?'':' sm'}">${svg(SPR[e.t]||SPR.soldier)}</span><div class="sb-t"><b><span class="fd-n">${e.name}</span><span class="fd-st"><i class="st-a"><b class="ic"></b>${nf(e.atk)}</i>${hp(nf(e.hp))}</span></b><span>${what}</span></div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
+}
+let hpick=-1; /* 11/5: the hand block whose paper is open */
+function slotPaper(i){ /* 11/5: a tap on a hand block that carries something: what it is */
+  const t=run.hand[i],e=t&&t.e,el=$('skbar');if(!t||!el)return;
+  let h='';
+  if(e&&e.k==='foe')h=foePaper(e,foeWhat(e,null));
+  else{
+    const g=e&&gearOf(e);let ic='',n='',d='';
+    if(g){const sl=SLOTS.find(x=>x.k===g.s);ic=ico(g.art);n=`${g.n}<em class="ct">${sl?sl.n:''} ${'★'.repeat(g.r)}</em>`;
+      d=owned(g.id)?`もう持っている：のると${ico(SPR.coin)}+${nf(gainOf(dupGold(g)))}`:`のると手に入る${gearDesc(g)?'・'+gearDesc(g):''}`}
+    else if(e&&e.k==='coin'){ic=ico(SPR.coin);n='金貨';d=`のると${ico(SPR.coin)}+${nf(e.v)}`}
+    else if(e&&e.k==='potion'){ic=ico(SPR.potion);n='キャンディ';d=`のると${ico(SPR.heart)}+${nf(e.v)}`}
+    else if(t.sp&&SP_ID[t.sp]){ic=svg(spBlock(t.sp));n=SP_ID[t.sp][2];d=SP_ID[t.sp][4]}
+    else{if(hpick>=0)hidePick();return}
+    h=`<span class="sb-ic">${ic}</span><div class="sb-t"><b>${n}</b><span>${d}</span></div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
+  }
+  hidePick();hpick=i;el.innerHTML=h;el.hidden=false;
+}
 function showFoe(i,e){
   hidePick();fpick=i;const c=cellAt(i),pz=c.tile&&c.tile.pz;(pz||[i]).forEach(x=>{fsel.add(x);const el=elOf(x);if(el)el.classList.add('fsel')});
   const hp=x=>`<i class="st-h"><b class="ic"></b>${x}</i>`;
   let what;
-  {const s=c.foe&&SHOOTERS[e.t],d=dmgFor(e);what=(s&&FOE_DO[e.t]?`<span class="fd-do">${FOE_DO[e.t](s.rng)}</span>`:'')+(QK[e.t]?`<span class="fd-do">${QK[e.t].d}</span>`:'')+(d?`<span class="fd-c">戦うと${hp('-'+nf(d))}</span>`:'戦ってもダメージなし')+`<span class="fd-g">たおすと${ico(SPR.coin)}+${nf(gainOf(e.gold))}${(QK[e.t]||{}).flee?`（にげると+${nf(gainOf(Math.ceil(e.gold/2)))}）`:''}</span>`}
+  what=foeWhat(e,c.foe&&SHOOTERS[e.t]);
   const el=$('skbar');
-  el.innerHTML=`<span class="sb-ic fd-ic${e.boss||e.king?'':' sm'}">${svg(SPR[e.t]||SPR.soldier)}</span><div class="sb-t"><b><span class="fd-n">${e.name}</span><span class="fd-st"><i class="st-a"><b class="ic"></b>${nf(e.atk)}</i>${hp(nf(e.hp))}</span></b><span>${what}</span></div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
+  el.innerHTML=foePaper(e,what);
   el.hidden=false;
 }
 FXH.cells.push(i=>fsel.has(i)?{cls:'fsel'}:null);
