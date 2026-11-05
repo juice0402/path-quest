@@ -1249,6 +1249,21 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .skn .sb-go{--capw:22px;padding:0 4px}
 .ov-sub .btn{--capw:26px;padding:8px 4px}
 .ov .ov-go .mk{position:static;align-self:flex-start;margin:6px 0 0 -2px;flex:none}
+/* 11/5: narrow phones: the plank ends get thinner and the words smaller, so つづける・もう一回・強化する stay whole */
+@media (max-width:389px){
+  #s-quit .ov-sub .btn,#ov .ov-sub .btn{--capw:18px;padding:8px 0;gap:4px}
+  #s-quit .ov-sub .btn.play,#ov .ov-sub .btn.play{font-size:16px;letter-spacing:0}
+  #s-quit .ov-sub .btn.play::before,#ov .ov-sub .btn.play::before{border-left-width:9px;border-top-width:6px;border-bottom-width:6px}
+  #s-quit .ov-sub .bi svg,#ov .ov-sub .bi svg{width:22px;height:22px}
+  .dt-foot{gap:6px}
+  .dt-btn{--capw:20px;min-width:0;padding:0 2px;gap:4px;font-size:16px;letter-spacing:.02em}
+  .dt-btn b{font-size:17px}
+  .dt-btn svg{width:20px;height:20px}
+  .dt-sub{min-width:60px;padding:0 8px}
+}
+@media (max-width:340px){
+  #s-quit .ov-sub .btn.play::before,#ov .ov-sub .btn.play::before{display:none}
+}
 /* paper: the cream paper from inside the frame */
 .card,.sh-sheet,.rrow,.pill,.quit,.dt-sub,.skn .sb-x,.kit .skill,.btn:not(.main):not(.link),.sh-nav [role=tab][aria-selected=true]{background-image:var(--ui-paper);background-size:cover;background-position:center}
 /* framed paper: the pinned paper of the shop, the message window and the skill paper on the field */
@@ -1951,9 +1966,9 @@ let meta=store.get(META)||{};
   if(u.roll==null&&u.undo!=null)u.roll=u.undo; // the old "undo" upgrade becomes the reroll upgrade
   const g=meta.gear||{},own=Array.isArray(g.own)?g.own.filter(id=>GEAR_ID[id]):[],eq={};
   for(const s of SLOTS){const id=g.eq&&g.eq[s.k];eq[s.k]=id&&own.includes(id)&&GEAR_ID[id].s===s.k?id:null}
-  const k=meta.sk,sown=k&&Array.isArray(k.own)?k.own.filter(id=>SKILL_ID[id]):['turn'],seq=[null,null,null]; // the first climb starts with the quarter turn learned and set
+  const k=meta.sk&&typeof meta.sk==='object'?meta.sk:null,sown=k&&Array.isArray(k.own)?k.own.filter(id=>SKILL_ID[id]):['turn'],seq=[null,null,null]; // the first climb starts with the quarter turn learned and set
   if(!k)seq[0]='turn';else [0,1,2].forEach(j=>{const id=k.eq&&k.eq[j];if(id&&sown.includes(id)&&!seq.includes(id))seq[j]=id});
-  meta={bank:meta.bank|0,best:meta.best|0,far:meta.far|0,seen:meta.seen|0,up:Object.fromEntries(UPS.map(x=>[x.k,u[x.k]|0])),gear:{own,eq},sk:{own:sown,eq:seq},newg:(Array.isArray(meta.newg)?meta.newg:[]).filter(id=>GEAR_ID[id]),newu:(Array.isArray(meta.newu)?meta.newu:[]).filter(x=>/^(sk|up):/.test(x))};
+  meta={bank:Math.max(0,meta.bank|0),best:meta.best|0,far:meta.far|0,seen:meta.seen|0,up:Object.fromEntries(UPS.map(x=>[x.k,Math.min(x.max,Math.max(0,u[x.k]|0))])),gear:{own,eq},sk:{own:sown,eq:seq},newg:(Array.isArray(meta.newg)?meta.newg:[]).filter(id=>GEAR_ID[id]),newu:(Array.isArray(meta.newu)?meta.newu:[]).filter(x=>{const [t,k]=String(x).split(':');return t==='sk'?!!SKILL_ID[k]:t==='up'&&UPS.some(v=>v.k===k)})};
 }
 const saveMeta=()=>store.set(META,meta);
 /* 11/5: the strong ones open as the climb goes further (meta.far = the best step ever). what is already bought stays open */
@@ -2656,6 +2671,7 @@ function showPick(k,note){
   el.hidden=false;
 }
 function tickSkills(){ // one step walked
+  if(!run)return;
   for(const s of run.sk||[])if(s&&s.cd>0)s.cd--;
   if(FX().wind>0){run.fx.wind--;if(!run.fx.wind)note('攻撃力が元にもどった','bad')}
   renderSkills();
@@ -2735,7 +2751,9 @@ const SK_DO={ // each changes the climb and gives back what to show once it is d
   }
 };
 function useSkill(k,x){
+  if(!run||!run.sk||!run.sk[k]||run.sk[k].cd>0)return; /* 11/5: resting, or nothing in that slot */
   const s=run.sk[k],d=SKILL_ID[s.id],lv=lvOf(rowOf(run.at));
+  if(!d||(d.aim&&!targets(d.aim).includes(x)))return; /* pointed at something it cannot take */
   aim=null;hidePick();
   const shown=SK_DO[d.id](x>=0?x:lv,lv);
   if(typeof shown==='string'){render();return say(shown)}
@@ -3079,6 +3097,7 @@ function rewardNotes(x,b,g){ // the lines for the message window: the toy first,
   L.forEach(t=>note(t,'good'));
 }
 function takeReward(i){
+  if(!run||!run.rewards)return; /* 11/5: already taken */
   const x=run.rewards[i];if(!x)return;
   const N=typeof x.val==='number'?x.val:typeof x.v==='number'?x.v:0; // older saves kept the number in v
   const b0={atk:run.atk,def:run.def,mx:run.maxHp,hp:run.hp,rl:run.rolls};let gotG=0;
@@ -3330,7 +3349,7 @@ function shopAct(act){
   }
   if(act==='on'){const g=GEAR_ID[sel];if(g&&owned(g.id))meta.gear.eq[g.s]=g.id}
   if(act==='off'){const g=GEAR_ID[sel];if(g)meta.gear.eq[g.s]=null}
-  if(act==='set'){const eq=meta.sk.eq,f=eq.indexOf(null);if(f>=0)eq[f]=sel;else{swap=sel;renderShop();return}}
+  if(act==='set'){if(!meta.sk.own.includes(sel)||isLocked('sk',sel))return;const eq=meta.sk.eq,f=eq.indexOf(null);if(f>=0)eq[f]=sel;else{swap=sel;renderShop();return}}
   if(act==='unset')meta.sk.eq=meta.sk.eq.map(x=>x===sel?null:x);
   if(act==='cancel'){swap=null;renderShop();return}
   saveMeta();renderShop();
