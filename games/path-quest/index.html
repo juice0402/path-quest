@@ -219,6 +219,18 @@ button{font:inherit;color:inherit}
 .slot.dull{opacity:.45;filter:saturate(.4)}
 .slot.none{box-sizing:border-box}
 .slot.deal{animation:deal .3s ease-out backwards}
+/* 11/5: くるっと回す: only the road turns, around the top face's centre */
+.slot .rd{transform-box:view-box}
+.slot.turnable .rd{animation:rdprev 1.8s ease-in-out infinite}
+@keyframes rdprev{0%,18%{transform:rotate(0);opacity:1}52%,78%{transform:rotate(90deg);opacity:1}88%{transform:rotate(90deg);opacity:0}89%{transform:rotate(0);opacity:0}100%{transform:rotate(0);opacity:1}}
+.slot .rd.turning{animation:rdturn .5s cubic-bezier(.3,1.45,.55,1) both}
+@keyframes rdturn{from{transform:rotate(-90deg)}to{transform:rotate(0)}}
+.slot .turnmk{position:absolute;right:-12%;top:-14%;width:50%;height:50%;z-index:3;pointer-events:none;filter:drop-shadow(0 2px 0 rgba(58,28,8,.35));animation:tmbob 1.8s ease-in-out infinite}
+.slot .turnmk svg,.slot .turnfx svg{width:100%;height:100%;display:block;overflow:visible}
+@keyframes tmbob{0%,18%,100%{transform:rotate(0) scale(1)}52%,78%{transform:rotate(20deg) scale(1.1)}}
+.slot .turnfx{position:absolute;inset:-4%;z-index:3;pointer-events:none;opacity:0;animation:tfx .6s ease-out forwards}
+@keyframes tfx{0%{opacity:0;transform:rotate(-70deg) scale(.75)}25%{opacity:.95}100%{opacity:0;transform:rotate(25deg) scale(1.05)}}
+@media (prefers-reduced-motion:reduce){.slot.turnable .rd,.slot .turnmk{animation:none}}
 .slot.deal:nth-child(2){animation-delay:.04s}.slot.deal:nth-child(3){animation-delay:.08s}.slot.deal:nth-child(4){animation-delay:.12s}.slot.deal:nth-child(5){animation-delay:.16s}.slot.deal:nth-child(6){animation-delay:.2s}
 @keyframes deal{from{transform:translateY(40%) scale(.7);opacity:0}}
 .dice{position:relative;flex:none;width:var(--slot);height:var(--slot);padding:0;border:0;border-radius:3px;background:var(--accent);box-shadow:0 4px 0 var(--accent-deep);cursor:pointer}
@@ -461,6 +473,17 @@ body.art #s-title .btn:not(.main){background:rgba(255,255,255,.94)}
 /* in play: how high, and how far to the next present */
 
 /* the first climb: a finger shows where to tap */
+/* 11/5: the way is up: three chevrons rise over the knight in turn (the first climbs only) */
+.upcue{position:absolute;z-index:4;pointer-events:none;display:flex;justify-content:center}
+.upcue svg{width:64%;height:100%;overflow:visible;filter:drop-shadow(0 2px 0 rgba(58,28,8,.35))}
+.upcue .cv{opacity:0;animation:cvup 1.5s ease-in-out infinite}
+.upcue .cv path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.upcue .cv .o{stroke:var(--wood-deep);stroke-width:14}
+.upcue .cv .i{stroke:#fff6e6;stroke-width:8}
+.upcue .cv:nth-child(2){animation-delay:.25s}
+.upcue .cv:nth-child(3){animation-delay:.5s}
+@keyframes cvup{0%{opacity:0;transform:translateY(6px)}35%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.upcue .cv{animation:none;opacity:1}}
 .finger{position:absolute;left:50%;top:46%;z-index:8;font-size:30px;line-height:1;pointer-events:none;transform:translateX(-36%);animation:poke .9s ease-in-out infinite;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
 @keyframes poke{0%,100%{translate:0 8px}45%{translate:0 0}55%{translate:0 0;scale:.94}}
 @media (min-width:1100px){.say{top:calc(var(--hudh) + 6px)}}
@@ -1115,6 +1138,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .bboss .bb-tag{display:none}
 .skn .sb-t .fd-g{display:inline-flex;align-items:center;gap:3px;margin:0 0 0 10px;font:800 13px/1.3 var(--round);color:#b07a10}
 .skn .fd-g svg{width:16px;height:16px;display:block}
+.sb-t .sp-d svg{display:inline-block;width:16px;height:16px;margin:0 1px;vertical-align:-3px} /* 11/5: the coin and heart inside the words of a hand block's paper */
 /* HP low: the heart beats, the number and what is left of the gauge turn red */
 .hp.low>span>svg{transform-origin:50% 60%;animation:hbeat 1s ease-in-out infinite}
 .hp.crit>span>svg{animation-duration:.55s}
@@ -1656,7 +1680,7 @@ function roadSVG(m,sh,lo,hi,ace){ // on the field the road runs past the block i
   return `<path d="${d}" stroke="${sh}" stroke-width="36" fill="none"/><circle cx="50" cy="${RC}" r="18" fill="${sh}"/><path d="${d}" stroke="${ace?'#fff0a0':'#fffdf8'}" stroke-width="28" fill="none"/><circle cx="50" cy="${RC}" r="14" fill="${ace?'#fff0a0':'#fffdf8'}"/><path d="${d}" stroke="${ace?'#e8a520':sh}" stroke-width="3.5" stroke-dasharray="7 7" fill="none"/>`;
 }
 const tileArt=(t,inTray,at)=>{const a0=tileArt0(t,inTray,at);return !t.sp?a0:(t.sp==='ghost'?`<g opacity=".72">${a0}</g>`:a0)+spIco(t.sp)};
-const tileArt0=(t,inTray,at)=>{const c=t.c|0,ace=t.m===15&&!t.gate;return blockSVG(c)+(inTray?roadSVG(t.m,BLOCKS[c][1],4,96,ace):roadSVG(t.m,BLOCKS[c][1],undefined,undefined,ace))+(t.kg&&!t.e&&HAS_ART?U('portal',14,-6,72,86):'')+(inTray&&t.e&&t.e.k==='foe'?`<g transform="translate(70 30) scale(.5) translate(-50 -50)"><circle cx="50" cy="58" r="34" fill="#fffaf0" stroke="#6b4a3a" stroke-width="5"/><g transform="translate(50 54) scale(.72) translate(-50 -50)">${SPR[t.e.t]||SPR.soldier}</g></g>`:evSVG(t.e,at))+(ace?`<g class="tw">${STAR(86,12,9)}</g><g class="tw tw2">${STAR(13,82,7)}</g>`:'')};
+const tileArt0=(t,inTray,at)=>{const c=t.c|0,ace=t.m===15&&!t.gate;return blockSVG(c)+(inTray?`<g class="rd" style="transform-origin:50% ${RC}%">${roadSVG(t.m,BLOCKS[c][1],4,96,ace)}</g>`:roadSVG(t.m,BLOCKS[c][1],undefined,undefined,ace))+(t.kg&&!t.e&&HAS_ART?U('portal',14,-6,72,86):'')+(inTray&&t.e&&t.e.k==='foe'?`<g transform="translate(70 30) scale(.5) translate(-50 -50)"><circle cx="50" cy="58" r="34" fill="#fffaf0" stroke="#6b4a3a" stroke-width="5"/><g transform="translate(50 54) scale(.72) translate(-50 -50)">${SPR[t.e.t]||SPR.soldier}</g></g>`:evSVG(t.e,at))+(ace?`<g class="tw">${STAR(86,12,9)}</g><g class="tw tw2">${STAR(13,82,7)}</g>`:'')};
 const LOOT=(s,i,glow)=>{const d=`style="--d:-${((i|0)*7%11)/10}s"`;return `<ellipse class="lsh" cx="50" cy="79" rx="15" ry="3.6" fill="rgba(60,30,46,.24)" ${d}/>`+(glow?`<circle class="lglow" cx="50" cy="54" r="23" fill="#fff3a8" ${d}/>`:'')+`<g class="loot" ${d}>${s}</g><g class="tw">${STAR(79,26,6)}</g><g class="tw tw2">${STAR(23,68,4.5)}</g>`}; // treasure: it bobs and twinkles
 function evSVG(e,at){
   if(!e)return '';
@@ -1976,8 +2000,8 @@ let meta=store.get(META)||{};
   if(u.roll==null&&u.undo!=null)u.roll=u.undo; // the old "undo" upgrade becomes the reroll upgrade
   const g=meta.gear||{},own=Array.isArray(g.own)?g.own.filter(id=>GEAR_ID[id]):[],eq={};
   for(const s of SLOTS){const id=g.eq&&g.eq[s.k];eq[s.k]=id&&own.includes(id)&&GEAR_ID[id].s===s.k?id:null}
-  const k=meta.sk&&typeof meta.sk==='object'?meta.sk:null,sown=k&&Array.isArray(k.own)?k.own.filter(id=>SKILL_ID[id]):['turn'],seq=[null,null,null]; // the first climb starts with the quarter turn learned and set
-  if(!k)seq[0]='turn';else [0,1,2].forEach(j=>{const id=k.eq&&k.eq[j];if(id&&sown.includes(id)&&!seq.includes(id))seq[j]=id});
+  const k=meta.sk&&typeof meta.sk==='object'?meta.sk:null,sown=k&&Array.isArray(k.own)?k.own.filter(id=>SKILL_ID[id]):[],seq=[null,null,null]; // the first climb starts with the quarter turn learned and set
+  if(k)[0,1,2].forEach(j=>{const id=k.eq&&k.eq[j];if(id&&sown.includes(id)&&!seq.includes(id))seq[j]=id});
   meta={bank:Math.max(0,meta.bank|0),best:meta.best|0,far:meta.far|0,seen:meta.seen|0,up:Object.fromEntries(UPS.map(x=>[x.k,Math.min(x.max,Math.max(0,u[x.k]|0))])),gear:{own,eq},sk:{own:sown,eq:seq},newg:(Array.isArray(meta.newg)?meta.newg:[]).filter(id=>GEAR_ID[id]),newu:(Array.isArray(meta.newu)?meta.newu:[]).filter(x=>{const [t,k]=String(x).split(':');return t==='sk'?!!SKILL_ID[k]:t==='up'&&UPS.some(v=>v.k===k)})};
 }
 const saveMeta=()=>store.set(META,meta);
@@ -2030,6 +2054,8 @@ function newRun(){
   run.dp=0;
   run.hand=Array.from({length:run.handSize},()=>makeTile(1));
   for(let k=0;k<Math.min(meta.up.ds|0,run.hand.length);k++)run.hand[k].m=15; // the deck upgrade: crosses in hand from the start
+  run.intro=meta.far<3?1:0; /* 11/5: the first climbs: one straight block, and it can only go up */
+  if(run.intro){const up=cellAt(idOf(2,2));if(up){up.rock=0;up.foe=null}run.hand[run.hand.length-1]={m:5,e:null,c:rnd(BLOCKS.length),intro:1}}
   aceNew=run.hand.map((t,k)=>t.m===15?k:-1).filter(k=>k>=0);
   sel=-1;aim=null;hideSay();save();hideSheets();if(drawerAuto)setDrawer(false);render();afterAction();
 }
@@ -2066,7 +2092,7 @@ function grow(){ // rows are made well ahead of the knight and dropped once they
 }
 
 /* ---------- connections: only the open sides of the block the knight stands on, never downward ---------- */
-const exitsOf=i=>{const c=cellAt(i);return !c?0:c.start?11:c.tile?c.tile.m:0};
+const exitsOf=i=>{const c=cellAt(i);return !c?0:c.start?(run.intro?1:11):c.tile?c.tile.m:0};
 function frontier(){
   const map=new Map(),m=exitsOf(run.at)&~DOWN,here=cellAt(run.at),jump=!!(here&&here.tile&&here.tile.sp==='spring');
   map.rock=new Map(); // obstacles next in line: only a ghost block goes there
@@ -2104,8 +2130,8 @@ function gateFrom(i,m){ // the captain's gap that an open side of this block lea
   }
   return -1;
 }
-const fits=(t,j,F)=>!!t&&(F.has(j)?!!(t.m&F.get(j)):t.sp==='ghost'&&!!F.rock&&F.rock.has(j)&&!!(t.m&F.rock.get(j)));
-const anyFit=(t,F)=>{if(!t)return false;for(const j of F.keys())if(t.m&F.get(j))return true;if(t.sp==='ghost'&&F.rock)for(const [j,b] of F.rock)if(t.m&b)return true;return false};
+const fits=(t,j,F)=>!!t&&!(run&&run.intro&&!t.intro)&&(F.has(j)?!!(t.m&F.get(j)):t.sp==='ghost'&&!!F.rock&&F.rock.has(j)&&!!(t.m&F.rock.get(j)));
+const anyFit=(t,F)=>{if(!t||(run&&run.intro&&!t.intro))return false;for(const j of F.keys())if(t.m&F.get(j))return true;if(t.sp==='ghost'&&F.rock)for(const [j,b] of F.rock)if(t.m&b)return true;return false};
 
 /* ---------- rendering ---------- */
 const app=$('app'),view=$('view'),board=$('board'),handEl=$('hand'),rollBtn=$('roll');
@@ -2201,7 +2227,8 @@ function renderHand(F){
   F=F||frontier();
   handEl.style.setProperty('--hs',run.hand.length);
   const can=aim&&aim.kind!=='rock'?targets(aim.kind):null;
-  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${can?(can.includes(i)?' aim':' dull'):anyFit(t,F)?'':' dull'}${t.m===15?' ace':''}${aceNew.includes(i)?' acein':''}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}"><span class="blk">${svg(tileArt(t,true))}</span>${slotLabel(t)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('')+'<div class="slot lock" aria-hidden="true"></div>'.repeat(Math.max(0,6-run.hand.length));
+  const tA=!!(can&&run.sk&&run.sk[aim.k]&&run.sk[aim.k].id==='turn'),tOk=(t,i)=>tA&&can.includes(i)&&rot(t.m)!==t.m; /* 11/5: くるっと回す: which ones turn, and how */
+  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${can?(can.includes(i)?' aim':' dull'):anyFit(t,F)?'':' dull'}${t.m===15?' ace':''}${aceNew.includes(i)?' acein':''}${tOk(t,i)?' turnable':''}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}"><span class="blk">${svg(tileArt(t,true))}${tOk(t,i)?`<i class="turnmk" aria-hidden="true">${turnArrow()}</i>`:''}</span>${slotLabel(t)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('')+'<div class="slot lock" aria-hidden="true"></div>'.repeat(Math.max(0,6-run.hand.length));
   if(aceNew.length){const a=aceNew;aceNew=[];setTimeout(()=>a.forEach(aceBurst),40)}
 }
 let preview=0; // the hp the held block would cost
@@ -2245,12 +2272,22 @@ function markStuck(F){
 }
 function render(){const F=frontier();renderStats();renderBoard(F);renderHand(F);markStuck(F);hintFinger(F)}
 function hintFinger(F){ // the very first climb: a finger on a block that fits, then on where it goes
-  document.querySelectorAll('.finger').forEach(x=>x.remove());
+  document.querySelectorAll('.finger,.upcue').forEach(x=>x.remove());
   if(meta.far>=3||!run||run.phase!=='build'||busy||aim)return;
+  upCue();
   let el=null;
   if(sel<0){let k=run.hand.findIndex(t=>anyFit(t,F)&&!(t.e&&t.e.k==='foe'));if(k<0)k=run.hand.findIndex(t=>anyFit(t,F));el=k>=0?handEl.children[k]:null}
   else for(const j of F.keys())if(fits(run.hand[sel],j,F)){el=elOf(j);break}
   if(el)el.insertAdjacentHTML('beforeend','<span class="finger" aria-hidden="true">👆</span>');
+}
+function upCue(){ /* 11/5: the first climbs: chevrons rise over the knight's head, so the way is UP (no words) */
+  const h=elOf(run.at);if(!h)return;
+  const c=document.createElement('div');c.className='upcue';c.setAttribute('aria-hidden','true');
+  const w=h.offsetWidth,ht=h.offsetHeight;
+  c.style.cssText=`left:${h.offsetLeft}px;top:${h.offsetTop-ht*1.55}px;width:${w}px;height:${ht*1.5}px`;
+  const v=y=>{const d=`M14 ${y+15}L30 ${y}L46 ${y+15}`;return `<g class="cv"><path class="o" d="${d}"/><path class="i" d="${d}"/></g>`};
+  c.innerHTML=`<svg viewBox="0 0 60 100">${v(70)}${v(44)}${v(18)}</svg>`;
+  board.appendChild(c);
 }
 function placeHero(i,instant){
   const el=elOf(i);if(!el)return;
@@ -2389,9 +2426,10 @@ function tapSlot(i){
   if(aim){if(aim.kind!=='rock'&&targets(aim.kind).includes(i))useSkill(aim.k,i);else flashSlot(i);return}
   if(pick>=0||fpick>=0)hidePick();
   const t=run.hand[i];if(!t)return;
-  if(sel!==i&&!anyFit(t,frontier()))return flashSlot(i);
+  if(sel!==i&&!anyFit(t,frontier())){if(hpick===i)hidePick();else slotPaper(i);return flashSlot(i)} /* 11/5: it cannot go anywhere now, but what is on it still shows */
   sel=sel===i?-1:i;
   renderHand();refreshMarks();setPreview(-1);hintFinger(frontier());
+  if(sel===i)slotPaper(i);else if(hpick>=0)hidePick();
 }
 function tapCell(i){
   FXH.emit('tap',{i});
@@ -2399,13 +2437,15 @@ function tapCell(i){
   if(pick>=0)return closePick();
   const e=foeAt(i),F=frontier();
   if(e&&!(sel>=0&&fits(run.hand[sel],i,F))){if(fpick>=0&&fsel.has(i))return hidePick();return showFoe(i,e)} // a toy: its paper (again: closed)
+  if(!e){const c=cellAt(i),h=boardPaper(i); /* 11/5: a thing on the field: its paper (again: closed) */
+    if(h&&!(sel>=0&&(fits(run.hand[sel],i,F)||(c&&!c.rock&&!c.tile&&F.has(i))))){if(fpick>=0&&fsel.has(i))return hidePick();return showThing(i,h)}}
   if(fpick>=0)hidePick();
   if(sel<0){if(F.has(i))hop();return}
   place(i,sel);
 }
 function place(j,hi){
   if(busy||!run||run.phase!=='build')return;
-  if(pick>=0||fpick>=0)hidePick(); // a skill's paper or a toy's paper closes (a drag does not pass the slots)
+  if(pick>=0||fpick>=0||hpick>=0)hidePick(); // a skill's paper or a toy's paper closes (a drag does not pass the slots)
   const t=run.hand[hi];
   if(!t)return;
   const F=frontier();if(!fits(t,j,F)){SND('nope');flashCell(j);flashSlot(hi);return}
@@ -2600,7 +2640,7 @@ function resolve(i){
 function reroll(){
   if(busy||!run||run.phase!=='build'||run.rolls<=0)return;SND('dice');
   const lv=lvOf(rowOf(run.at));
-  run.hand=run.hand.map(()=>makeTile(lv));
+  if(hpick>=0)hidePick();run.intro=0;run.hand=run.hand.map(()=>makeTile(lv));
   aceNew=run.hand.map((t,k)=>t.m===15?k:-1).filter(k=>k>=0);
   run.rolls--;sel=-1;aim=null;hidePick();render();
   [...handEl.children].forEach(s=>s.classList.add('deal'));
@@ -2653,7 +2693,7 @@ function renderSkills(){
 }
 let pick=-1; // the skill whose note is pinned
 let fpick=-1;const fsel=new Set(); // the toy whose paper is open, and its panels (the captain has four)
-function hidePick(){pick=-1;if(fpick>=0||fsel.size){fpick=-1;fsel.clear();document.querySelectorAll('.cell.fsel').forEach(x=>x.classList.remove('fsel'))}const el=$('skbar');if(el)el.hidden=true}
+function hidePick(){pick=-1;hpick=-1;if(fpick>=0||fsel.size){fpick=-1;fsel.clear();document.querySelectorAll('.cell.fsel').forEach(x=>x.classList.remove('fsel'))}const el=$('skbar');if(el)el.hidden=true}
 function foeAt(i){ // the toy a tap on this panel means: one standing here, one riding a block, or the captain of this square
   const c=cellAt(i);if(!c)return null;if(c.foe)return c.foe;
   const t=c.tile;if(!t)return null;
@@ -2661,13 +2701,72 @@ function foeAt(i){ // the toy a tap on this panel means: one standing here, one 
   return t.e&&t.e.k==='foe'?t.e:null;
 }
 const FOE_DO={archer:r=>`${r}マス以内に矢をうつ`,mage:r=>`${r}マス以内に魔法（守りは効かない）`,clown:()=>'近くに毒の水たまりをまく',mason:()=>'近くにかべを作る'};
+function foeWhat(e,s){ /* what a toy does, costs and gives: the field (s: it shoots from where it stands) and the hand share it */
+  const hp=x=>`<i class="st-h"><b class="ic"></b>${x}</i>`,d=dmgFor(e);
+  return (s&&FOE_DO[e.t]?`<span class="fd-do">${FOE_DO[e.t](s.rng)}</span>`:'')+(QK[e.t]?`<span class="fd-do">${QK[e.t].d}</span>`:'')+(d?`<span class="fd-c">戦うと${hp('-'+nf(d))}</span>`:'戦ってもダメージなし')+`<span class="fd-g">たおすと${ico(SPR.coin)}+${nf(gainOf(e.gold))}${(QK[e.t]||{}).flee?`（にげると+${nf(gainOf(Math.ceil(e.gold/2)))}）`:''}</span>`;
+}
+function foePaper(e,what){
+  const hp=x=>`<i class="st-h"><b class="ic"></b>${x}</i>`;
+  return `<span class="sb-ic fd-ic${e.boss||e.king?'':' sm'}">${svg(SPR[e.t]||SPR.soldier)}</span><div class="sb-t"><b><span class="fd-n">${e.name}</span><span class="fd-st"><i class="st-a"><b class="ic"></b>${nf(e.atk)}</i>${hp(nf(e.hp))}</span></b><span>${what}</span></div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
+}
+let hpick=-1; /* 11/5: the hand block whose paper is open */
+function blockWhat(t){ /* what rides on a block (gear, gold, candy) or what a special block does; a plain one: null */
+  const e=t&&t.e,g=e&&gearOf(e);
+  if(g){const sl=SLOTS.find(x=>x.k===g.s);return {ic:ico(g.art),n:`${g.n}<em class="ct">${sl?sl.n:''} ${'★'.repeat(g.r)}</em>`,
+    d:owned(g.id)?`もう持っている：のると${ico(SPR.coin)}+${nf(gainOf(dupGold(g)))}`:`のると手に入る${gearDesc(g)?'・'+gearDesc(g):''}`}}
+  if(e&&e.k==='coin')return {ic:ico(SPR.coin),n:'金貨',d:`のると${ico(SPR.coin)}+${nf(e.v)}`};
+  if(e&&e.k==='potion')return {ic:ico(SPR.potion),n:'キャンディ',d:`のると${ico(SPR.heart)}+${nf(e.v)}`};
+  if(t&&t.sp&&SP_ID[t.sp])return {ic:svg(spBlock(t.sp)),n:SP_ID[t.sp][2],d:SP_ID[t.sp][4]};
+  return null;
+}
+function thingPaper(ic,n,ds){
+  return `<span class="sb-ic">${ic}</span><div class="sb-t"><b>${n}</b>${ds.filter(Boolean).map(d=>`<span class="sp-d">${d}</span>`).join('')}</div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
+}
+/* 11/5: the things on the field. only what this knight has to deal with them is told */
+const OB_N={grass:'家',forest:'木',lake:'池',snow:'雪だるま',castle:'城のかべ'};
+const setSk=id=>!!(run&&run.sk&&run.sk.some(x=>x&&x.id===id));
+function floorWhat(c){ /* poison, a marble, coins lying on a panel */
+  const a=[];
+  if(c.psn)a.push({ic:svg(SPR.psn),n:'毒の水たまり',d:`通ると毒：3歩のあいだ ${ico(SPR.heart)}-${nf(c.psn)}ずつ`,x:setSk('clear')?'おかたづけで消せる':''});
+  if(c.gem)a.push({ic:ico(SPR.gem),n:'ビー玉',d:`通ると${ico(SPR.coin)}+${nf(gainOf(c.gem))}`,x:setSk('magnet')?'じしゃくで集められる':''});
+  if(c.coin)a.push({ic:ico(SPR.coin),n:'金貨',d:`通ると${ico(SPR.coin)}+${nf(gainOf(c.coin))}`,x:setSk('magnet')?'じしゃくで集められる':''});
+  return a;
+}
+function boardPaper(i){ /* the paper for a tap on panel i (a toy has its own), or '' */
+  const c=cellAt(i);if(!c||c.start)return '';
+  const fl=floorWhat(c),more=fl.map(x=>x.n+'：'+x.d);
+  if(c.rock===2){const row=run.rows[rowOf(i)],g=row&&row.find(x=>x.tile&&x.tile.anc),who=g&&g.tile.kg?'王さま':'大将';
+    return thingPaper(svg(SPR.fence),`${who}の柵`,['こわせない',`通れるのは ${who}のマスだけ`])}
+  if(c.rock){const a=areaOf(rowOf(i)).k,fix=[];
+    if((meta.up.sg|0)>0)fix.push('幽霊なら置ける');
+    if((meta.up.sh|0)>0)fix.push('ハンマーでこわせる');
+    if(setSk('clear'))fix.push('おかたづけでどかせる');
+    return c.rock===3?thingPaper(svg(SPR.brick),'かべ職人のかべ',['ここには積み木を置けない',fix.join('・')])
+      :thingPaper(svg(SPR.ob[a]||SPR.ob.grass),OB_N[a]||'障害物',['ここには積み木を置けない',fix.join('・')])}
+  if(c.tile){const w=blockWhat(c.tile);
+    if(w)return thingPaper(w.ic,w.n,[w.d,...more]);
+    if(!fl.length)return '';}
+  if(!fl.length)return '';
+  const f=fl[0];return thingPaper(f.ic,f.n,[f.d,...more.slice(1),f.x]);
+}
+function showThing(i,h){
+  hidePick();fpick=i;fsel.add(i);const c0=elOf(i);if(c0)c0.classList.add('fsel');
+  const el=$('skbar');el.innerHTML=h;el.hidden=false;
+}
+function slotPaper(i){ /* 11/5: a tap on a hand block that carries something: what it is */
+  const t=run.hand[i],e=t&&t.e,el=$('skbar');if(!t||!el)return;
+  let h='';
+  if(e&&e.k==='foe')h=foePaper(e,foeWhat(e,null));
+  else{const w=blockWhat(t);if(!w){if(hpick>=0)hidePick();return}h=thingPaper(w.ic,w.n,[w.d])}
+  hidePick();hpick=i;el.innerHTML=h;el.hidden=false;
+}
 function showFoe(i,e){
   hidePick();fpick=i;const c=cellAt(i),pz=c.tile&&c.tile.pz;(pz||[i]).forEach(x=>{fsel.add(x);const el=elOf(x);if(el)el.classList.add('fsel')});
   const hp=x=>`<i class="st-h"><b class="ic"></b>${x}</i>`;
   let what;
-  {const s=c.foe&&SHOOTERS[e.t],d=dmgFor(e);what=(s&&FOE_DO[e.t]?`<span class="fd-do">${FOE_DO[e.t](s.rng)}</span>`:'')+(QK[e.t]?`<span class="fd-do">${QK[e.t].d}</span>`:'')+(d?`<span class="fd-c">戦うと${hp('-'+nf(d))}</span>`:'戦ってもダメージなし')+`<span class="fd-g">たおすと${ico(SPR.coin)}+${nf(gainOf(e.gold))}${(QK[e.t]||{}).flee?`（にげると+${nf(gainOf(Math.ceil(e.gold/2)))}）`:''}</span>`}
+  what=foeWhat(e,c.foe&&SHOOTERS[e.t]);
   const el=$('skbar');
-  el.innerHTML=`<span class="sb-ic fd-ic${e.boss||e.king?'':' sm'}">${svg(SPR[e.t]||SPR.soldier)}</span><div class="sb-t"><b><span class="fd-n">${e.name}</span><span class="fd-st"><i class="st-a"><b class="ic"></b>${nf(e.atk)}</i>${hp(nf(e.hp))}</span></b><span>${what}</span></div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
+  el.innerHTML=foePaper(e,what);
   el.hidden=false;
 }
 FXH.cells.push(i=>fsel.has(i)?{cls:'fsel'}:null);
@@ -2702,7 +2801,7 @@ function targets(kind){ // the hand blocks (or the cells) a skill can be pointed
   if(kind==='rock'){const a=[];for(let r=rowOf(run.at);r<=win.hi;r++)for(let c=0;c<W;c++){const x=cellAt(idOf(r,c));if(x&&(x.rock===1||x.rock===3||x.foe||(x.psn&&!x.tile)))a.push(idOf(r,c))}return a}
   return run.hand.map((t,i)=>{const foe=!!(t&&t.e&&t.e.k==='foe');return t&&(kind==='tile'||(kind==='free'?!t.e&&!t.sp:foe))?i:-1}).filter(i=>i>=0);
 }
-const AIM_SAY={turn:'回す積み木をえらぶ',cross:'十字にする積み木をえらぶ',clear:'どかす物を盤でえらぶ',bugle:'追い出す敵の積み木をえらぶ',treasure:'装備をのせる積み木をえらぶ'};
+const AIM_SAY={turn:'右に回す積み木をえらぶ',cross:'十字にする積み木をえらぶ',clear:'どかす物を盤でえらぶ',bugle:'追い出す敵の積み木をえらぶ',treasure:'装備をのせる積み木をえらぶ'};
 const NO_AIM={rock:'近くに どかせる物がない',foe:'手持ちに敵がいない',free:'何ものっていない積み木がない',tile:'積み木がない'};
 function tapSkill(k){
   if(busy||!run||run.phase!=='build')return;
@@ -2712,10 +2811,22 @@ function tapSkill(k){
   if(s.cd<=0&&d.aim){if(targets(d.aim).length)aim={k,kind:d.aim};else note=NO_AIM[d.aim]}
   render();showPick(k,note);
 }
+function turnArrow(){ /* a right-hand turn: an arc over the top with its head at the bottom right, cream on a wood outline */
+  const a='M20 50A30 30 0 1 1 71.2 71.2',h='62 80 79 79 64 63';
+  return `<svg viewBox="0 0 100 100"><path d="${a}" fill="none" stroke="#74401f" stroke-width="17" stroke-linecap="round"/><polygon points="${h}" fill="#74401f" stroke="#74401f" stroke-width="8" stroke-linejoin="round"/>`+
+    `<path d="${a}" fill="none" stroke="#fff6e6" stroke-width="9" stroke-linecap="round"/><polygon points="${h}" fill="#fff6e6" stroke="#fff6e6" stroke-width="2" stroke-linejoin="round"/></svg>`;
+}
+const turnFx=x=>()=>{ /* 11/5: the road comes round from where it was, a quarter to the right; a big arrow spins over it */
+  const el=handEl.children[x];if(!el)return;
+  const g=el.querySelector('.rd'),b=el.querySelector('.blk');
+  if(g){g.classList.remove('turning');void g.getBoundingClientRect();g.classList.add('turning')}
+  if(b){b.insertAdjacentHTML('beforeend',`<i class="turnfx" aria-hidden="true">${turnArrow()}</i>`);const f=b.lastChild;setTimeout(()=>f.remove(),700)}
+  setTimeout(()=>{const a=mid(el);if(a)bits(a.x,a.y-a.w*.1,6,['#fff','#ffe58a'],a.w*.4,4)},380);
+};
 const dealFx=x=>()=>{const el=handEl.children[x],a=mid(el);if(!el)return;el.classList.add('deal');if(a)bits(a.x,a.y-a.w*.1,6,['#fff','#ffe58a'],a.w*.4,4)};
 function visible(f){for(let r=Math.max(win.lo,rowOf(run.at));r<=win.hi;r++)for(let c=0;c<W;c++){const i=idOf(r,c),x=cellAt(i);if(x)f(i,x)}}
 const SK_DO={ // each changes the climb and gives back what to show once it is drawn, or words when it cannot be used now
-  turn:x=>{const t=run.hand[x];if(rot(t.m)===t.m)return '回しても同じ形';t.m=rot(t.m);return dealFx(x)},
+  turn:x=>{const t=run.hand[x];if(rot(t.m)===t.m)return '回しても同じ形';t.m=rot(t.m);return turnFx(x)},
   cross:x=>{if(run.hand[x].m===15)return 'もう十字の積み木';run.hand[x].m=15;aceNew=[x];return null},
   bugle:x=>{run.hand[x].e=null;return dealFx(x)},
   treasure:(x,lv)=>{run.hand[x].e=makeGear(SLOTS[rnd(3)].k,lv);return dealFx(x)},
@@ -2767,6 +2878,7 @@ function useSkill(k,x){
   if(!run||!run.sk||!run.sk[k]||run.sk[k].cd>0)return; /* 11/5: resting, or nothing in that slot */
   const s=run.sk[k],d=SKILL_ID[s.id],lv=lvOf(rowOf(run.at));
   if(!d||(d.aim&&!targets(d.aim).includes(x)))return; /* pointed at something it cannot take */
+  run.intro=0; /* 11/5: a skill ends the first-step lesson */
   aim=null;hidePick();
   const shown=SK_DO[d.id](x>=0?x:lv,lv);
   if(typeof shown==='string'){render();return say(shown)}
@@ -3192,6 +3304,7 @@ FXH.add('render',()=>{ // remember the next captain once his square is on the sc
   if(a.bottom>top+a.height*.4&&a.top<v.bottom){meta.seen=g;saveMeta()}
 });
 
+FXH.add('step',()=>{document.querySelectorAll('.upcue').forEach(x=>x.remove());if(run)run.intro=0}); /* 11/5: the chevrons go once the knight walks */
 const ICON_UP_F=()=>SPR.sword+'<circle cx="66" cy="66" r="11" fill="#2f9e5f" stroke="#fff" stroke-width="3"/><path d="M66 71V61M61 65.5l5-5 5 5" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
 const affordable=()=>{const b=meta.bank;return (meta.newu||[]).length>0||UPS.some(u=>meta.up[u.k]<u.max&&u.cost(meta.up[u.k])<=b&&!isLocked('up',u.k))||SKILLS.some(k=>!meta.sk.own.includes(k.id)&&k.cost<=b&&!isLocked('sk',k.id))};
 let cuJobs=[];
