@@ -1999,8 +1999,8 @@ let meta=store.get(META)||{};
   if(u.roll==null&&u.undo!=null)u.roll=u.undo; // the old "undo" upgrade becomes the reroll upgrade
   const g=meta.gear||{},own=Array.isArray(g.own)?g.own.filter(id=>GEAR_ID[id]):[],eq={};
   for(const s of SLOTS){const id=g.eq&&g.eq[s.k];eq[s.k]=id&&own.includes(id)&&GEAR_ID[id].s===s.k?id:null}
-  const k=meta.sk&&typeof meta.sk==='object'?meta.sk:null,sown=k&&Array.isArray(k.own)?k.own.filter(id=>SKILL_ID[id]):['turn'],seq=[null,null,null]; // the first climb starts with the quarter turn learned and set
-  if(!k)seq[0]='turn';else [0,1,2].forEach(j=>{const id=k.eq&&k.eq[j];if(id&&sown.includes(id)&&!seq.includes(id))seq[j]=id});
+  const k=meta.sk&&typeof meta.sk==='object'?meta.sk:null,sown=k&&Array.isArray(k.own)?k.own.filter(id=>SKILL_ID[id]):[],seq=[null,null,null]; // the first climb starts with the quarter turn learned and set
+  if(k)[0,1,2].forEach(j=>{const id=k.eq&&k.eq[j];if(id&&sown.includes(id)&&!seq.includes(id))seq[j]=id});
   meta={bank:Math.max(0,meta.bank|0),best:meta.best|0,far:meta.far|0,seen:meta.seen|0,up:Object.fromEntries(UPS.map(x=>[x.k,Math.min(x.max,Math.max(0,u[x.k]|0))])),gear:{own,eq},sk:{own:sown,eq:seq},newg:(Array.isArray(meta.newg)?meta.newg:[]).filter(id=>GEAR_ID[id]),newu:(Array.isArray(meta.newu)?meta.newu:[]).filter(x=>{const [t,k]=String(x).split(':');return t==='sk'?!!SKILL_ID[k]:t==='up'&&UPS.some(v=>v.k===k)})};
 }
 const saveMeta=()=>store.set(META,meta);
@@ -2053,6 +2053,8 @@ function newRun(){
   run.dp=0;
   run.hand=Array.from({length:run.handSize},()=>makeTile(1));
   for(let k=0;k<Math.min(meta.up.ds|0,run.hand.length);k++)run.hand[k].m=15; // the deck upgrade: crosses in hand from the start
+  run.intro=meta.far<3?1:0; /* 11/5: the first climbs: one straight block, and it can only go up */
+  if(run.intro){const up=cellAt(idOf(2,2));if(up){up.rock=0;up.foe=null}run.hand[run.hand.length-1]={m:5,e:null,c:rnd(BLOCKS.length),intro:1}}
   aceNew=run.hand.map((t,k)=>t.m===15?k:-1).filter(k=>k>=0);
   sel=-1;aim=null;hideSay();save();hideSheets();if(drawerAuto)setDrawer(false);render();afterAction();
 }
@@ -2089,7 +2091,7 @@ function grow(){ // rows are made well ahead of the knight and dropped once they
 }
 
 /* ---------- connections: only the open sides of the block the knight stands on, never downward ---------- */
-const exitsOf=i=>{const c=cellAt(i);return !c?0:c.start?11:c.tile?c.tile.m:0};
+const exitsOf=i=>{const c=cellAt(i);return !c?0:c.start?(run.intro?1:11):c.tile?c.tile.m:0};
 function frontier(){
   const map=new Map(),m=exitsOf(run.at)&~DOWN,here=cellAt(run.at),jump=!!(here&&here.tile&&here.tile.sp==='spring');
   map.rock=new Map(); // obstacles next in line: only a ghost block goes there
@@ -2127,8 +2129,8 @@ function gateFrom(i,m){ // the captain's gap that an open side of this block lea
   }
   return -1;
 }
-const fits=(t,j,F)=>!!t&&(F.has(j)?!!(t.m&F.get(j)):t.sp==='ghost'&&!!F.rock&&F.rock.has(j)&&!!(t.m&F.rock.get(j)));
-const anyFit=(t,F)=>{if(!t)return false;for(const j of F.keys())if(t.m&F.get(j))return true;if(t.sp==='ghost'&&F.rock)for(const [j,b] of F.rock)if(t.m&b)return true;return false};
+const fits=(t,j,F)=>!!t&&!(run&&run.intro&&!t.intro)&&(F.has(j)?!!(t.m&F.get(j)):t.sp==='ghost'&&!!F.rock&&F.rock.has(j)&&!!(t.m&F.rock.get(j)));
+const anyFit=(t,F)=>{if(!t||(run&&run.intro&&!t.intro))return false;for(const j of F.keys())if(t.m&F.get(j))return true;if(t.sp==='ghost'&&F.rock)for(const [j,b] of F.rock)if(t.m&b)return true;return false};
 
 /* ---------- rendering ---------- */
 const app=$('app'),view=$('view'),board=$('board'),handEl=$('hand'),rollBtn=$('roll');
@@ -2634,7 +2636,7 @@ function resolve(i){
 function reroll(){
   if(busy||!run||run.phase!=='build'||run.rolls<=0)return;SND('dice');
   const lv=lvOf(rowOf(run.at));
-  run.hand=run.hand.map(()=>makeTile(lv));
+  run.intro=0;run.hand=run.hand.map(()=>makeTile(lv));
   aceNew=run.hand.map((t,k)=>t.m===15?k:-1).filter(k=>k>=0);
   run.rolls--;sel=-1;aim=null;hidePick();render();
   [...handEl.children].forEach(s=>s.classList.add('deal'));
@@ -2813,6 +2815,7 @@ function useSkill(k,x){
   if(!run||!run.sk||!run.sk[k]||run.sk[k].cd>0)return; /* 11/5: resting, or nothing in that slot */
   const s=run.sk[k],d=SKILL_ID[s.id],lv=lvOf(rowOf(run.at));
   if(!d||(d.aim&&!targets(d.aim).includes(x)))return; /* pointed at something it cannot take */
+  run.intro=0; /* 11/5: a skill ends the first-step lesson */
   aim=null;hidePick();
   const shown=SK_DO[d.id](x>=0?x:lv,lv);
   if(typeof shown==='string'){render();return say(shown)}
@@ -3238,7 +3241,7 @@ FXH.add('render',()=>{ // remember the next captain once his square is on the sc
   if(a.bottom>top+a.height*.4&&a.top<v.bottom){meta.seen=g;saveMeta()}
 });
 
-FXH.add('step',()=>document.querySelectorAll('.upcue').forEach(x=>x.remove())); /* 11/5: the chevrons go once the knight walks */
+FXH.add('step',()=>{document.querySelectorAll('.upcue').forEach(x=>x.remove());if(run)run.intro=0}); /* 11/5: the chevrons go once the knight walks */
 const ICON_UP_F=()=>SPR.sword+'<circle cx="66" cy="66" r="11" fill="#2f9e5f" stroke="#fff" stroke-width="3"/><path d="M66 71V61M61 65.5l5-5 5 5" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
 const affordable=()=>{const b=meta.bank;return (meta.newu||[]).length>0||UPS.some(u=>meta.up[u.k]<u.max&&u.cost(meta.up[u.k])<=b&&!isLocked('up',u.k))||SKILLS.some(k=>!meta.sk.own.includes(k.id)&&k.cost<=b&&!isLocked('sk',k.id))};
 let cuJobs=[];
