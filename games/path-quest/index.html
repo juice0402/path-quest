@@ -219,6 +219,18 @@ button{font:inherit;color:inherit}
 .slot.dull{opacity:.45;filter:saturate(.4)}
 .slot.none{box-sizing:border-box}
 .slot.deal{animation:deal .3s ease-out backwards}
+/* 11/5: くるっと回す: only the road turns, around the top face's centre */
+.slot .rd{transform-box:view-box}
+.slot.turnable .rd{animation:rdprev 1.8s ease-in-out infinite}
+@keyframes rdprev{0%,18%{transform:rotate(0);opacity:1}52%,78%{transform:rotate(90deg);opacity:1}88%{transform:rotate(90deg);opacity:0}89%{transform:rotate(0);opacity:0}100%{transform:rotate(0);opacity:1}}
+.slot .rd.turning{animation:rdturn .5s cubic-bezier(.3,1.45,.55,1) both}
+@keyframes rdturn{from{transform:rotate(-90deg)}to{transform:rotate(0)}}
+.slot .turnmk{position:absolute;right:-12%;top:-14%;width:50%;height:50%;z-index:3;pointer-events:none;filter:drop-shadow(0 2px 0 rgba(58,28,8,.35));animation:tmbob 1.8s ease-in-out infinite}
+.slot .turnmk svg,.slot .turnfx svg{width:100%;height:100%;display:block;overflow:visible}
+@keyframes tmbob{0%,18%,100%{transform:rotate(0) scale(1)}52%,78%{transform:rotate(20deg) scale(1.1)}}
+.slot .turnfx{position:absolute;inset:-4%;z-index:3;pointer-events:none;opacity:0;animation:tfx .6s ease-out forwards}
+@keyframes tfx{0%{opacity:0;transform:rotate(-70deg) scale(.75)}25%{opacity:.95}100%{opacity:0;transform:rotate(25deg) scale(1.05)}}
+@media (prefers-reduced-motion:reduce){.slot.turnable .rd,.slot .turnmk{animation:none}}
 .slot.deal:nth-child(2){animation-delay:.04s}.slot.deal:nth-child(3){animation-delay:.08s}.slot.deal:nth-child(4){animation-delay:.12s}.slot.deal:nth-child(5){animation-delay:.16s}.slot.deal:nth-child(6){animation-delay:.2s}
 @keyframes deal{from{transform:translateY(40%) scale(.7);opacity:0}}
 .dice{position:relative;flex:none;width:var(--slot);height:var(--slot);padding:0;border:0;border-radius:3px;background:var(--accent);box-shadow:0 4px 0 var(--accent-deep);cursor:pointer}
@@ -1667,7 +1679,7 @@ function roadSVG(m,sh,lo,hi,ace){ // on the field the road runs past the block i
   return `<path d="${d}" stroke="${sh}" stroke-width="36" fill="none"/><circle cx="50" cy="${RC}" r="18" fill="${sh}"/><path d="${d}" stroke="${ace?'#fff0a0':'#fffdf8'}" stroke-width="28" fill="none"/><circle cx="50" cy="${RC}" r="14" fill="${ace?'#fff0a0':'#fffdf8'}"/><path d="${d}" stroke="${ace?'#e8a520':sh}" stroke-width="3.5" stroke-dasharray="7 7" fill="none"/>`;
 }
 const tileArt=(t,inTray,at)=>{const a0=tileArt0(t,inTray,at);return !t.sp?a0:(t.sp==='ghost'?`<g opacity=".72">${a0}</g>`:a0)+spIco(t.sp)};
-const tileArt0=(t,inTray,at)=>{const c=t.c|0,ace=t.m===15&&!t.gate;return blockSVG(c)+(inTray?roadSVG(t.m,BLOCKS[c][1],4,96,ace):roadSVG(t.m,BLOCKS[c][1],undefined,undefined,ace))+(t.kg&&!t.e&&HAS_ART?U('portal',14,-6,72,86):'')+(inTray&&t.e&&t.e.k==='foe'?`<g transform="translate(70 30) scale(.5) translate(-50 -50)"><circle cx="50" cy="58" r="34" fill="#fffaf0" stroke="#6b4a3a" stroke-width="5"/><g transform="translate(50 54) scale(.72) translate(-50 -50)">${SPR[t.e.t]||SPR.soldier}</g></g>`:evSVG(t.e,at))+(ace?`<g class="tw">${STAR(86,12,9)}</g><g class="tw tw2">${STAR(13,82,7)}</g>`:'')};
+const tileArt0=(t,inTray,at)=>{const c=t.c|0,ace=t.m===15&&!t.gate;return blockSVG(c)+(inTray?`<g class="rd" style="transform-origin:50% ${RC}%">${roadSVG(t.m,BLOCKS[c][1],4,96,ace)}</g>`:roadSVG(t.m,BLOCKS[c][1],undefined,undefined,ace))+(t.kg&&!t.e&&HAS_ART?U('portal',14,-6,72,86):'')+(inTray&&t.e&&t.e.k==='foe'?`<g transform="translate(70 30) scale(.5) translate(-50 -50)"><circle cx="50" cy="58" r="34" fill="#fffaf0" stroke="#6b4a3a" stroke-width="5"/><g transform="translate(50 54) scale(.72) translate(-50 -50)">${SPR[t.e.t]||SPR.soldier}</g></g>`:evSVG(t.e,at))+(ace?`<g class="tw">${STAR(86,12,9)}</g><g class="tw tw2">${STAR(13,82,7)}</g>`:'')};
 const LOOT=(s,i,glow)=>{const d=`style="--d:-${((i|0)*7%11)/10}s"`;return `<ellipse class="lsh" cx="50" cy="79" rx="15" ry="3.6" fill="rgba(60,30,46,.24)" ${d}/>`+(glow?`<circle class="lglow" cx="50" cy="54" r="23" fill="#fff3a8" ${d}/>`:'')+`<g class="loot" ${d}>${s}</g><g class="tw">${STAR(79,26,6)}</g><g class="tw tw2">${STAR(23,68,4.5)}</g>`}; // treasure: it bobs and twinkles
 function evSVG(e,at){
   if(!e)return '';
@@ -2212,7 +2224,8 @@ function renderHand(F){
   F=F||frontier();
   handEl.style.setProperty('--hs',run.hand.length);
   const can=aim&&aim.kind!=='rock'?targets(aim.kind):null;
-  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${can?(can.includes(i)?' aim':' dull'):anyFit(t,F)?'':' dull'}${t.m===15?' ace':''}${aceNew.includes(i)?' acein':''}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}"><span class="blk">${svg(tileArt(t,true))}</span>${slotLabel(t)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('')+'<div class="slot lock" aria-hidden="true"></div>'.repeat(Math.max(0,6-run.hand.length));
+  const tA=!!(can&&run.sk&&run.sk[aim.k]&&run.sk[aim.k].id==='turn'),tOk=(t,i)=>tA&&can.includes(i)&&rot(t.m)!==t.m; /* 11/5: くるっと回す: which ones turn, and how */
+  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${can?(can.includes(i)?' aim':' dull'):anyFit(t,F)?'':' dull'}${t.m===15?' ace':''}${aceNew.includes(i)?' acein':''}${tOk(t,i)?' turnable':''}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}"><span class="blk">${svg(tileArt(t,true))}${tOk(t,i)?`<i class="turnmk" aria-hidden="true">${turnArrow()}</i>`:''}</span>${slotLabel(t)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('')+'<div class="slot lock" aria-hidden="true"></div>'.repeat(Math.max(0,6-run.hand.length));
   if(aceNew.length){const a=aceNew;aceNew=[];setTimeout(()=>a.forEach(aceBurst),40)}
 }
 let preview=0; // the hp the held block would cost
@@ -2723,7 +2736,7 @@ function targets(kind){ // the hand blocks (or the cells) a skill can be pointed
   if(kind==='rock'){const a=[];for(let r=rowOf(run.at);r<=win.hi;r++)for(let c=0;c<W;c++){const x=cellAt(idOf(r,c));if(x&&(x.rock===1||x.rock===3||x.foe||(x.psn&&!x.tile)))a.push(idOf(r,c))}return a}
   return run.hand.map((t,i)=>{const foe=!!(t&&t.e&&t.e.k==='foe');return t&&(kind==='tile'||(kind==='free'?!t.e&&!t.sp:foe))?i:-1}).filter(i=>i>=0);
 }
-const AIM_SAY={turn:'回す積み木をえらぶ',cross:'十字にする積み木をえらぶ',clear:'どかす物を盤でえらぶ',bugle:'追い出す敵の積み木をえらぶ',treasure:'装備をのせる積み木をえらぶ'};
+const AIM_SAY={turn:'右に回す積み木をえらぶ',cross:'十字にする積み木をえらぶ',clear:'どかす物を盤でえらぶ',bugle:'追い出す敵の積み木をえらぶ',treasure:'装備をのせる積み木をえらぶ'};
 const NO_AIM={rock:'近くに どかせる物がない',foe:'手持ちに敵がいない',free:'何ものっていない積み木がない',tile:'積み木がない'};
 function tapSkill(k){
   if(busy||!run||run.phase!=='build')return;
@@ -2733,10 +2746,22 @@ function tapSkill(k){
   if(s.cd<=0&&d.aim){if(targets(d.aim).length)aim={k,kind:d.aim};else note=NO_AIM[d.aim]}
   render();showPick(k,note);
 }
+function turnArrow(){ /* a right-hand turn: an arc over the top with its head at the bottom right, cream on a wood outline */
+  const a='M20 50A30 30 0 1 1 71.2 71.2',h='62 80 79 79 64 63';
+  return `<svg viewBox="0 0 100 100"><path d="${a}" fill="none" stroke="#74401f" stroke-width="17" stroke-linecap="round"/><polygon points="${h}" fill="#74401f" stroke="#74401f" stroke-width="8" stroke-linejoin="round"/>`+
+    `<path d="${a}" fill="none" stroke="#fff6e6" stroke-width="9" stroke-linecap="round"/><polygon points="${h}" fill="#fff6e6" stroke="#fff6e6" stroke-width="2" stroke-linejoin="round"/></svg>`;
+}
+const turnFx=x=>()=>{ /* 11/5: the road comes round from where it was, a quarter to the right; a big arrow spins over it */
+  const el=handEl.children[x];if(!el)return;
+  const g=el.querySelector('.rd'),b=el.querySelector('.blk');
+  if(g){g.classList.remove('turning');void g.getBoundingClientRect();g.classList.add('turning')}
+  if(b){b.insertAdjacentHTML('beforeend',`<i class="turnfx" aria-hidden="true">${turnArrow()}</i>`);const f=b.lastChild;setTimeout(()=>f.remove(),700)}
+  setTimeout(()=>{const a=mid(el);if(a)bits(a.x,a.y-a.w*.1,6,['#fff','#ffe58a'],a.w*.4,4)},380);
+};
 const dealFx=x=>()=>{const el=handEl.children[x],a=mid(el);if(!el)return;el.classList.add('deal');if(a)bits(a.x,a.y-a.w*.1,6,['#fff','#ffe58a'],a.w*.4,4)};
 function visible(f){for(let r=Math.max(win.lo,rowOf(run.at));r<=win.hi;r++)for(let c=0;c<W;c++){const i=idOf(r,c),x=cellAt(i);if(x)f(i,x)}}
 const SK_DO={ // each changes the climb and gives back what to show once it is drawn, or words when it cannot be used now
-  turn:x=>{const t=run.hand[x];if(rot(t.m)===t.m)return '回しても同じ形';t.m=rot(t.m);return dealFx(x)},
+  turn:x=>{const t=run.hand[x];if(rot(t.m)===t.m)return '回しても同じ形';t.m=rot(t.m);return turnFx(x)},
   cross:x=>{if(run.hand[x].m===15)return 'もう十字の積み木';run.hand[x].m=15;aceNew=[x];return null},
   bugle:x=>{run.hand[x].e=null;return dealFx(x)},
   treasure:(x,lv)=>{run.hand[x].e=makeGear(SLOTS[rnd(3)].k,lv);return dealFx(x)},
