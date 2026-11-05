@@ -4,7 +4,7 @@
    build: tools/audio/build_sound.py puts this file between the SND markers of the game ---------- */
 var AUD=(()=>{
   const AC=window.AudioContext||window.webkitAudioContext;
-  let ctx=null,master=null,mBus=null,sBus=null,rv=null,nb=null,on=true,ok=false,players=[],cur=null,jing=null,last={},stepK=0;
+  let bouncing=false,ctx=null,master=null,mBus=null,sBus=null,rv=null,nb=null,on=true,ok=false,players=[],cur=null,jing=null,last={},stepK=0;
   try{on=localStorage.getItem('pq.snd')!=='0'}catch(err){}
   const NT={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
   const nm=s=>{const m=/^([A-G])([#b]?)(-?\d)$/.exec(s);return m?12*(+m[3]+1)+NT[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0):null};
@@ -185,7 +185,7 @@ var AUD=(()=>{
     }
   }
   function tick(){
-    if(!ctx||ctx.state!=='running')return;
+    if(bouncing||!ctx||ctx.state!=='running')return;
     const now=ctx.currentTime;
     for(const p of players){
       if(p.next<now-.25){const n=Math.ceil((now-p.next)/p.dt);p.step+=n;p.next+=n*p.dt} /* woke up late: skip, do not burst */
@@ -205,9 +205,9 @@ var AUD=(()=>{
     return areaOf(r).k+(dm?'@'+dm:'');
   }
   function sync(){
-    if(!live()||document.hidden)return;
+    if(bouncing||!live()||document.hidden)return;
     const w=wanted();if(cur&&cur.key===w&&!cur.end)return;
-    if(jing&&!jing.end&&w===jing.key)return;
+    if(jing&&w===jing.key)return;
     const [id,dm]=w.split('@'),d=+dm||0;
     fade(cur);cur=start(id,{key:w,tr:[0,2,-3,5][d%4],fast:d?1.05:1});
   }
@@ -273,7 +273,7 @@ var AUD=(()=>{
   };
   const GAP={coin:.05,step:.05,pon:.09,hit:.04,crit:.04,kill:.05,tap:.05,tock:.05,pop:.05,swing:.06,t_atk:.05,bubble:.08,clink:.05,hurt:.06,block:.05,boom:.1,dice:.2};
   function sfx(n,o){
-    if(!live()||document.hidden)return;const f=S[n];if(!f)return;
+    if(bouncing||!live()||document.hidden)return;const f=S[n];if(!f)return;
     const now=ctx.currentTime;if(last[n]&&now-last[n]<(GAP[n]||.03))return;last[n]=now;
     try{f(now+.005,o||{})}catch(err){}
   }
@@ -315,12 +315,12 @@ var AUD=(()=>{
   async function bounce(fn,sec){ /* test only: play into a silent recorder and measure how loud it got */
     const O=window.OfflineAudioContext||window.webkitOfflineAudioContext;if(!O)return null;
     const keep=[ctx,master,mBus,sBus,rv,nb,players,on,cur,jing];
-    ctx=new O(2,Math.round(44100*sec),44100);graph();players=[];on=true;let res=null;
+    bouncing=true;ctx=new O(2,Math.round(44100*sec),44100);graph();players=[];on=true;let res=null;
     try{fn();for(const p of players)while(p.next<sec&&!(p.total&&p.step>=p.total)){book(p,p.step,p.next);p.step++;p.next+=p.dt}
       const buf=await ctx.startRendering(),d=buf.getChannelData(0);let pk=0,sq=0,clip=0;
       for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>pk)pk=a;sq+=d[i]*d[i];if(a>.99)clip++}
       res={peak:+pk.toFixed(3),rms:+Math.sqrt(sq/d.length).toFixed(4),clip};
-    }finally{[ctx,master,mBus,sBus,rv,nb,players,on,cur,jing]=keep}
+    }finally{[ctx,master,mBus,sBus,rv,nb,players,on,cur,jing]=keep;bouncing=false}
     return res;
   }
   return {sfx,over,set,bounce,songs:()=>Object.keys(SONGS),names:()=>Object.keys(S),
