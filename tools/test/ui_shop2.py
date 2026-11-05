@@ -47,7 +47,7 @@ async def lock_flow(S):
     await S.click('#o-shop'); await pg.wait_for_timeout(400)
     marks = await pg.evaluate("()=>['up','gear','skill','deck'].map(t=>{const m=document.querySelector('#tab-'+t+' .mk');return t+':'+m.className+':'+m.textContent})")
     print(' marks', marks)
-    if 'tab-skill' and not any(m.startswith('skill:mk new:1') for m in marks): issue('wrong', f'skill tab NEW mark {marks}')
+    if not any(m.startswith('skill:mk new:2') for m in marks): issue('wrong', f'skill tab NEW mark {marks}')  # clear と rain の2つ
     if not any(m.startswith('deck:mk new:1') for m in marks): issue('wrong', f'deck tab NEW mark {marks}')
     # tab order for skills: open, NEW, locked
     await S.click('#tab-skill'); await pg.wait_for_timeout(300)
