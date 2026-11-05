@@ -90,11 +90,11 @@ window.SIM=(()=>{
     const fight=['atk','hp','def'],util=core.filter(k=>!fight.includes(k));
     for(let n=0;n<60;n++){ // two for the fight, then one for the road, the cheapest of each
       const set=n%3===2?util:fight;
-      const pick=ks=>ks.map(k=>U.find(u=>u.k===k)).filter(u=>m.up[u.k]<u.max&&u.cost(m.up[u.k])<=m.bank).sort((a,b)=>a.cost(m.up[a.k])-b.cost(m.up[b.k]))[0];
+      const pick=ks=>ks.map(k=>U.find(u=>u.k===k)).filter(u=>m.up[u.k]<u.max&&u.cost(m.up[u.k])<=m.bank&&!(PQ.isLocked&&PQ.isLocked('up',u.k))).sort((a,b)=>a.cost(m.up[a.k])-b.cost(m.up[b.k]))[0];
       const u=pick(set)||pick(core);if(!u)break;
       m.bank-=u.cost(m.up[u.k]);m.up[u.k]++;bought.push(u.k);
     }
-    for(const id of ['candy','box','clear']){const k=PQ.SKILL_ID[id];if(!m.sk.own.includes(id)&&m.bank>=k.cost){m.bank-=k.cost;m.sk.own.push(id);const f=m.sk.eq.indexOf(null);if(f>=0)m.sk.eq[f]=id;bought.push(id)}}
+    for(const id of ['candy','box','clear']){const k=PQ.SKILL_ID[id];if(!m.sk.own.includes(id)&&m.bank>=k.cost&&!(PQ.isLocked&&PQ.isLocked('sk',id))){m.bank-=k.cost;m.sk.own.push(id);const f=m.sk.eq.indexOf(null);if(f>=0)m.sk.eq[f]=id;bought.push(id)}}
     PQ.saveMeta();return bought;
   }
   return {playRun,shop};

@@ -825,6 +825,16 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .gi2.lock{background:#efe6dc}
 .gi2.lock svg{filter:brightness(0) opacity(.13)}
 .gi2.lock .st{color:#b3a493}
+.sk2.lk{background:#efe6dc}
+.book .sk2.lk>svg,.row-i.lk .ri-art svg,.dt-art.lk svg{filter:brightness(0) opacity(.13)}
+.sk2.lk b,.row-i.lk .ri-name b{color:#b3a493}
+.tag.lk{padding:2px 7px 2px 2px;background:transparent;outline-color:#cdbca9;color:#9c8774;font-size:14px}
+.tag.lk svg{width:18px;height:18px;filter:saturate(.4) opacity(.8)}
+.sk2 .tag.lk{font-size:12px}
+.sk2 .tag.lk svg{width:15px;height:15px}
+.sk2 .nw{position:absolute;top:-6px;right:-6px;padding:1px 4px;background:#e23c56;font:800 10px/1.4 var(--round);color:#fff;font-style:normal}
+.row-i .ri-name b .nw{display:inline-block;margin-left:6px;padding:2px 4px;font-size:10px;font-style:normal;vertical-align:2px}
+.dt-d.lk-now{margin-top:4px;font-size:12px}
 .gi2 .eqk{position:absolute;left:2px;right:2px;bottom:2px;padding:1px 0;background:var(--accent);font:800 10px/1.4 var(--round);color:#fff;font-style:normal;text-align:center}
 .gi2 .nw{position:absolute;top:-6px;right:-6px;padding:1px 4px;background:#e23c56;font:800 10px/1.4 var(--round);color:#fff;font-style:normal}
 .gi2.sel{background:#fff;box-shadow:inset 0 0 0 2px var(--rc,#d8c1a6),0 0 0 3px var(--frame)}
@@ -1943,9 +1953,25 @@ let meta=store.get(META)||{};
   for(const s of SLOTS){const id=g.eq&&g.eq[s.k];eq[s.k]=id&&own.includes(id)&&GEAR_ID[id].s===s.k?id:null}
   const k=meta.sk,sown=k&&Array.isArray(k.own)?k.own.filter(id=>SKILL_ID[id]):['turn'],seq=[null,null,null]; // the first climb starts with the quarter turn learned and set
   if(!k)seq[0]='turn';else [0,1,2].forEach(j=>{const id=k.eq&&k.eq[j];if(id&&sown.includes(id)&&!seq.includes(id))seq[j]=id});
-  meta={bank:meta.bank|0,best:meta.best|0,far:meta.far|0,seen:meta.seen|0,up:Object.fromEntries(UPS.map(x=>[x.k,u[x.k]|0])),gear:{own,eq},sk:{own:sown,eq:seq},newg:(Array.isArray(meta.newg)?meta.newg:[]).filter(id=>GEAR_ID[id])};
+  meta={bank:meta.bank|0,best:meta.best|0,far:meta.far|0,seen:meta.seen|0,up:Object.fromEntries(UPS.map(x=>[x.k,u[x.k]|0])),gear:{own,eq},sk:{own:sown,eq:seq},newg:(Array.isArray(meta.newg)?meta.newg:[]).filter(id=>GEAR_ID[id]),newu:(Array.isArray(meta.newu)?meta.newu:[]).filter(x=>/^(sk|up):/.test(x))};
 }
 const saveMeta=()=>store.set(META,meta);
+/* 11/5: the strong ones open as the climb goes further (meta.far = the best step ever). what is already bought stays open */
+const LOCK={
+  sk:{clear:10,rain:10,cross:20,wind:20,box:40,cannon:40,treasure:50},
+  up:{sd:10,dx:20,sh:20,sj:20,ds:40,sg:40}
+};
+const lockAt=(t,k)=>LOCK[t][k]||0;
+const isLocked=(t,k)=>meta.far<lockAt(t,k)&&!(t==='sk'?meta.sk.own.includes(k):meta.up[k]>0);
+const lockTag=(t,k)=>`<span class="tag lk">${ico(SPR.flag)}${lockAt(t,k)}段</span>`;
+const lockPaper=(art,txt)=>`<span class="dt-art lk">${art}</span><div class="dt-head"><b>？？？</b></div><div class="dt-body"><p class="dt-d dim">${txt}</p><p class="dt-d dim lk-now">いまの記録 ${nf(meta.far)}段</p></div><div class="dt-foot"></div>`;
+function opened(a,b){ /* the record went from a to b: what opened goes into the shop with a NEW */
+  const sk=SKILLS.filter(k=>LOCK.sk[k.id]>a&&LOCK.sk[k.id]<=b&&!meta.sk.own.includes(k.id)).map(k=>'sk:'+k.id),
+        up=UPS.filter(u=>LOCK.up[u.k]>a&&LOCK.up[u.k]<=b&&!meta.up[u.k]).map(u=>'up:'+u.k);
+  if(!sk.length&&!up.length)return;
+  meta.newu=[...new Set([...(meta.newu||[]),...sk,...up])];
+  note(`お店に 新しい${sk.length&&up.length?'スキルと積み木':sk.length?'スキル':'積み木'}が出た`,'good');
+}
 
 /* ---------- run state ---------- */
 let run=store.get(SAVE);
@@ -2442,7 +2468,7 @@ async function stepTo(i){
 }
 function reach(r){ // a new row: every 10 a reward, every 20 a new land
   run.top=r;const s=stepOf(r);
-  if(s>meta.far){meta.far=s;saveMeta()}
+  if(s>meta.far){const was=meta.far;meta.far=s;opened(was,s);saveMeta()}
   if(s===(run.best|0)+1&&(run.best|0)>=3){note('じぶんの記録をこえた！','good');SND('record');heroPose('cheer',800);heroHop()}
   if(s===R2_AT&&!dimOf(r))note('★2の装備も見つかるようになった','good');
   if(s>0&&s%DIM_LEN===1&&s>DIM_LEN){ // through the portal: the knight doubles with the toys, then picks one dimension power
@@ -3132,7 +3158,7 @@ FXH.add('render',()=>{ // remember the next captain once his square is on the sc
 });
 
 const ICON_UP_F=()=>SPR.sword+'<circle cx="66" cy="66" r="11" fill="#2f9e5f" stroke="#fff" stroke-width="3"/><path d="M66 71V61M61 65.5l5-5 5 5" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
-const affordable=()=>{const b=meta.bank;return UPS.some(u=>meta.up[u.k]<u.max&&u.cost(meta.up[u.k])<=b)||SKILLS.some(k=>!meta.sk.own.includes(k.id)&&k.cost<=b)};
+const affordable=()=>{const b=meta.bank;return (meta.newu||[]).length>0||UPS.some(u=>meta.up[u.k]<u.max&&u.cost(meta.up[u.k])<=b&&!isLocked('up',u.k))||SKILLS.some(k=>!meta.sk.own.includes(k.id)&&k.cost<=b&&!isLocked('sk',k.id))};
 let cuJobs=[];
 function countUp(el,to,ms,pre){ // a number that rolls up; a tap anywhere finishes it
   pre=pre||'';if(REDUCED||to<=0){el.textContent=pre+nf(to);return}
@@ -3179,14 +3205,17 @@ const priceTag=(c,can)=>`<span class="tag${can?'':' no'}">${ico(SPR.coin)}${nf(c
 const upArt=u=>{const mi=MIX_OF[u.k];if(mi!=null){const [,c,m]=MIXG[mi];return svg(blockSVG(c)+roadSVG(m,BLOCKS[c][1],4,96)+(u.k==='dh'?'<path d="M66 10l22 22M88 10 66 32" stroke="#fff" stroke-width="12" stroke-linecap="round"/><path d="M66 10l22 22M88 10 66 32" stroke="#d6334f" stroke-width="6" stroke-linecap="round"/>':''))}return u.art?svg(u.art):ico(SPR[u.icon])};
 const UPNAME={dx:'十字',dt:'T字',dc:'カーブ',dh:'横まっすぐを減らす',dg:'宝の積み木',dp:'キャンディの積み木',ds:'はじめの十字'};
 function upRow(u){
+  const nw=(meta.newu||[]).includes('up:'+u.k)?' <i class="nw">NEW</i>':'';
+  if(isLocked('up',u.k))return `<button class="row-i lk${shopSel[shopTab]===u.k?' sel':''}" type="button" data-k="${u.k}" aria-label="まだ出てきていない"><span class="ri-art">${upArt(u)}</span>`+
+    `<span class="ri-name"><b>？？？</b><span class="ri-sub">先へ進むと出てくる</span></span>${lockTag('up',u.k)}</button>`;
   const l=meta.up[u.k],max=l>=u.max,c=u.cost(l),can=!max&&meta.bank>=c,v=UPV[u.k],mi=MIX_OF[u.k];
   const sub=mi!=null?`${MIXG[mi][3]} ${pc(mixAt()[mi])}`:v?`${v[0]} ${v[1](l)}`:'';
   return `<button class="row-i${shopSel[shopTab]===u.k?' sel':''}" type="button" data-k="${u.k}"><span class="ri-art">${upArt(u)}</span>`+
-    `<span class="ri-name"><b>${UPNAME[u.k]||u.name}</b><span class="ri-sub">${lvPips(l,u.max)} ${sub}</span></span>`+
+    `<span class="ri-name"><b>${UPNAME[u.k]||u.name}${nw}</b><span class="ri-sub">${lvPips(l,u.max)} ${sub}</span></span>`+
     (max?'<span class="tag max">MAX</span>':priceTag(c,can))+'</button>';
 }
 function mixHTML(){ // the bar of how the blocks come now, and with a shape chosen, after one more level
-  const now=mixAt(),k=shopSel.deck,u=UPS.find(x=>x.k===k),mi=MIX_OF[k],after=u&&mi!=null&&meta.up[k]<u.max?mixAt({[k]:meta.up[k]+1}):null;
+  const now=mixAt(),k=shopSel.deck,u=UPS.find(x=>x.k===k),mi=MIX_OF[k],after=u&&mi!=null&&meta.up[k]<u.max&&!isLocked('up',k)?mixAt({[k]:meta.up[k]+1}):null;
   const bar=(m,lab)=>`<div class="mx-row"><span class="mx-l">${lab}</span><div class="bar">${m.map((w,j)=>`<i class="${after&&j===mi?'hi':''}" style="flex-grow:${w.toFixed(4)};background:${BLOCKS[MIXG[j][1]][0]}">${w>=.08?pc(w):''}</i>`).join('')}</div></div>`;
   return `<div class="sh-sheet mix">${bar(now,'いま')}${after?bar(after,'強化後'):''}<div class="lg">${MIXG.map(([,c,m,n],j)=>`<span class="${after&&j===mi?'hi':''}">${svg(blockSVG(c)+roadSVG(m,BLOCKS[c][1],4,96))}${n}</span>`).join('')}</div></div>`;
 }
@@ -3202,9 +3231,9 @@ function gearHTML(){
 function skillHTML(){
   const own=meta.sk.own,eq=meta.sk.eq;
   let h=`<div class="pegs${swap?' swap':''}"><span>${swap?'どの枠と入れかえる？':'セット'}</span>${eq.map((id,j)=>`<button class="peg${id&&shopSel.skill===id&&!swap?' sel':''}" type="button" data-peg="${j}" aria-label="枠${j+1}${id?'：'+SKILL_ID[id].n:'（空き）'}"><em>${j+1}</em>${id?svg(SK_ART[id]):''}</button>`).join('')}</div>`;
-  h+='<div class="book">'+SKILLS.map(k=>{const has=own.includes(k.id),on=eq.includes(k.id);
-    const tag=on?'<span class="tag on">セット中</span>':has?'<span class="tag own">覚えた</span>':priceTag(k.cost,meta.bank>=k.cost);
-    return `<button class="sk2${has?'':' not'}${shopSel.skill===k.id?' sel':''}" type="button" data-s="${k.id}">${svg(SK_ART[k.id])}<b>${k.n}</b>${tag}</button>`}).join('')+'</div>';
+  h+='<div class="book">'+SKILLS.map(k=>{const has=own.includes(k.id),on=eq.includes(k.id),lk=isLocked('sk',k.id),nw=(meta.newu||[]).includes('sk:'+k.id);
+    const tag=lk?lockTag('sk',k.id):on?'<span class="tag on">セット中</span>':has?'<span class="tag own">覚えた</span>':priceTag(k.cost,meta.bank>=k.cost);
+    return `<button class="sk2${has?'':' not'}${lk?' lk':''}${shopSel.skill===k.id?' sel':''}" type="button" data-s="${k.id}"${lk?' aria-label="まだ出てきていない"':''}>${svg(SK_ART[k.id])}<b>${lk?'？？？':k.n}</b>${tag}${nw?'<i class="nw">NEW</i>':''}</button>`}).join('')+'</div>';
   return h;
 }
 const bought=(t,key)=>{for(let j=visit.length-1;j>=0;j--)if(visit[j].t===t&&visit[j].key===key)return j;return -1};
@@ -3218,6 +3247,7 @@ function detailHTML(){
   const undo=(t,key)=>`<button class="dt-sub" type="button" data-act="undo"${bought(t,key)>=0?'':' disabled'}>もどす</button>`;
   if(shopTab==='up'||shopTab==='deck'){
     const u=UPS.find(x=>x.k===sel);if(!u)return '';
+    if(isLocked('up',u.k))return lockPaper(upArt(u),`${lockAt('up',u.k)}段まで進むと お店に出てくる`);
     const l=meta.up[u.k],max=l>=u.max,c=u.cost(l),v=UPV[u.k],mi=MIX_OF[u.k];
     let ch='';
     if(mi!=null)ch=chg(MIXG[mi][3]+'の出やすさ',pc(mixAt()[mi]),max?pc(mixAt()[mi]):pc(mixAt({[u.k]:l+1})[mi]));
@@ -3239,6 +3269,7 @@ function detailHTML(){
   }
   if(shopTab==='skill'){
     const k=SKILL_ID[sel];if(!k)return '';
+    if(isLocked('sk',k.id))return lockPaper(svg(SK_ART[k.id]),`${lockAt('sk',k.id)}段まで進むと 覚えられるようになる`);
     const has=meta.sk.own.includes(k.id),on=meta.sk.eq.includes(k.id);
     let foot;
     if(swap)foot=`<span class="note">入れかえる枠を上でえらぶ</span><button class="dt-sub" type="button" data-act="cancel">やめる</button>`;
@@ -3250,11 +3281,11 @@ function detailHTML(){
   return '';
 }
 function shopMarks(){
-  const b=meta.bank,canU=f=>UPS.some(u=>!!u.deck===f&&meta.up[u.k]<u.max&&u.cost(meta.up[u.k])<=b);
+  const b=meta.bank,canU=f=>UPS.some(u=>!!u.deck===f&&meta.up[u.k]<u.max&&u.cost(meta.up[u.k])<=b&&!isLocked('up',u.k)),nn2=p=>(meta.newu||[]).filter(x=>x.startsWith(p)).length;
   const mk=(id,cls,txt)=>{const m=$(id).querySelector('.mk');m.className='mk'+(cls?' '+cls:'');m.textContent=txt||''};
-  mk('tab-up',canU(false)?'coin':'');mk('tab-deck',canU(true)?'coin':'');
+  mk('tab-up',canU(false)?'coin':'');{const n=nn2('up:');mk('tab-deck',n?'new':canU(true)?'coin':'',n?String(n):'')}
   const nn=(meta.newg||[]).length;mk('tab-gear',nn?'new':'',nn?String(nn):'');
-  mk('tab-skill',SKILLS.some(k=>!meta.sk.own.includes(k.id)&&k.cost<=b)?'coin':'');
+  {const n=nn2('sk:');mk('tab-skill',n?'new':SKILLS.some(k=>!meta.sk.own.includes(k.id)&&k.cost<=b&&!isLocked('sk',k.id))?'coin':'',n?String(n):'')}
 }
 function pickDefault(){ // nothing is chosen until a tap: the pinned paper comes up only then (11/4)
   if(shopTab==='gear'){const s=GEAR_ID[shopSel.gear];if(!s||s.s!==gearSlot)shopSel.gear=null}
@@ -3272,7 +3303,8 @@ function renderShop(fresh){
   if(shopTab==='skill')$('sh-skill').innerHTML=skillHTML();
   const d=$('sh-det'),dh=detailHTML();d.innerHTML=dh;d.hidden=!dh;
   if(fresh)$('sh-body').scrollTop=0;
-  if(shopTab==='gear'&&meta.newg&&meta.newg.includes(shopSel.gear)){meta.newg=meta.newg.filter(x=>x!==shopSel.gear);saveMeta()} // seen: the NEW goes after this look
+  if(shopTab==='gear'&&meta.newg&&meta.newg.includes(shopSel.gear)){meta.newg=meta.newg.filter(x=>x!==shopSel.gear);saveMeta()}
+  if(shopTab==='skill'||shopTab==='deck'){const nk=(shopTab==='skill'?'sk:':'up:')+shopSel[shopTab];if(meta.newu&&meta.newu.includes(nk)){meta.newu=meta.newu.filter(x=>x!==nk);saveMeta()}} // seen: the NEW goes after this look
   shopMarks();
 }
 function choose(key){ // a tap on the list: only the pinned paper changes
@@ -3285,10 +3317,10 @@ function shopAct(act){
   if(performance.now()-detT<250)return; // a tap that just chose cannot also buy
   const sel=shopSel[shopTab];let el=$('sh-body').querySelector(`.sel`),msg=false;
   if(act==='buy'&&(shopTab==='up'||shopTab==='deck')){
-    const u=UPS.find(x=>x.k===sel),l=meta.up[sel],c=u&&u.cost(l);if(!u||l>=u.max||meta.bank<c)return;
+    const u=UPS.find(x=>x.k===sel),l=meta.up[sel],c=u&&u.cost(l);if(!u||l>=u.max||meta.bank<c||isLocked('up',u.k))return;
     SND('buy');meta.bank-=c;meta.up[sel]++;visit.push({t:'up',key:sel,c});msg=true;
   }
-  if(act==='buy'&&shopTab==='skill'){const k=SKILL_ID[sel];if(!k||meta.sk.own.includes(k.id)||meta.bank<k.cost)return;SND('buy');meta.bank-=k.cost;meta.sk.own.push(k.id);visit.push({t:'sk',key:k.id,c:k.cost});msg=true}
+  if(act==='buy'&&shopTab==='skill'){const k=SKILL_ID[sel];if(!k||meta.sk.own.includes(k.id)||meta.bank<k.cost||isLocked('sk',k.id))return;SND('buy');meta.bank-=k.cost;meta.sk.own.push(k.id);visit.push({t:'sk',key:k.id,c:k.cost});msg=true}
   if(act==='undo'){
     const t=shopTab==='skill'?'sk':'up',j=bought(t,sel);if(j<0)return;const v=visit.splice(j,1)[0];meta.bank+=v.c;
     if(t==='up')meta.up[sel]=Math.max(0,meta.up[sel]-1);else{meta.sk.own=meta.sk.own.filter(x=>x!==sel);meta.sk.eq=meta.sk.eq.map(x=>x===sel?null:x)}
@@ -3814,7 +3846,7 @@ function SND(n,o){if(AUD)AUD.sfx(n,o)} /* var and function: safe even before thi
 /*SND:end*/
 
 /* test only: open with #fxtest to reach the internals from a test script (PQ.jump(step) puts the knight on that step) */
-if(/fxtest/.test(location.hash))window.PQ={get run(){return run},get busy(){return busy},get sel(){return sel},get meta(){return meta},frontier,fits,anyFit,place,reroll,useSkill,takeReward,newRun,gameOver,saveMeta,rescue,gateFrom,dmgFor,targets,heroPose,heroBase,toyAct,toysAct,fightRules,AUD,QK,UPS,SKILL_ID,stepOf,lvOf,cellAtSafe:i=>cellAt(i),FXH,openReward,showShop,note,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,
+if(/fxtest/.test(location.hash))window.PQ={get run(){return run},get busy(){return busy},get sel(){return sel},get meta(){return meta},frontier,fits,anyFit,place,reroll,useSkill,takeReward,newRun,gameOver,saveMeta,rescue,gateFrom,dmgFor,targets,heroPose,heroBase,toyAct,toysAct,fightRules,AUD,QK,UPS,SKILL_ID,LOCK,isLocked,opened,stepOf,lvOf,cellAtSafe:i=>cellAt(i),FXH,openReward,showShop,note,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,
   jump(step,col){const r=step+1,c=col==null?colOf(run.at):col;while(run.made<r+40){run.made++;newRow(run.made)}
     const x=cellAt(idOf(r,c));x.rock=0;x.foe=null;x.tile={m:15,e:null,c:0};run.at=idOf(r,c);run.top=r;run.phase='build';grow();render();return run.at}};
 
