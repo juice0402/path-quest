@@ -461,6 +461,17 @@ body.art #s-title .btn:not(.main){background:rgba(255,255,255,.94)}
 /* in play: how high, and how far to the next present */
 
 /* the first climb: a finger shows where to tap */
+/* 11/5: the way is up: three chevrons rise over the knight in turn (the first climbs only) */
+.upcue{position:absolute;z-index:4;pointer-events:none;display:flex;justify-content:center}
+.upcue svg{width:64%;height:100%;overflow:visible;filter:drop-shadow(0 2px 0 rgba(58,28,8,.35))}
+.upcue .cv{opacity:0;animation:cvup 1.5s ease-in-out infinite}
+.upcue .cv path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.upcue .cv .o{stroke:var(--wood-deep);stroke-width:14}
+.upcue .cv .i{stroke:#fff6e6;stroke-width:8}
+.upcue .cv:nth-child(2){animation-delay:.25s}
+.upcue .cv:nth-child(3){animation-delay:.5s}
+@keyframes cvup{0%{opacity:0;transform:translateY(6px)}35%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.upcue .cv{animation:none;opacity:1}}
 .finger{position:absolute;left:50%;top:46%;z-index:8;font-size:30px;line-height:1;pointer-events:none;transform:translateX(-36%);animation:poke .9s ease-in-out infinite;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
 @keyframes poke{0%,100%{translate:0 8px}45%{translate:0 0}55%{translate:0 0;scale:.94}}
 @media (min-width:1100px){.say{top:calc(var(--hudh) + 6px)}}
@@ -2245,12 +2256,22 @@ function markStuck(F){
 }
 function render(){const F=frontier();renderStats();renderBoard(F);renderHand(F);markStuck(F);hintFinger(F)}
 function hintFinger(F){ // the very first climb: a finger on a block that fits, then on where it goes
-  document.querySelectorAll('.finger').forEach(x=>x.remove());
+  document.querySelectorAll('.finger,.upcue').forEach(x=>x.remove());
   if(meta.far>=3||!run||run.phase!=='build'||busy||aim)return;
+  upCue();
   let el=null;
   if(sel<0){let k=run.hand.findIndex(t=>anyFit(t,F)&&!(t.e&&t.e.k==='foe'));if(k<0)k=run.hand.findIndex(t=>anyFit(t,F));el=k>=0?handEl.children[k]:null}
   else for(const j of F.keys())if(fits(run.hand[sel],j,F)){el=elOf(j);break}
   if(el)el.insertAdjacentHTML('beforeend','<span class="finger" aria-hidden="true">👆</span>');
+}
+function upCue(){ /* 11/5: the first climbs: chevrons rise over the knight's head, so the way is UP (no words) */
+  const h=elOf(run.at);if(!h)return;
+  const c=document.createElement('div');c.className='upcue';c.setAttribute('aria-hidden','true');
+  const w=h.offsetWidth,ht=h.offsetHeight;
+  c.style.cssText=`left:${h.offsetLeft}px;top:${h.offsetTop-ht*1.55}px;width:${w}px;height:${ht*1.5}px`;
+  const v=y=>{const d=`M14 ${y+15}L30 ${y}L46 ${y+15}`;return `<g class="cv"><path class="o" d="${d}"/><path class="i" d="${d}"/></g>`};
+  c.innerHTML=`<svg viewBox="0 0 60 100">${v(70)}${v(44)}${v(18)}</svg>`;
+  board.appendChild(c);
 }
 function placeHero(i,instant){
   const el=elOf(i);if(!el)return;
@@ -3192,6 +3213,7 @@ FXH.add('render',()=>{ // remember the next captain once his square is on the sc
   if(a.bottom>top+a.height*.4&&a.top<v.bottom){meta.seen=g;saveMeta()}
 });
 
+FXH.add('step',()=>document.querySelectorAll('.upcue').forEach(x=>x.remove())); /* 11/5: the chevrons go once the knight walks */
 const ICON_UP_F=()=>SPR.sword+'<circle cx="66" cy="66" r="11" fill="#2f9e5f" stroke="#fff" stroke-width="3"/><path d="M66 71V61M61 65.5l5-5 5 5" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
 const affordable=()=>{const b=meta.bank;return (meta.newu||[]).length>0||UPS.some(u=>meta.up[u.k]<u.max&&u.cost(meta.up[u.k])<=b&&!isLocked('up',u.k))||SKILLS.some(k=>!meta.sk.own.includes(k.id)&&k.cost<=b&&!isLocked('sk',k.id))};
 let cuJobs=[];
