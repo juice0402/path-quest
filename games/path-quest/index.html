@@ -91,12 +91,12 @@ button{font:inherit;color:inherit}
 .b-foe{color:var(--foe)}.b-zero{color:var(--dim)}.b-coin{color:var(--gold)}.b-heal{color:var(--heal)}.b-gear{color:var(--gear)}
 
 .art-defs{position:absolute;width:0;height:0;overflow:hidden}
-.hero{position:absolute;left:0;top:0;z-index:3;pointer-events:none;transition:transform .15s linear}
+.hero{position:absolute;left:0;top:0;z-index:3;pointer-events:none;transition:transform .17s linear}
 .hero svg{width:100%;height:100%;display:block;overflow:visible}
 .hero svg{transform-origin:50% 86%}
 .hero:not(.walk) svg{animation:breathe 1.7s ease-in-out infinite alternate}
-.hero.walk svg{animation:bob .17s ease-in-out infinite alternate}
-.hero.hurt svg{animation:hurt .3s ease-out}
+.hero.walk svg{animation:hWalk .34s linear infinite}
+.hero.hurt svg{animation:hurt .34s ease-out}
 .hero.down svg{animation:topple .55s cubic-bezier(.5,0,.8,.6) .95s forwards}
 @keyframes bob{to{transform:translateY(-5%)}}
 @keyframes breathe{to{transform:scale(1.03,.97)}}
@@ -180,7 +180,7 @@ button{font:inherit;color:inherit}
 .bit{position:fixed;left:0;top:0;pointer-events:none;border-radius:2px}
 .fly{position:fixed;left:0;top:0;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(74,53,65,.25))}
 .fly svg{width:100%;height:100%;display:block}
-@keyframes hurt{30%{transform:translateX(-7%);filter:drop-shadow(0 0 5px var(--bad))}70%{transform:translateX(7%);filter:drop-shadow(0 0 5px var(--bad))}}
+@keyframes hurt{0%{transform:none;animation-timing-function:cubic-bezier(.2,.8,.4,1)}22%{transform:translate(-9%,-2%) rotate(-7deg) scale(1.04,.95);filter:drop-shadow(0 0 5px var(--bad))}58%{transform:translateX(3%) rotate(2deg);filter:drop-shadow(0 0 5px var(--bad))}100%{transform:none}}
 
 .pop{position:absolute;z-index:5;pointer-events:none;transform:translate(-50%,0);font:800 20px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 2px 0 #fff;animation:rise .95s ease-out forwards}
 .p-deal{color:var(--deal)}.p-hurt{color:var(--foe)}.p-guard{color:var(--dim)}.p-gold{color:var(--gold)}.p-heal{color:var(--heal)}.p-gear{color:var(--gear)}
@@ -1127,6 +1127,11 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 @keyframes ovDrop{from{transform:translateY(-70px);opacity:0}}
 .ov.rec .ov-card{animation:ovDrop .45s cubic-bezier(.3,1.35,.5,1) both,ovThud .24s 1.42s ease-out}
 @keyframes ovThud{35%{transform:translateY(5px)}}
+/* the knight moves smoothly (11/5) */
+@keyframes hWalk{0%{transform:translateY(0) rotate(-2.5deg) scale(1.03,.97);animation-timing-function:ease-out}25%{transform:translateY(-6%) rotate(0deg) scale(.98,1.02);animation-timing-function:ease-in}50%{transform:translateY(0) rotate(2.5deg) scale(1.03,.97);animation-timing-function:ease-out}75%{transform:translateY(-6%) rotate(0deg) scale(.98,1.02);animation-timing-function:ease-in}100%{transform:translateY(0) rotate(-2.5deg) scale(1.03,.97)}}
+.hero>svg.hghost{position:absolute;inset:0;pointer-events:none;animation:none!important}
+.hero .hpz{transform-box:view-box;transform-origin:50% 86%}
+
 /* the sound button on the home screen (11/5) */
 #t-snd{position:absolute;z-index:3;top:max(14px,env(safe-area-inset-top,0px));right:max(14px,env(safe-area-inset-right,0px));color:var(--ink)}
 #t-snd svg{inset:6px;width:32px;height:32px}
@@ -2211,7 +2216,7 @@ function flash(el){if(!el)return;el.classList.remove('bad');void el.offsetWidth;
 const flashCell=i=>flash(elOf(i));
 const flashSlot=i=>{if(i>=0)flash(handEl.children[i])};
 function hop(){if(REDUCED)return;[...handEl.children].forEach((s,k)=>s.animate([{transform:'none'},{transform:'translateY(-10px)'},{transform:'none'}],{duration:280,delay:k*35}))}
-function lunge(dx,dy){if(!REDUCED)hero.firstElementChild.animate([{transform:'none'},{transform:`translate(${dx}px,${dy}px)`,offset:.35},{transform:`translate(${dx}px,${dy}px)`,offset:.6},{transform:'none'}],{duration:240,easing:'ease-out'})} // the hold at the front is the hit-stop
+function lunge(dx,dy){if(!REDUCED)hero.firstElementChild.animate([{transform:'none',easing:'ease-out'},{transform:`translate(${-dx*.22}px,${-dy*.22}px) scale(.96,1.04)`,offset:.16,easing:'cubic-bezier(.3,0,.2,1)'},{transform:`translate(${dx}px,${dy}px) scale(1.06,.95)`,offset:.4},{transform:`translate(${dx*.92}px,${dy*.92}px)`,offset:.62,easing:'ease-in-out'},{transform:'none'}],{duration:240})} // the hold at the front is the hit-stop
 function struck(el){const s=el&&(el.querySelector(':scope>svg')||el.firstElementChild);if(s&&!REDUCED)s.animate([{transform:'none'},{transform:'translateX(7%)',filter:'brightness(1.35)'},{transform:'translateX(-7%)'},{transform:'none'}],{duration:220})}
 function hurt(){hero.classList.remove('hurt');void hero.offsetWidth;hero.classList.add('hurt')}
 
@@ -3887,10 +3892,22 @@ function hbox(n){
   return HBOX[n]={x:+(50-w*ax).toFixed(1),y:+(88-h).toFixed(1),w:+w.toFixed(1),h:+h.toFixed(1)};
 }
 function heroArt(p){const n=HPOSE[p]&&hbox(HPOSE[p])?HPOSE[p]:'hero',b=hbox(n)||{x:16,y:-6,w:68,h:94};return U(n,b.x,b.y,b.w,b.h)}
+function poseGhost(s0){ /* the picture he had a moment ago stays on top and fades out quickly (a soft change, not a cut) */
+  const o=hero.querySelector(':scope>svg.hghost');if(o)o.remove();
+  const g=s0.cloneNode(true);g.classList.add('hghost');g.style.transform=getComputedStyle(s0).transform;s0.after(g);
+  const a=g.animate([{opacity:.9},{opacity:0}],{duration:140,easing:'ease-out'});a.onfinish=a.oncancel=()=>g.remove();
+}
+function poseSettle(s0,p,flip){ /* the new pose lands: a small squash and back; the shield is pushed back a little */
+  const z=s0.querySelector('.hpz');if(!z)return;
+  if(p==='block'){const x=flip?-7:7;z.animate([{transform:'none'},{transform:`translateX(${x}px) scale(1.05,.94)`,offset:.28},{transform:'none'}],{duration:280,easing:'ease-out'});return}
+  if(p==='hurt'||p==='ko')return;
+  const k=p==='swing'?[1.07,.93]:p==='jump'||p==='cheer'||p==='raise'||p==='lift'?[.95,1.06]:[1.035,.965];
+  z.animate([{transform:`scale(${k[0]},${k[1]})`},{transform:`scale(${(2-k[0]).toFixed(3)},${(2-k[1]).toFixed(3)})`,offset:.55},{transform:'none'}],{duration:200,easing:'ease-out'});
+}
 function drawHero(p,flip){ // the shadow goes last: lunge() moves the first child, which is kept (only its inside changes)
-  const a=heroArt(p),f=flip?' transform="translate(100 0) scale(-1 1)"':'',body=`<g transform="${HG}"><g${f}>${a}</g></g>`,sh=`<g transform="${CASTM(HF)}"><g transform="${HG}"><g${f}>${SHAD(a)}</g></g></g>${CONTACT(HF,20)}`;
+  const a=heroArt(p),f=flip?' transform="translate(100 0) scale(-1 1)"':'',body=`<g class="hpz"><g transform="${HG}"><g${f}>${a}</g></g></g>`,sh=`<g transform="${CASTM(HF)}"><g transform="${HG}"><g${f}>${SHAD(a)}</g></g></g>${CONTACT(HF,20)}`;
   const s0=hero.firstElementChild,s1=hero.querySelector(':scope>svg.hsh');
-  if(s0&&s1&&s0!==s1){s0.innerHTML=body;s1.innerHTML=sh;return}
+  if(s0&&s1&&s0!==s1){if(!REDUCED)poseGhost(s0);s0.innerHTML=body;s1.innerHTML=sh;if(!REDUCED)poseSettle(s0,p,flip);return}
   hero.innerHTML=svg(body)+`<svg class="hsh" viewBox="0 0 100 100" aria-hidden="true" style="overflow:visible">${sh}</svg>`;
 }
 if(HAS_ART)drawHero('front',false); // the knight: a little taller, with his long shadow on the ground beside him
