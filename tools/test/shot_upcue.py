@@ -1,4 +1,4 @@
-# 11/5 はじめての冒険の「上へ」の矢印の点検：出る・騎士くんの真上・歩くと消える・3段のぼったあとは出ない
+# 11/5 はじめての冒険の「上へ」の矢印の点検：出る・騎士くんの真上・歩くと消える・2段のぼったあとは出ない（q）
 # usage: python3 tools/test/shot_upcue.py [out.png]   … out.png を渡すと、矢印の2コマを並べて1枚に（騎士くんのまわりを切り出す）
 import asyncio, sys, os
 from playwright.async_api import async_playwright
@@ -25,10 +25,10 @@ async def main():
                 shots.append(f'/tmp/_u{k}.png')
         await pg.evaluate("()=>PQ.FXH.emit('step',{})"); await pg.wait_for_timeout(100)
         if await pg.evaluate(CUE): bad.append('cue stays while the knight walks')
-        await pg.evaluate("()=>{PQ.meta.far=3;PQ.render()}"); await pg.wait_for_timeout(200)
-        if await pg.evaluate(CUE): bad.append('cue after the record reached 3')
         await pg.evaluate("()=>{PQ.meta.far=2;PQ.render()}"); await pg.wait_for_timeout(200)
-        if not await pg.evaluate(CUE): bad.append('no cue again at record 2')
+        if await pg.evaluate(CUE): bad.append('cue after the record reached 2')
+        await pg.evaluate("()=>{PQ.meta.far=1;PQ.render()}"); await pg.wait_for_timeout(200)
+        if not await pg.evaluate(CUE): bad.append('no cue again at record 1')
         if errs: bad.append(f'errors {errs[:2]}')
         await b.close()
     print('problems', len(bad)); [print(' ', x) for x in bad]

@@ -2054,8 +2054,9 @@ function newRun(){
   run.dp=0;
   run.hand=Array.from({length:run.handSize},()=>makeTile(1));
   for(let k=0;k<Math.min(meta.up.ds|0,run.hand.length);k++)run.hand[k].m=15; // the deck upgrade: crosses in hand from the start
-  run.intro=meta.far<3?1:0; /* 11/5: the first climbs: one straight block, and it can only go up */
-  if(run.intro){const up=cellAt(idOf(2,2));if(up){up.rock=0;up.foe=null}run.hand[run.hand.length-1]={m:5,e:null,c:rnd(BLOCKS.length),intro:1}}
+  run.intro=meta.far<2?1:0; /* 11/5: the first climbs: one straight block, and it can only go up (q: until 2 steps) */
+  if(run.intro){for(const r of [2,3]){const up=cellAt(idOf(r,2));if(up){up.rock=0;up.foe=null}} /* q: the cell beyond is open too, so the lesson block never leads into a house */
+    const a=run.hand[0];run.hand[0]={m:5,e:null,c:rnd(BLOCKS.length),intro:1};if(a&&a.m===15)run.hand[run.hand.length-1]=a} /* q: the lesson block is the leftmost one */
   aceNew=run.hand.map((t,k)=>t.m===15?k:-1).filter(k=>k>=0);
   sel=-1;aim=null;hideSay();save();hideSheets();if(drawerAuto)setDrawer(false);render();afterAction();
 }
@@ -2271,14 +2272,32 @@ function markStuck(F){
   else if(!stuck&&drawerAuto&&run.phase==='build'&&!busy)drawerTimer=setTimeout(()=>{if(drawerAuto)setDrawer(false)},700);
 }
 function render(){const F=frontier();renderStats();renderBoard(F);renderHand(F);markStuck(F);hintFinger(F)}
-function hintFinger(F){ // the very first climb: a finger on a block that fits, then on where it goes
+function hintFinger(F){ /* the first climbs (until 2 steps): a finger on the block and the place that keep the way open, up first; on the die when every place would end the way */
   document.querySelectorAll('.finger,.upcue').forEach(x=>x.remove());
-  if(meta.far>=3||!run||run.phase!=='build'||busy||aim)return;
+  if(meta.far>=2||!run||run.phase!=='build'||busy||aim)return;
   upCue();
+  const spots=[...F.keys(),...(F.rock?F.rock.keys():[])];
+  const bestFor=t=>{let b=null;if(t)for(const j of spots){const v=hintScore(t,j,F);if(v>-9&&(!b||v>b.v))b={j,v}}return b};
+  let best=null;run.hand.forEach((t,k)=>{const b=bestFor(t);if(b&&(!best||b.v>best.v))best={k,j:b.j,v:b.v}});
   let el=null;
-  if(sel<0){let k=run.hand.findIndex(t=>anyFit(t,F)&&!(t.e&&t.e.k==='foe'));if(k<0)k=run.hand.findIndex(t=>anyFit(t,F));el=k>=0?handEl.children[k]:null}
-  else for(const j of F.keys())if(fits(run.hand[sel],j,F)){el=elOf(j);break}
+  if((!best||best.v<0)&&run.rolls>0){el=rollBtn;if(!drawerOpen)setDrawer(true,true);clearTimeout(drawerTimer)}
+  else if(sel<0){if(best)el=handEl.children[best.k]}
+  else{const b=bestFor(run.hand[sel]);el=b&&(b.v>=0||!best||best.v<0)?elOf(b.j):best?handEl.children[best.k]:null}
   if(el)el.insertAdjacentHTML('beforeend','<span class="finger" aria-hidden="true">👆</span>');
+}
+function hintScore(t,j,F){ /* 11/5 q: how good a lesson move is: -9 does not fit, -1 the way ends there, else the ways left open (up counts most) */
+  if(!fits(t,j,F))return -9;
+  const back=F.has(j)?F.get(j):(F.rock&&F.rock.get(j))||0,m=t.m&~DOWN&~back,free=c=>!!c&&!c.rock&&!c.tile&&!c.start;
+  let s=0;
+  for(const b of BITS){
+    if(!(m&b))continue;const n=nbr(j,b),c=n>=0&&cellAt(n);if(!free(c))continue;
+    s+=(b===1?4:1)-(c.foe?.5:0);
+    for(const d of BITS){if(d===DOWN||d===OPP[b])continue;const o=nbr(n,d);if(o>=0&&free(cellAt(o)))s+=.3}
+  }
+  if(!s)return -1;
+  if(t.e&&t.e.k==='foe')s-=2;
+  if(t.sp)s-=1;
+  return Math.max(.1,s);
 }
 function upCue(){ /* 11/5: the first climbs: chevrons rise over the knight's head, so the way is UP (no words) */
   const h=elOf(run.at);if(!h)return;
