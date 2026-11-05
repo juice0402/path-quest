@@ -1962,7 +1962,9 @@ const LOCK={
   up:{sd:10,dx:20,sh:20,sj:20,ds:40,sg:40}
 };
 const lockAt=(t,k)=>LOCK[t][k]||0;
-const byLock=(t,key)=>(a,b)=>(lockAt(t,key(a))>0)-(lockAt(t,key(b))>0)||lockAt(t,key(b))-lockAt(t,key(a)); /* open from the start first, then the biggest step first */
+let shopNew=new Set(); /* the NEW ones as the shop opened: the order keeps to it until the shop closes */
+const lockGrp=(t,k)=>isLocked(t,k)?2:shopNew.has(t+':'+k)?1:0;
+const byLock=(t,key)=>(a,b)=>{const x=key(a),y=key(b);return lockGrp(t,x)-lockGrp(t,y)||(lockAt(t,x)>0)-(lockAt(t,y)>0)||lockAt(t,y)-lockAt(t,x)}; /* open → NEW → locked; in each, from the start first, then the biggest step first */
 const isLocked=(t,k)=>meta.far<lockAt(t,k)&&!(t==='sk'?meta.sk.own.includes(k):meta.up[k]>0);
 const lockTag=(t,k)=>`<span class="tag lk">${ico(SPR.flag)}${lockAt(t,k)}段</span>`;
 const lockPaper=(art,txt)=>`<span class="dt-art lk">${art}</span><div class="dt-head"><b>？？？</b></div><div class="dt-body"><p class="dt-d dim">${txt}</p><p class="dt-d dim lk-now">いまの記録 ${nf(meta.far)}段</p></div><div class="dt-foot"></div>`;
@@ -3340,7 +3342,7 @@ function shopAct(act){
 function setShopTab(t){if(swap)swap=null;shopTab=t;shopSel[t]=null;renderShop(true)}
 function leaveShop(){visit=[];swap=null} // what was bought is kept for good from here
 function showShop(tab){
-  if(tab)shopTab=tab;visit=[];swap=null;for(const k in shopSel)shopSel[k]=null;
+  if(tab)shopTab=tab;visit=[];swap=null;shopNew=new Set(meta.newu||[]);for(const k in shopSel)shopSel[k]=null;
   const ti=(id,a)=>{$(id).querySelector('.ti').innerHTML=ico(a)};
   ti('tab-up',SPR.heart);ti('tab-gear',SPR.shield);ti('tab-skill',SK_ART.turn?`<g transform="translate(50 50) scale(.6) translate(-50 -50)">${SK_ART.turn}</g>`:STAR(50,50,20));ti('tab-deck',SPR.box);
   $('sh-home-i').innerHTML=ico(SPR.door);$('sh-coin-i').innerHTML=ico(SPR.coin);

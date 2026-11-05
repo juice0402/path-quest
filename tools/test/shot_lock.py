@@ -1,5 +1,5 @@
 # 11/5 鍵の点検：記録12段のお店（スキル・積み木の箱）と、のぼっている途中の知らせを並べて1枚に
-# usage: python3 tools/test/shot_lock.py out.png [order]  … order: 並び順だけ（スキル全体・積み木の箱の上と下）
+# usage: python3 tools/test/shot_lock.py out.png [order] [meta の上書き JSON]  … order: 並び順だけ（スキル全体・積み木の箱の上と下）
 import asyncio, sys, os, json
 from playwright.async_api import async_playwright
 from PIL import Image
@@ -7,6 +7,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 URL = 'file://' + os.path.abspath(os.path.join(HERE, '../../games/path-quest/index.html')) + '#fxtest'
 META = {'bank': 480, 'best': 12, 'far': 12, 'seen': 0, 'up': {'hp': 2, 'atk': 1},
         'sk': {'own': ['turn', 'candy'], 'eq': ['turn', 'candy', None]}, 'newu': ['sk:clear', 'sk:rain', 'up:sd']}
+if len(sys.argv) > 3: META.update(json.loads(sys.argv[3]))  # 例: '{"far":25,"newu":["sk:cross"]}'
 TMP = os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), '_lock_%d.png')
 
 async def main():
