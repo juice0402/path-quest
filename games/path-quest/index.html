@@ -2437,6 +2437,8 @@ function tapCell(i){
   if(pick>=0)return closePick();
   const e=foeAt(i),F=frontier();
   if(e&&!(sel>=0&&fits(run.hand[sel],i,F))){if(fpick>=0&&fsel.has(i))return hidePick();return showFoe(i,e)} // a toy: its paper (again: closed)
+  if(!e){const c=cellAt(i),h=boardPaper(i); /* 11/5: a thing on the field: its paper (again: closed) */
+    if(h&&!(sel>=0&&(fits(run.hand[sel],i,F)||(c&&!c.rock&&!c.tile&&F.has(i))))){if(fpick>=0&&fsel.has(i))return hidePick();return showThing(i,h)}}
   if(fpick>=0)hidePick();
   if(sel<0){if(F.has(i))hop();return}
   place(i,sel);
@@ -2708,20 +2710,54 @@ function foePaper(e,what){
   return `<span class="sb-ic fd-ic${e.boss||e.king?'':' sm'}">${svg(SPR[e.t]||SPR.soldier)}</span><div class="sb-t"><b><span class="fd-n">${e.name}</span><span class="fd-st"><i class="st-a"><b class="ic"></b>${nf(e.atk)}</i>${hp(nf(e.hp))}</span></b><span>${what}</span></div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
 }
 let hpick=-1; /* 11/5: the hand block whose paper is open */
+function blockWhat(t){ /* what rides on a block (gear, gold, candy) or what a special block does; a plain one: null */
+  const e=t&&t.e,g=e&&gearOf(e);
+  if(g){const sl=SLOTS.find(x=>x.k===g.s);return {ic:ico(g.art),n:`${g.n}<em class="ct">${sl?sl.n:''} ${'★'.repeat(g.r)}</em>`,
+    d:owned(g.id)?`もう持っている：のると${ico(SPR.coin)}+${nf(gainOf(dupGold(g)))}`:`のると手に入る${gearDesc(g)?'・'+gearDesc(g):''}`}}
+  if(e&&e.k==='coin')return {ic:ico(SPR.coin),n:'金貨',d:`のると${ico(SPR.coin)}+${nf(e.v)}`};
+  if(e&&e.k==='potion')return {ic:ico(SPR.potion),n:'キャンディ',d:`のると${ico(SPR.heart)}+${nf(e.v)}`};
+  if(t&&t.sp&&SP_ID[t.sp])return {ic:svg(spBlock(t.sp)),n:SP_ID[t.sp][2],d:SP_ID[t.sp][4]};
+  return null;
+}
+function thingPaper(ic,n,ds){
+  return `<span class="sb-ic">${ic}</span><div class="sb-t"><b>${n}</b>${ds.filter(Boolean).map(d=>`<span class="sp-d">${d}</span>`).join('')}</div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
+}
+/* 11/5: the things on the field. only what this knight has to deal with them is told */
+const OB_N={grass:'家',forest:'木',lake:'池',snow:'雪だるま',castle:'城のかべ'};
+const setSk=id=>!!(run&&run.sk&&run.sk.some(x=>x&&x.id===id));
+function floorWhat(c){ /* poison, a marble, coins lying on a panel */
+  const a=[];
+  if(c.psn)a.push({ic:svg(SPR.psn),n:'毒の水たまり',d:`通ると毒：3歩のあいだ ${ico(SPR.heart)}-${nf(c.psn)}ずつ`,x:setSk('clear')?'おかたづけで消せる':''});
+  if(c.gem)a.push({ic:ico(SPR.gem),n:'ビー玉',d:`通ると${ico(SPR.coin)}+${nf(gainOf(c.gem))}`,x:setSk('magnet')?'じしゃくで集められる':''});
+  if(c.coin)a.push({ic:ico(SPR.coin),n:'金貨',d:`通ると${ico(SPR.coin)}+${nf(gainOf(c.coin))}`,x:setSk('magnet')?'じしゃくで集められる':''});
+  return a;
+}
+function boardPaper(i){ /* the paper for a tap on panel i (a toy has its own), or '' */
+  const c=cellAt(i);if(!c||c.start)return '';
+  const fl=floorWhat(c),more=fl.map(x=>x.n+'：'+x.d);
+  if(c.rock===2){const row=run.rows[rowOf(i)],g=row&&row.find(x=>x.tile&&x.tile.anc),who=g&&g.tile.kg?'王さま':'大将';
+    return thingPaper(svg(SPR.fence),`${who}の柵`,['こわせない',`通れるのは ${who}のマスだけ`])}
+  if(c.rock){const a=areaOf(rowOf(i)).k,fix=[];
+    if((meta.up.sg|0)>0)fix.push('幽霊なら置ける');
+    if((meta.up.sh|0)>0)fix.push('ハンマーでこわせる');
+    if(setSk('clear'))fix.push('おかたづけでどかせる');
+    return c.rock===3?thingPaper(svg(SPR.brick),'かべ職人のかべ',['ここには積み木を置けない',fix.join('・')])
+      :thingPaper(svg(SPR.ob[a]||SPR.ob.grass),OB_N[a]||'障害物',['ここには積み木を置けない',fix.join('・')])}
+  if(c.tile){const w=blockWhat(c.tile);
+    if(w)return thingPaper(w.ic,w.n,[w.d,...more]);
+    if(!fl.length)return '';}
+  if(!fl.length)return '';
+  const f=fl[0];return thingPaper(f.ic,f.n,[f.d,...more.slice(1),f.x]);
+}
+function showThing(i,h){
+  hidePick();fpick=i;fsel.add(i);const c0=elOf(i);if(c0)c0.classList.add('fsel');
+  const el=$('skbar');el.innerHTML=h;el.hidden=false;
+}
 function slotPaper(i){ /* 11/5: a tap on a hand block that carries something: what it is */
   const t=run.hand[i],e=t&&t.e,el=$('skbar');if(!t||!el)return;
   let h='';
   if(e&&e.k==='foe')h=foePaper(e,foeWhat(e,null));
-  else{
-    const g=e&&gearOf(e);let ic='',n='',d='';
-    if(g){const sl=SLOTS.find(x=>x.k===g.s);ic=ico(g.art);n=`${g.n}<em class="ct">${sl?sl.n:''} ${'★'.repeat(g.r)}</em>`;
-      d=owned(g.id)?`もう持っている：のると${ico(SPR.coin)}+${nf(gainOf(dupGold(g)))}`:`のると手に入る${gearDesc(g)?'・'+gearDesc(g):''}`}
-    else if(e&&e.k==='coin'){ic=ico(SPR.coin);n='金貨';d=`のると${ico(SPR.coin)}+${nf(e.v)}`}
-    else if(e&&e.k==='potion'){ic=ico(SPR.potion);n='キャンディ';d=`のると${ico(SPR.heart)}+${nf(e.v)}`}
-    else if(t.sp&&SP_ID[t.sp]){ic=svg(spBlock(t.sp));n=SP_ID[t.sp][2];d=SP_ID[t.sp][4]}
-    else{if(hpick>=0)hidePick();return}
-    h=`<span class="sb-ic">${ic}</span><div class="sb-t"><b>${n}</b><span class="sp-d">${d}</span></div><div class="sb-b"><button class="sb-x" type="button" data-sb="x">とじる</button></div>`;
-  }
+  else{const w=blockWhat(t);if(!w){if(hpick>=0)hidePick();return}h=thingPaper(w.ic,w.n,[w.d])}
   hidePick();hpick=i;el.innerHTML=h;el.hidden=false;
 }
 function showFoe(i,e){
