@@ -1,0 +1,132 @@
+/* ===== the toy shelf under the field: skills and the die on the top board, the hand in six sockets below ===== */
+.app{--slot:min(60px,calc((min(100vw,520px) - 16px - 30px) / 6))}
+.tray{flex-direction:column;align-items:stretch;gap:7px;padding:8px 8px max(8px,env(safe-area-inset-bottom,0px));border-top:0;
+  background:var(--grain),#bd7e4a;box-shadow:0 -4px 0 var(--wood-deep)}
+.kit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 60px;gap:6px}
+.kit .skill{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:auto;height:60px;padding:3px 2px 4px;box-sizing:border-box;border:0;border-radius:2px;
+  background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 4px 0 var(--frame);cursor:pointer;color:var(--ink)}
+.kit .skill .sk-ic{position:relative;flex:none;width:36px;height:36px}
+.kit .skill .sk-ic svg{position:absolute;inset:0;width:100%;height:100%}
+.kit .skill .sk-n{max-width:100%;font:800 11.5px/1.15 var(--round);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kit .skill.none{outline:2px dashed rgba(255,246,230,.55);background:rgba(90,45,15,.18);box-shadow:none;cursor:default;justify-content:center;color:rgba(255,246,230,.7);font:800 12px/1 var(--round)}
+.kit .skill.rest{background:#eadfd2;box-shadow:0 2px 0 var(--frame)}
+.kit .skill.rest .sk-ic svg{filter:saturate(0) opacity(.5)}
+.kit .skill.rest .sk-n{color:#9c8774}
+/* resting: a wind-up dial runs down over the picture, the steps left in the middle */
+.sk-rest{position:absolute;inset:2px;border-radius:50%;background:conic-gradient(rgba(107,74,58,.55) calc(var(--p) * 1turn),rgba(107,74,58,0) 0);display:grid;place-items:center}
+.sk-rest b{min-width:22px;height:22px;padding:0 4px;box-sizing:border-box;border-radius:11px;background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;font:800 14px/22px var(--round);color:var(--frame);text-align:center;font-variant-numeric:tabular-nums}
+.kit .skill.on{background:#fff;outline:3px solid var(--accent);outline-offset:-3px;box-shadow:0 4px 0 var(--accent-deep);transform:translateY(-3px)}
+.kit .skill.ready{animation:skready .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes skready{40%{transform:translateY(-6px) scale(1.06)}}
+.kit.stuck .skill.can,.kit.stuck .dice:not(:disabled){animation:nudge .9s ease-in-out infinite}
+.kit .skill:not(.none):not(.on):active{transform:translateY(3px);box-shadow:0 1px 0 var(--frame)}
+.kit .dice{width:60px;height:60px;border-radius:2px;background:#fffaf0;outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 4px 0 var(--frame)}
+.kit .dice svg{position:absolute;inset:7px;width:46px;height:46px}
+.kit .dice b{top:-8px;right:-6px;min-width:22px;height:22px;padding:0 5px;background:var(--frame);box-shadow:none;color:#fff6e6;font:800 13px/22px var(--round)}
+.kit .dice:disabled{background:#eadfd2;box-shadow:0 2px 0 var(--frame)}
+.kit .dice:disabled svg{opacity:.4}
+.kit .dice:not(:disabled):active{transform:translateY(3px);box-shadow:0 1px 0 var(--frame)}
+
+/* the hand: always six sockets; the ones the shop has not opened yet are shut with a lid */
+.hand{--hs:6;flex:none;display:grid;grid-template-columns:repeat(6,var(--slot));justify-content:center;gap:6px}
+.slot{position:relative;aspect-ratio:auto;height:calc(var(--slot) + 17px);display:flex;flex-direction:column;align-items:center;border-radius:2px;
+  background:rgba(70,34,12,.28);box-shadow:inset 0 3px 0 rgba(40,18,6,.35),inset 0 -1px 0 rgba(255,255,255,.18);cursor:grab;transition:transform .12s}
+.slot .blk{position:relative;width:var(--slot);height:var(--slot);flex:none}
+.slot .blk svg{position:absolute;inset:0;width:100%;height:100%}
+.slot .lbl{display:flex;align-items:center;justify-content:center;gap:1px;height:16px;margin-top:1px;font:800 12px/1 var(--round);color:#fff6e6;font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 1px 0 rgba(40,18,6,.6)}
+.slot .lbl svg{width:15px;height:15px;flex:none}
+.slot .lbl.foe{color:#ffd3da}.slot .lbl.coin{color:#ffe59a}.slot .lbl.heal{color:#c7f5d2}.slot .lbl.new{color:#fff}
+.slot .lbl.new b{padding:0 4px;background:#e23c56;font-size:10px;line-height:14px}
+.slot .badge,.slot .pz{display:none}
+.slot.sel{transform:translateY(-8px)}
+.slot.sel::before{content:"";position:absolute;inset:-3px -3px auto;height:calc(var(--slot) + 6px);border:3px solid var(--accent);border-radius:2px;pointer-events:none;box-shadow:0 0 0 2px #fff}
+.slot.dull .blk{opacity:.4;filter:saturate(.3)}
+.slot.dull .blk::after{content:"";position:absolute;inset:26%;background:linear-gradient(45deg,transparent 43%,rgba(107,74,58,.75) 43% 57%,transparent 57%),linear-gradient(-45deg,transparent 43%,rgba(107,74,58,.75) 43% 57%,transparent 57%)}
+.slot.none{border:0;cursor:default}
+.slot.lock{cursor:default;background:repeating-linear-gradient(135deg,rgba(70,34,12,.22) 0 6px,rgba(70,34,12,.32) 6px 12px);box-shadow:inset 0 3px 0 rgba(40,18,6,.3)}
+.slot.aim::before{inset:-3px -3px auto;height:calc(var(--slot) + 6px)}
+/* where the held block fits: a faint copy of it sits on the panel; panels it does not fit lose their chalk line */
+.board.holding .cell.front:not(.fit)::after{opacity:0}
+.cell .gh{position:absolute;inset:0;z-index:1;opacity:.55;pointer-events:none;animation:ghin .2s ease-out}
+.cell .gh svg{overflow:visible}
+@keyframes ghin{from{opacity:0;transform:translateY(-6%)}}
+
+/* the skill note: what the chosen skill does, pinned over the row behind the knight */
+.skn{position:absolute;left:6px;right:6px;bottom:4px;z-index:8;display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:var(--cell,60px);box-sizing:border-box;padding:6px 8px 6px 6px;
+  background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 4px 0 var(--frame);animation:skin .16s ease-out}
+@keyframes skin{from{transform:translateY(10px);opacity:0}}
+.skn .sb-ic{width:46px;height:46px}
+.skn .sb-ic svg{width:100%;height:100%}
+.skn .sb-t{min-width:0}
+.skn .sb-t b{display:block;font:800 15px/1.2 var(--round)}
+.skn .sb-t span{display:block;margin-top:1px;font:700 13px/1.3 var(--round);color:var(--dim)}
+.skn .sb-t span.do{color:var(--accent)}
+.skn .sb-b{display:flex;gap:6px}
+.skn button{height:44px;border:0;border-radius:2px;font:800 14px/1 var(--round);cursor:pointer}
+.skn .sb-x{min-width:58px;padding:0 10px;background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 3px 0 var(--frame);color:var(--frame)}
+.skn .sb-go{min-width:68px;padding:0 14px;clip-path:var(--cut);background:var(--grain),#34a56a;box-shadow:inset 0 -4px 0 #1d6b41;color:#fff;font:400 16px/1 var(--disp);letter-spacing:.06em;text-shadow:0 2px 0 #1d6b41}
+.skn button:active{transform:translateY(2px)}
+.drawer,.pull{display:none!important}
+.say{top:calc(var(--hudh) + 6px)}
+
+/* ===== the reward: three toys on a shelf, one row each; a tap chooses, the sign below takes it ===== */
+.sheet.reward{background:rgba(40,22,10,.78)}
+.rw{width:min(100%,430px);gap:12px}
+.rw-head{gap:10px}
+.rw-head svg{width:40px;height:40px}
+.rw-head h2{font:400 28px/1.1 var(--disp);letter-spacing:.04em}
+.rw-head small{font-size:12px}
+.inv{gap:6px}
+.inv .ig{display:flex;flex-direction:column;align-items:center;gap:3px}
+.inv .ig>small{font:800 11px/1 var(--round);color:#f3dcc0;letter-spacing:.1em}
+.inv .ig-row{display:flex;gap:5px}
+.inv i{width:40px;height:40px;background:var(--paper);box-shadow:0 0 0 2px var(--frame)}
+.inv i svg{inset:3px;width:34px;height:34px}
+.inv i b{background:var(--frame);outline:0}
+.inv i.empty{background:rgba(255,246,230,.12);box-shadow:inset 0 0 0 2px rgba(255,246,230,.35)}
+.inv i.tgt{animation:tgt .7s ease-in-out infinite alternate}
+@keyframes tgt{to{box-shadow:0 0 0 4px #ffe58a}}
+.inv i .stamp{position:absolute;left:50%;top:-10px;transform:translateX(-50%) rotate(-6deg);padding:2px 6px;background:#e23c56;color:#fff;font:800 12px/1.2 var(--round);font-style:normal;white-space:nowrap;animation:stamp .5s cubic-bezier(.3,1.7,.5,1) both}
+@keyframes stamp{from{transform:translateX(-50%) rotate(-6deg) scale(2.2);opacity:0}}
+.card .inv .ig>small{color:var(--dim)}
+.card .inv i.empty{background:#f3e8da;box-shadow:inset 0 0 0 2px #d8c1a6}
+.rw-cards{display:flex;flex-direction:column;gap:10px}
+.rw-cards.n1,.rw-cards.n2{display:flex}
+.rrow{--kc:#c9a46a;position:relative;display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:10px;width:100%;min-height:100px;box-sizing:border-box;padding:10px 12px 10px 8px;border:0;border-radius:2px;
+  background:var(--paper);outline:2px solid var(--frame);outline-offset:-2px;box-shadow:0 5px 0 var(--frame);text-align:left;color:var(--ink);cursor:pointer;
+  animation:rrin .42s cubic-bezier(.3,1.35,.5,1) backwards;animation-delay:calc(var(--n) * 90ms)}
+@keyframes rrin{from{transform:translateY(30px);opacity:0}}
+.rrow .rr-art{position:relative;width:76px;height:76px;background:#f3e8da;box-shadow:inset 0 0 0 3px var(--kc)}
+.rrow .rr-art svg{position:absolute;inset:6px;width:64px;height:64px}
+.rrow .rr-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rrow .rr-tag{padding:2px 6px;background:var(--frame);color:#fff6e6;font:800 11px/1.2 var(--round);font-style:normal}
+.rrow .rr-tag.ch{background:transparent;outline:1.5px solid var(--frame);outline-offset:-1.5px;color:var(--frame)}
+.rrow .rr-name{font:800 18px/1.2 var(--round)}
+.rrow .rr-v{margin-left:auto;font:400 20px/1 var(--disp);color:var(--kc);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.rrow .rr-v.nw{font:800 12px/1 var(--round);padding:3px 6px;background:#e23c56;color:#fff;letter-spacing:.04em}
+.rrow .rr-d{display:block;margin-top:5px;font:700 14px/1.45 var(--round);color:var(--ink)}
+.rrow .rr-d b{color:var(--kc);font-weight:800}
+.rrow .rr-h{display:block;margin-top:3px;font:700 12px/1.35 var(--round);color:var(--dim)}
+.rrow.k-atk{--kc:#e0743a}.rrow.k-def{--kc:#4f86c9}.rrow.k-hp{--kc:#2f9e5f}.rrow.k-roll{--kc:#9a6cd0}.rrow.k-mag{--kc:#8a5fc4}.rrow.k-gold{--kc:#c8891a}
+.rrow.on{outline:3px solid var(--kc);outline-offset:-3px;box-shadow:0 5px 0 var(--frame),0 0 0 3px #fff;transform:translateY(-4px)}
+.rw-cards.has .rrow:not(.on){opacity:.62}
+.rrow:active{transform:translateY(2px)}
+/* the gold of a new dimension and the captain's chest */
+.rw.power .rrow,.rw.chest .rrow,.rrow.evo{--kc:#d49a16;background:#fff6dc}
+.rw.power .rrow::before,.rw.chest .rrow::before,.rrow.evo::before{content:none}
+.rw.power .rw-head h2,.rw.chest .rw-head h2{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:#ffe08a;filter:none;text-shadow:0 2px 0 #6b3d10}
+.rw-go{width:100%;height:54px;border:0;border-radius:0;clip-path:var(--cut);cursor:pointer;
+  background:radial-gradient(circle at 18px 50%,#f3e2c4 0 3px,#5e3417 3.5px 5px,transparent 5.5px),radial-gradient(circle at calc(100% - 18px) 50%,#f3e2c4 0 3px,#5e3417 3.5px 5px,transparent 5.5px),var(--grain),#34a56a;
+  box-shadow:inset 0 -6px 0 #1d6b41;color:#fff;font:400 20px/1 var(--disp);letter-spacing:.1em;text-shadow:0 2px 0 #1d6b41}
+.rw-go:disabled{cursor:default;background:var(--paper);box-shadow:none;outline:2px dashed rgba(107,74,58,.6);outline-offset:-4px;color:var(--frame);text-shadow:none;font:800 15px/1 var(--round);letter-spacing:.04em}
+.rw-go:not(:disabled):active{transform:translateY(2px)}
+.rw-info{display:none}
+/* taking it: the chosen toy rises, the others tumble off the shelf */
+.rrow.take{transition:transform .25s cubic-bezier(.3,1.6,.5,1);transform:translateY(-8px) scale(1.03)}
+.rrow.fall{transition:transform .5s cubic-bezier(.5,0,.9,.6),opacity .5s;transform:translateY(90px) rotate(var(--r,6deg));opacity:0}
+@media (prefers-reduced-motion:reduce){.rrow,.inv i.tgt,.kit .skill.ready,.kit.stuck .skill.can,.cell .gh{animation:none!important}.rrow.fall,.rrow.take{transition:none}}
+@media (min-width:1100px){
+  .tray{gap:12px}
+  .kit{grid-template-columns:repeat(3,minmax(0,1fr)) 60px}
+  .hand{grid-template-columns:repeat(3,96px);--slot:96px}
+}
