@@ -1264,6 +1264,16 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 @media (max-width:340px){
   #s-quit .ov-sub .btn.play::before,#ov .ov-sub .btn.play::before{display:none}
 }
+/* 11/5: a phone on its side, in the shop: the list on the left, the pinned paper on the right */
+@media (orientation:landscape) and (max-height:520px){
+  .sh{width:min(100%,900px);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"top top" "body det" "nav nav"}
+  .sh-top{grid-area:top}
+  .sh-body{grid-area:body;padding-bottom:12px}
+  .sh:not(.det-on) .sh-body{grid-column:1/-1}
+  .sh-det{grid-area:det;align-self:start;margin:4px max(10px,env(safe-area-inset-right,0px)) 10px 2px}
+  .sh-nav{grid-area:nav;margin-top:14px}
+  .sh-nav [role=tab]{height:50px}
+}
 /* paper: the cream paper from inside the frame */
 .card,.sh-sheet,.rrow,.pill,.quit,.dt-sub,.skn .sb-x,.kit .skill,.btn:not(.main):not(.link),.sh-nav [role=tab][aria-selected=true]{background-image:var(--ui-paper);background-size:cover;background-position:center}
 /* framed paper: the pinned paper of the shop, the message window and the skill paper on the field */
@@ -3326,14 +3336,14 @@ function renderShop(fresh){
   if(shopTab==='deck')$('sh-deck').innerHTML=mixHTML()+'<div class="sh-sheet">'+UPS.filter(u=>u.deck&&MIX_OF[u.k]!=null).sort(byLock('up',u=>u.k)).map(upRow).join('')+'</div><p class="sh-cap">のっている物</p><div class="sh-sheet">'+UPS.filter(u=>u.deck&&!u.sp&&MIX_OF[u.k]==null).sort(byLock('up',u=>u.k)).map(upRow).join('')+'</div><p class="sh-cap">特別な積み木</p><div class="sh-sheet">'+UPS.filter(u=>u.sp).sort(byLock('up',u=>u.k)).map(upRow).join('')+'</div>';
   if(shopTab==='gear')$('sh-gear').innerHTML=gearHTML();
   if(shopTab==='skill')$('sh-skill').innerHTML=skillHTML();
-  const d=$('sh-det'),dh=detailHTML();d.innerHTML=dh;d.hidden=!dh;
+  const d=$('sh-det'),dh=detailHTML();d.innerHTML=dh;d.hidden=!dh;d.parentElement.classList.toggle('det-on',!!dh);
   if(fresh)$('sh-body').scrollTop=0;
   if(shopTab==='gear'&&meta.newg&&meta.newg.includes(shopSel.gear)){meta.newg=meta.newg.filter(x=>x!==shopSel.gear);saveMeta()}
   if(shopTab==='skill'||shopTab==='deck'){const nk=(shopTab==='skill'?'sk:':'up:')+shopSel[shopTab];if(meta.newu&&meta.newu.includes(nk)){meta.newu=meta.newu.filter(x=>x!==nk);saveMeta()}} // seen: the NEW goes after this look
   shopMarks();
 }
 function choose(key){ // a tap on the list: only the pinned paper changes
-  if(shopSel[shopTab]===key)return;
+  if(shopSel[shopTab]===key){shopSel[shopTab]=null;swap=null;renderShop();return} /* 11/5: the same one again closes the paper */
   shopSel[shopTab]=key;detT=performance.now();renderShop();
   const d=$('sh-det');if(!REDUCED){d.classList.remove('flash');void d.offsetWidth;d.classList.add('flash')}
   const on=$('sh-body').querySelector('.sel');if(on)on.scrollIntoView({block:'nearest'}); // the paper came up under it: keep the chosen row in view
