@@ -2013,7 +2013,7 @@ const LOCK={
 const lockAt=(t,k)=>LOCK[t][k]||0;
 let shopNew=new Set(); /* the NEW ones as the shop opened: the order keeps to it until the shop closes */
 const lockGrp=(t,k)=>isLocked(t,k)?2:shopNew.has(t+':'+k)?1:0;
-const byLock=(t,key)=>(a,b)=>{const x=key(a),y=key(b);return lockGrp(t,x)-lockGrp(t,y)||(lockAt(t,x)>0)-(lockAt(t,y)>0)||lockAt(t,y)-lockAt(t,x)}; /* open → NEW → locked; in each, from the start first, then the biggest step first */
+const byLock=(t,key)=>(a,b)=>{const x=key(a),y=key(b),g=lockGrp(t,x);return g-lockGrp(t,y)||(lockAt(t,x)>0)-(lockAt(t,y)>0)||(g===2?lockAt(t,x)-lockAt(t,y):lockAt(t,y)-lockAt(t,x))}; /* open → NEW → locked; open and NEW: from the start first, then the biggest step first; locked: the smallest step first (the next to open on top) */
 const isLocked=(t,k)=>meta.far<lockAt(t,k)&&!(t==='sk'?meta.sk.own.includes(k):meta.up[k]>0);
 const lockTag=(t,k)=>`<span class="tag lk">${ico(SPR.flag)}${lockAt(t,k)}段</span>`;
 const lockPaper=(art,txt)=>`<span class="dt-art lk">${art}</span><div class="dt-head"><b>？？？</b></div><div class="dt-body"><p class="dt-d dim">${txt}</p><p class="dt-d dim lk-now">いまの記録 ${nf(meta.far)}段</p></div><div class="dt-foot"></div>`;
