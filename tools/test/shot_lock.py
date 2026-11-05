@@ -1,5 +1,5 @@
 # 11/5 鍵の点検：記録12段のお店（スキル・積み木の箱）と、のぼっている途中の知らせを並べて1枚に
-# usage: python3 tools/test/shot_lock.py out.png
+# usage: python3 tools/test/shot_lock.py out.png [order]  … order: 並び順だけ（スキル全体・積み木の箱の上と下）
 import asyncio, sys, os, json
 from playwright.async_api import async_playwright
 from PIL import Image
@@ -18,19 +18,27 @@ async def main():
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await pg.goto(URL); await pg.wait_for_timeout(600)
         shots = []
-        # 1: the skill book, a locked one chosen
-        await pg.evaluate("()=>PQ.showShop('skill')"); await pg.wait_for_timeout(400)
-        await pg.click('.sk2[data-s="cross"]'); await pg.wait_for_timeout(500)
-        await pg.screenshot(path=TMP % 1); shots.append(TMP % 1)
-        # 2: the toy box, scrolled to the special blocks, a locked one chosen
-        await pg.evaluate("()=>PQ.showShop('deck')"); await pg.wait_for_timeout(400)
-        await pg.click('.row-i[data-k="sg"]'); await pg.wait_for_timeout(500)
-        await pg.evaluate("()=>{const e=document.querySelector('.row-i[data-k=\"sd\"]');e&&e.scrollIntoView({block:'center'})}"); await pg.wait_for_timeout(300)
-        await pg.screenshot(path=TMP % 2); shots.append(TMP % 2)
-        # 3: on the road, the record passes 20: the note
-        await pg.evaluate("()=>{PQ.newRun()}"); await pg.wait_for_timeout(900)
-        await pg.evaluate("()=>{PQ.meta.far=19;PQ.meta.newu=[];PQ.opened(19,20)}"); await pg.wait_for_timeout(700)
-        await pg.screenshot(path=TMP % 3); shots.append(TMP % 3)
+        if len(sys.argv) > 2 and sys.argv[2] == 'order':
+            await pg.evaluate("()=>PQ.showShop('skill')"); await pg.wait_for_timeout(400)
+            await pg.screenshot(path=TMP % 1); shots.append(TMP % 1)
+            await pg.evaluate("()=>PQ.showShop('deck')"); await pg.wait_for_timeout(400)
+            await pg.screenshot(path=TMP % 2); shots.append(TMP % 2)
+            await pg.evaluate("()=>{const b=document.getElementById('sh-body');b.scrollTop=b.scrollHeight}"); await pg.wait_for_timeout(300)
+            await pg.screenshot(path=TMP % 3); shots.append(TMP % 3)
+        else:
+            # 1: the skill book, a locked one chosen
+            await pg.evaluate("()=>PQ.showShop('skill')"); await pg.wait_for_timeout(400)
+            await pg.click('.sk2[data-s="cross"]'); await pg.wait_for_timeout(500)
+            await pg.screenshot(path=TMP % 1); shots.append(TMP % 1)
+            # 2: the toy box, scrolled to the special blocks, a locked one chosen
+            await pg.evaluate("()=>PQ.showShop('deck')"); await pg.wait_for_timeout(400)
+            await pg.click('.row-i[data-k="sg"]'); await pg.wait_for_timeout(500)
+            await pg.evaluate("()=>{const e=document.querySelector('.row-i[data-k=\"sd\"]');e&&e.scrollIntoView({block:'center'})}"); await pg.wait_for_timeout(300)
+            await pg.screenshot(path=TMP % 2); shots.append(TMP % 2)
+            # 3: on the road, the record passes 20: the note
+            await pg.evaluate("()=>{PQ.newRun()}"); await pg.wait_for_timeout(900)
+            await pg.evaluate("()=>{PQ.meta.far=19;PQ.meta.newu=[];PQ.opened(19,20)}"); await pg.wait_for_timeout(700)
+            await pg.screenshot(path=TMP % 3); shots.append(TMP % 3)
         info = await pg.evaluate("()=>({newu:PQ.meta.newu,lockedSk:Object.keys(PQ.LOCK.sk).filter(k=>PQ.isLocked('sk',k))})")
         await b.close()
     ims = [Image.open(x) for x in shots]

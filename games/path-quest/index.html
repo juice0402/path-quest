@@ -1962,6 +1962,7 @@ const LOCK={
   up:{sd:10,dx:20,sh:20,sj:20,ds:40,sg:40}
 };
 const lockAt=(t,k)=>LOCK[t][k]||0;
+const byLock=(t,key)=>(a,b)=>(lockAt(t,key(a))>0)-(lockAt(t,key(b))>0)||lockAt(t,key(b))-lockAt(t,key(a)); /* open from the start first, then the biggest step first */
 const isLocked=(t,k)=>meta.far<lockAt(t,k)&&!(t==='sk'?meta.sk.own.includes(k):meta.up[k]>0);
 const lockTag=(t,k)=>`<span class="tag lk">${ico(SPR.flag)}${lockAt(t,k)}段</span>`;
 const lockPaper=(art,txt)=>`<span class="dt-art lk">${art}</span><div class="dt-head"><b>？？？</b></div><div class="dt-body"><p class="dt-d dim">${txt}</p><p class="dt-d dim lk-now">いまの記録 ${nf(meta.far)}段</p></div><div class="dt-foot"></div>`;
@@ -3231,7 +3232,7 @@ function gearHTML(){
 function skillHTML(){
   const own=meta.sk.own,eq=meta.sk.eq;
   let h=`<div class="pegs${swap?' swap':''}"><span>${swap?'どの枠と入れかえる？':'セット'}</span>${eq.map((id,j)=>`<button class="peg${id&&shopSel.skill===id&&!swap?' sel':''}" type="button" data-peg="${j}" aria-label="枠${j+1}${id?'：'+SKILL_ID[id].n:'（空き）'}"><em>${j+1}</em>${id?svg(SK_ART[id]):''}</button>`).join('')}</div>`;
-  h+='<div class="book">'+SKILLS.map(k=>{const has=own.includes(k.id),on=eq.includes(k.id),lk=isLocked('sk',k.id),nw=(meta.newu||[]).includes('sk:'+k.id);
+  h+='<div class="book">'+[...SKILLS].sort(byLock('sk',k=>k.id)).map(k=>{const has=own.includes(k.id),on=eq.includes(k.id),lk=isLocked('sk',k.id),nw=(meta.newu||[]).includes('sk:'+k.id);
     const tag=lk?lockTag('sk',k.id):on?'<span class="tag on">セット中</span>':has?'<span class="tag own">覚えた</span>':priceTag(k.cost,meta.bank>=k.cost);
     return `<button class="sk2${has?'':' not'}${lk?' lk':''}${shopSel.skill===k.id?' sel':''}" type="button" data-s="${k.id}"${lk?' aria-label="まだ出てきていない"':''}>${svg(SK_ART[k.id])}<b>${lk?'？？？':k.n}</b>${tag}${nw?'<i class="nw">NEW</i>':''}</button>`}).join('')+'</div>';
   return h;
@@ -3298,7 +3299,7 @@ function renderShop(fresh){
     const on=k===shopTab;$(tab).setAttribute('aria-selected',on);$(panel).hidden=!on;if(on)$('sh-title').textContent=name;
   }
   if(shopTab==='up')$('sh-up').innerHTML='<div class="sh-sheet">'+UPS.filter(u=>!u.deck).map(upRow).join('')+'</div>';
-  if(shopTab==='deck')$('sh-deck').innerHTML=mixHTML()+'<div class="sh-sheet">'+UPS.filter(u=>u.deck&&MIX_OF[u.k]!=null).map(upRow).join('')+'</div><p class="sh-cap">のっている物</p><div class="sh-sheet">'+UPS.filter(u=>u.deck&&!u.sp&&MIX_OF[u.k]==null).map(upRow).join('')+'</div><p class="sh-cap">特別な積み木</p><div class="sh-sheet">'+UPS.filter(u=>u.sp).map(upRow).join('')+'</div>';
+  if(shopTab==='deck')$('sh-deck').innerHTML=mixHTML()+'<div class="sh-sheet">'+UPS.filter(u=>u.deck&&MIX_OF[u.k]!=null).sort(byLock('up',u=>u.k)).map(upRow).join('')+'</div><p class="sh-cap">のっている物</p><div class="sh-sheet">'+UPS.filter(u=>u.deck&&!u.sp&&MIX_OF[u.k]==null).sort(byLock('up',u=>u.k)).map(upRow).join('')+'</div><p class="sh-cap">特別な積み木</p><div class="sh-sheet">'+UPS.filter(u=>u.sp).sort(byLock('up',u=>u.k)).map(upRow).join('')+'</div>';
   if(shopTab==='gear')$('sh-gear').innerHTML=gearHTML();
   if(shopTab==='skill')$('sh-skill').innerHTML=skillHTML();
   const d=$('sh-det'),dh=detailHTML();d.innerHTML=dh;d.hidden=!dh;
