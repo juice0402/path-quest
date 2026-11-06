@@ -3554,8 +3554,8 @@ function detailHTML(){
     const has=meta.sk.own.includes(k.id),on=meta.sk.eq.includes(k.id);
     let foot;
     if(swap)foot=`<span class="note">入れかえる枠を上でえらぶ</span><button class="dt-sub" type="button" data-act="cancel">やめる</button>`;
-    else if(!has)foot=`${undo('sk',k.id)}<span class="note"></span>${meta.bank>=k.cost?coinBtn('覚える',k.cost):short(k.cost)}`;
-    else foot=`${undo('sk',k.id)}<span class="note">${run?'つぎの冒険から':''}</span>${on?'<button class="dt-btn alt" type="button" data-act="unset">はずす</button>':'<button class="dt-btn" type="button" data-act="set">セットする</button>'}`;
+    else if(!has)foot=`<span class="note"></span>${meta.bank>=k.cost?coinBtn('覚える',k.cost):short(k.cost)}`;
+    else foot=`<span class="note">${run?'つぎの冒険から':''}</span>${on?'<button class="dt-btn alt" type="button" data-act="unset">はずす</button>':'<button class="dt-btn" type="button" data-act="set">セットする</button>'}`;
     return `<span class="dt-art">${svg(SK_ART[k.id])}</span><div class="dt-head"><b>${k.n}</b>${on?'<span class="tag on">セット中</span>':''}</div>`+
       `<div class="dt-body"><p class="dt-ct"><span>クールタイム</span><b>${k.ct}</b><span>マス</span></p></div><div class="dt-foot">${foot}</div>`;
   }
@@ -3602,8 +3602,8 @@ function shopAct(act){
     SND('buy');meta.bank-=c;meta.up[sel]++;visit.push({t:'up',key:sel,c});msg=true;
   }
   if(act==='buy'&&shopTab==='skill'){const k=SKILL_ID[sel];if(!k||meta.sk.own.includes(k.id)||meta.bank<k.cost||isLocked('sk',k.id))return;SND('buy');meta.bank-=k.cost;meta.sk.own.push(k.id);visit.push({t:'sk',key:k.id,c:k.cost});msg=true}
-  if(act==='undo'){
-    const t=shopTab==='skill'?'sk':'up',j=bought(t,sel);if(j<0)return;const v=visit.splice(j,1)[0];meta.bank+=v.c;
+  if(act==='undo'){ /* 11/7: a skill stays learned once bought (no もどす for skills) */
+    if(shopTab==='skill')return;const t='up',j=bought(t,sel);if(j<0)return;const v=visit.splice(j,1)[0];meta.bank+=v.c;
     if(t==='up')meta.up[sel]=Math.max(0,meta.up[sel]-1);else{meta.sk.own=meta.sk.own.filter(x=>x!==sel);meta.sk.eq=meta.sk.eq.map(x=>x===sel?null:x)}
   }
   if(act==='on'){const g=GEAR_ID[sel];if(g&&owned(g.id))meta.gear.eq[g.s]=g.id}

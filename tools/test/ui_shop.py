@@ -131,8 +131,8 @@ async def skills(S):
     await S.click('#sh-det [data-act="set"]'); await pg.wait_for_timeout(300)
     await S.click('#sh-det [data-act="cancel"]'); await pg.wait_for_timeout(300)
     if await pg.evaluate("()=>!!document.querySelector('.pegs.swap')"): issue('wrong', 'cancel did not end swap')
-    # undo a skill that is set: eq must clear
-    await S.click('#sh-det [data-act="undo"]')
+    # 11/7: a skill paper has no もどす
+    if await pg.query_selector('#sh-det [data-act="undo"]'): issue('wrong', 'skill paper still has undo')
     # swap mode then tab change
     await S.click(f'#sh-skill .sk2[data-s="{other2}"]'); await pg.wait_for_timeout(300)
     await S.click('#sh-det [data-act="set"]'); await pg.wait_for_timeout(300)
@@ -141,15 +141,18 @@ async def skills(S):
     # leave and come back: duplicates in eq?
     st = await shop_state(S)
     if len([x for x in st['eq'] if x]) != len(set(x for x in st['eq'] if x)): issue('wrong', f'dup in eq {st["eq"]}')
-    # undo a skill that was just bought while it is set (fresh visit)
+    # 11/7: a skill just bought stays learned (no もどす on the paper, and an undo from code does nothing)
     await S.goto(mt=meta(99999, 60))
     await pg.evaluate("PQ.showShop('skill')"); await pg.wait_for_timeout(200)
     await S.click('#sh-skill .sk2[data-s="cannon"]'); await pg.wait_for_timeout(300)
+    if await pg.query_selector('#sh-det [data-act="undo"]'): issue('wrong', 'unbought skill paper has undo')
     await S.click('#sh-det [data-act="buy"]'); await pg.wait_for_timeout(300)
     await S.click('#sh-det [data-act="set"]'); await pg.wait_for_timeout(300)
-    await S.click('#sh-det [data-act="undo"]'); await pg.wait_for_timeout(300)
+    if await pg.query_selector('#sh-det [data-act="undo"]'): issue('wrong', 'bought skill paper has undo')
+    bank1 = (await shop_state(S))['bank']
+    await pg.evaluate("()=>{const b=document.createElement('button');b.dataset.act='undo';document.body.appendChild(b);b.click();b.remove()}"); await pg.wait_for_timeout(300)
     st = await shop_state(S); print(' bought+set+undo', st['own'], st['eq'], st['bank'])
-    if 'cannon' in st['own'] or 'cannon' in st['eq'] or st['bank'] != 99999: issue('wrong', f'undo after set: {st}')
+    if 'cannon' not in st['own'] or 'cannon' not in st['eq'] or st['bank'] != bank1: issue('wrong', f'skill undone: {st}')
 
 async def gear(S):
     pg = S.pg
