@@ -77,7 +77,7 @@ button{font:inherit;color:inherit}
 .cell.fit{--hl:radial-gradient(ellipse 80% 70% at 50% 44%,rgba(255,250,222,.95),rgba(255,236,160,.82))}
 .cell.fit::after{border:3px solid var(--sun-deep);animation:glow .9s ease-in-out infinite alternate}
 .cell.over{--hl:linear-gradient(rgba(255,229,138,.94),rgba(255,214,110,.94))}
-.cell.new svg{transform-origin:50% 100%;animation:thunk .34s ease-out}
+.cell.new svg{transform-origin:50% 100%;animation:thunk .34s ease-out}.lxw{position:absolute;inset:0;pointer-events:none}.lxw .lxp,.lxw .lxm{position:absolute;display:block;pointer-events:none}.lxw .lxm{left:0;top:0;width:100%;height:100%;transform-origin:0 0}.lxw svg{overflow:visible;pointer-events:none}.lxw svg>*{pointer-events:visiblePainted}.cell.new>.lxw{transform-origin:50% 100%;animation:thunk .34s ease-out}.cell.new .lxw svg{animation:none}
 @keyframes glow{from{opacity:.45}to{opacity:1}}
 @keyframes thunk{0%{transform:translateY(-30%) scale(.92,1.08)}55%{transform:translateY(0) scale(1.1,.88)}78%{transform:scale(.97,1.03)}100%{transform:none}}
 
@@ -380,6 +380,7 @@ body.art #s-title .btn:not(.main){background:rgba(255,255,255,.94)}
   .board .toy,.board .eye,.hero:not(.walk) svg,.hero.down svg{animation:none}
   .weather{display:none}
   .cell.new svg,.pop,.hero.hurt svg{animation-duration:.01s}
+  .cell.new>.lxw{animation-duration:.01s}
 }
 
 /* ===== the game-style screens: pictures, numbers and one word; details on a tap. colours always mean the same:
@@ -1537,7 +1538,32 @@ const PM=()=>dimX(run&&run.dp||0); // the knight's dimension power: heals, magic
 const placeName=r=>(dimOf(r)?dimName(dimOf(r))+' ':'')+`${areaOf(r).n} ${stepOf(r)}段`;
 
 /* ---------- sprites (100x100) ---------- */
-const svg=s=>`<svg viewBox="0 0 100 100" aria-hidden="true">${s}</svg>`;
+const svg=s=>`<svg viewBox="0 0 100 100" aria-hidden="true">${unlx(s)}</svg>`;
+/* 11/6: moving parts (treasure, sparkles, toys) are marked <lx>; svgx() gives them boxes of their own over the picture, svg() keeps them inline */
+function LX(c,inner,st,sp){return `<lx c="${c}"${st?` s="${st}"`:''}${sp?' sp="1"':''}>${inner}</lx>`}
+function lxA(a){const o={};a.replace(/(\w+)="([^"]*)"/g,(_,k,v)=>{o[k]=v});return o}
+function lxInline(a,inner){const o=lxA(a);let g=`<g class="${o.c}"${o.s?` style="${o.s}"`:''}>${inner}</g>`;if(o.sp)g=`<g class="spawn">${g}</g>`;if(o.m)g=`<g transform="${o.m}">${g}</g>`;return g}
+function unlx(s){return typeof s==='string'&&s.indexOf('<lx ')>=0?s.replace(/<lx ([^>]*)>([\s\S]*?)<\/lx>/g,(_,a,inner)=>lxInline(a,inner)):s}
+const LXB=new Map();let lxMs=null;
+function lxBox(h){ /* the part's own bounding box (what transform-box:fill-box used), measured once per drawing */
+  if(LXB.has(h))return LXB.get(h);
+  if(!lxMs){lxMs=document.createElementNS('http://www.w3.org/2000/svg','svg');lxMs.setAttribute('width','0');lxMs.setAttribute('height','0');lxMs.setAttribute('aria-hidden','true');lxMs.style.cssText='position:absolute;left:0;top:0;visibility:hidden;pointer-events:none';lxMs.appendChild(document.createElementNS('http://www.w3.org/2000/svg','g'));document.body.appendChild(lxMs)}
+  const g=lxMs.firstChild;let r=null;try{g.innerHTML=h;const q=g.getBBox();if(q.width>0&&q.height>0)r={x:+q.x.toFixed(3),y:+q.y.toFixed(3),w:+q.width.toFixed(3),h:+q.height.toFixed(3)}}catch(e){}
+  g.innerHTML='';LXB.set(h,r);return r;
+}
+function cssT(m){return m.replace(/translate\(([-\d.e]+)[ ,]+([-\d.e]+)\)/g,'translate($1%,$2%)').replace(/(skewX|skewY|rotate)\(([-\d.e]+)\)/g,'$1($2deg)').replace(/scale\(([-\d.e]+)[ ,]+([-\d.e]+)\)/g,'scale($1,$2)')}
+function svgx(s){
+  if(typeof s!=='string'||s.indexOf('<lx ')<0)return svg(s);
+  const parts=[];
+  const main=s.replace(/<lx ([^>]*)>([\s\S]*?)<\/lx>/g,(_,a,inner)=>{
+    const o=lxA(a),b=lxBox(inner);if(!b)return lxInline(a,inner);
+    const geo=`left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%`,sv=`<svg viewBox="${b.x} ${b.y} ${b.w} ${b.h}" preserveAspectRatio="none" aria-hidden="true">${inner}</svg>`;
+    let h=o.sp?`<i class="lxp spawn" style="${geo}"><i class="lxp ${o.c}" style="left:0;top:0;width:100%;height:100%${o.s?';'+o.s:''}">${sv}</i></i>`:`<i class="lxp ${o.c}" style="${geo}${o.s?';'+o.s:''}">${sv}</i>`;
+    if(o.m)h=`<i class="lxm" style="transform:${cssT(o.m)}">${h}</i>`;
+    parts.push(h);return '';
+  });
+  return svg(main)+(parts.length?`<div class="lxw" aria-hidden="true">${parts.join('')}</div>`:'');
+}
 const ico=s=>`<svg viewBox="22 22 56 56" aria-hidden="true">${s}</svg>`;
 const nf=v=>Math.abs(v)>=1e4?(v/1e4).toFixed(Math.abs(v)>=1e5?0:1).replace(/\.0$/,'')+'万':String(v); // 12345 → 1.2万
 const BLOCKS=[['#f7c3d4','#e29ab4'],['#bfe6d6','#8fcdb6'],['#fbe2a0','#e5bf63'],['#d8cdf6','#b4a3e8'],['#c4e2f5','#93c3e4']];
@@ -1679,9 +1705,9 @@ function roadSVG(m,sh,lo,hi,ace){ // on the field the road runs past the block i
   let d='';for(const b of BITS)if(m&b)d+=seg[b];
   return `<path d="${d}" stroke="${sh}" stroke-width="36" fill="none"/><circle cx="50" cy="${RC}" r="18" fill="${sh}"/><path d="${d}" stroke="${ace?'#fff0a0':'#fffdf8'}" stroke-width="28" fill="none"/><circle cx="50" cy="${RC}" r="14" fill="${ace?'#fff0a0':'#fffdf8'}"/><path d="${d}" stroke="${ace?'#e8a520':sh}" stroke-width="3.5" stroke-dasharray="7 7" fill="none"/>`;
 }
-const tileArt=(t,inTray,at)=>{const a0=tileArt0(t,inTray,at);return !t.sp?a0:(t.sp==='ghost'?`<g opacity=".72">${a0}</g>`:a0)+spIco(t.sp)};
-const tileArt0=(t,inTray,at)=>{const c=t.c|0,ace=t.m===15&&!t.gate;return blockSVG(c)+(inTray?`<g class="rd" style="transform-origin:50% ${RC}%">${roadSVG(t.m,BLOCKS[c][1],4,96,ace)}</g>`:roadSVG(t.m,BLOCKS[c][1],undefined,undefined,ace))+(t.kg&&!t.e&&HAS_ART?U('portal',14,-6,72,86):'')+(inTray&&t.e&&t.e.k==='foe'?`<g transform="translate(70 30) scale(.5) translate(-50 -50)"><circle cx="50" cy="58" r="34" fill="#fffaf0" stroke="#6b4a3a" stroke-width="5"/><g transform="translate(50 54) scale(.72) translate(-50 -50)">${SPR[t.e.t]||SPR.soldier}</g></g>`:evSVG(t.e,at))+(ace?`<g class="tw">${STAR(86,12,9)}</g><g class="tw tw2">${STAR(13,82,7)}</g>`:'')};
-const LOOT=(s,i,glow)=>{const d=`style="--d:-${((i|0)*7%11)/10}s"`;return `<ellipse class="lsh" cx="50" cy="79" rx="15" ry="3.6" fill="rgba(60,30,46,.24)" ${d}/>`+(glow?`<circle class="lglow" cx="50" cy="54" r="23" fill="#fff3a8" ${d}/>`:'')+`<g class="loot" ${d}>${s}</g><g class="tw">${STAR(79,26,6)}</g><g class="tw tw2">${STAR(23,68,4.5)}</g>`}; // treasure: it bobs and twinkles
+const tileArt=(t,inTray,at)=>{const a0=tileArt0(t,inTray,at);return !t.sp?a0:(t.sp==='ghost'?`<g opacity=".72">${unlx(a0)}</g>`:a0)+spIco(t.sp)};
+const tileArt0=(t,inTray,at)=>{const c=t.c|0,ace=t.m===15&&!t.gate;return blockSVG(c)+(inTray?`<g class="rd" style="transform-origin:50% ${RC}%">${roadSVG(t.m,BLOCKS[c][1],4,96,ace)}</g>`:roadSVG(t.m,BLOCKS[c][1],undefined,undefined,ace))+(t.kg&&!t.e&&HAS_ART?U('portal',14,-6,72,86):'')+(inTray&&t.e&&t.e.k==='foe'?`<g transform="translate(70 30) scale(.5) translate(-50 -50)"><circle cx="50" cy="58" r="34" fill="#fffaf0" stroke="#6b4a3a" stroke-width="5"/><g transform="translate(50 54) scale(.72) translate(-50 -50)">${SPR[t.e.t]||SPR.soldier}</g></g>`:evSVG(t.e,at))+(ace?LX('tw',STAR(86,12,9))+LX('tw tw2',STAR(13,82,7)):'')};
+const LOOT=(s,i,glow)=>{const d=`--d:-${((i|0)*7%11)/10}s`;return LX('lsh','<ellipse cx="50" cy="79" rx="15" ry="3.6" fill="rgba(60,30,46,.24)"/>',d)+(glow?LX('lglow','<circle cx="50" cy="54" r="23" fill="#fff3a8"/>',d):'')+LX('loot',s,d)+LX('tw',STAR(79,26,6))+LX('tw tw2',STAR(23,68,4.5))}; // treasure: it bobs and twinkles
 function evSVG(e,at){
   if(!e)return '';
   if(e.k==='foe'&&at!=null&&HAS_ART)return toyOnBlock(at,e.t,e); // on the field the toy stands on the block
@@ -2166,13 +2192,13 @@ function cellHTML(i,F){
   if(!c){}
   else if(c.start){cls+=' start';inner=svg(SPR.start)}
   else if(c.rock===2){cls+=' fence';inner=svg(SPR.fence)}
-  else if(c.foe){cls+=' rock stand'+(aim&&aim.kind==='rock'&&rowOf(i)>=rowOf(run.at)?' aim':'')+(reachOf(i,c.foe)?' threat':'');inner=svg(HAS_ART?toyStand(i,c.foe.t,c.foe):`<g class="toy">${SPR[c.foe.t]||SPR.soldier}</g>`);tab=` style="--d:-${(i*7%23)/5}s"`;
+  else if(c.foe){cls+=' rock stand'+(aim&&aim.kind==='rock'&&rowOf(i)>=rowOf(run.at)?' aim':'')+(reachOf(i,c.foe)?' threat':'');inner=svgx(HAS_ART?toyStand(i,c.foe.t,c.foe):`<g class="toy">${SPR[c.foe.t]||SPR.soldier}</g>`);tab=` style="--d:-${(i*7%23)/5}s"`;
     if(F&&F.has(i)&&!c.tile){const ok=sel>=0&&fits(run.hand[sel],i,F);cls+=' front'+(ok?' fit':'');if(ok)inner+=`<div class="gh">${svg(tileArt(run.hand[sel],false))}</div>`;tab+=' tabindex="0" role="button" aria-label="道の先（敵）"'}}
   else if(c.rock){cls+=' rock'+(aim&&aim.kind==='rock'&&c.rock!==2&&rowOf(i)>=rowOf(run.at)?' aim':'');inner=svg(c.rock===3?brickArt(i):obArt(i,a));
     if(F&&F.rock&&F.rock.has(i)&&sel>=0&&fits(run.hand[sel],i,F)){cls+=' front fit';inner+=`<div class="gh">${svg(tileArt(run.hand[sel],false))}</div>`}}
-  else if(c.tile){cls+=' laid'+(i===justPlaced?' new':'')+(c.tile.m===15&&!c.tile.gate?' ace':'')+(c.tile.sp?' sp-'+c.tile.sp:'');inner=svg(tileArt(c.tile,false,i))+badge(c.tile.e)+(c.tile.over?`<div class="gho">${svg(c.tile.over===3?brickArt(i):obArt(i,a))}</div>`:'');if(c.tile.e&&c.tile.e.k==='foe')tab=` style="--d:-${(i*7%23)/5}s"`}
+  else if(c.tile){cls+=' laid'+(i===justPlaced?' new':'')+(c.tile.m===15&&!c.tile.gate?' ace':'')+(c.tile.sp?' sp-'+c.tile.sp:'');inner=svgx(tileArt(c.tile,false,i))+badge(c.tile.e)+(c.tile.over?`<div class="gho">${svg(c.tile.over===3?brickArt(i):obArt(i,a))}</div>`:'');if(c.tile.e&&c.tile.e.k==='foe')tab=` style="--d:-${(i*7%23)/5}s"`}
   else{
-    inner=svg(deco(i)+(c.psn?SPR.psn:'')+(c.gem||c.coin?LOOT((c.gem?SPR.gem:'')+(c.coin?SPR.coin:''),i,1):''));
+    inner=svgx(deco(i)+(c.psn?SPR.psn:'')+(c.gem||c.coin?LOOT((c.gem?SPR.gem:'')+(c.coin?SPR.coin:''),i,1):''));
     if(c.psn&&aim&&aim.kind==='rock'&&rowOf(i)>=rowOf(run.at))cls+=' aim';
     if(F&&F.has(i)){const ok=sel>=0&&fits(run.hand[sel],i,F);cls+=' front'+(ok?' fit':'');if(ok)inner+=`<div class="gh">${svg(tileArt(run.hand[sel],false))}</div>`;tab=' tabindex="0" role="button" aria-label="道の先"'}
   }
@@ -2269,7 +2295,7 @@ function renderHand(F){
   handEl.style.setProperty('--hs',run.hand.length);
   const can=aim&&aim.kind!=='rock'?targets(aim.kind):null;
   const tA=!!(can&&run.sk&&run.sk[aim.k]&&run.sk[aim.k].id==='turn'),tOk=(t,i)=>tA&&can.includes(i)&&rot(t.m)!==t.m; /* 11/5: くるっと回す: which ones turn, and how */
-  const hh=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${can?(can.includes(i)?' aim':' dull'):anyFit(t,F)?'':' dull'}${t.m===15?' ace':''}${aceNew.includes(i)?' acein':''}${tOk(t,i)?' turnable':''}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}"><span class="blk">${svg(tileArt(t,true))}${tOk(t,i)?`<i class="turnmk" aria-hidden="true">${turnArrow()}</i>`:''}</span>${slotLabel(t)}</div>`:`<div class="slot none" data-i="${i}"></div>`);for(let k=run.hand.length;k<6;k++)hh.push('<div class="slot lock" aria-hidden="true"></div>');
+  const hh=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${can?(can.includes(i)?' aim':' dull'):anyFit(t,F)?'':' dull'}${t.m===15?' ace':''}${aceNew.includes(i)?' acein':''}${tOk(t,i)?' turnable':''}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}"><span class="blk">${svgx(tileArt(t,true))}${tOk(t,i)?`<i class="turnmk" aria-hidden="true">${turnArrow()}</i>`:''}</span>${slotLabel(t)}</div>`:`<div class="slot none" data-i="${i}"></div>`);for(let k=run.hand.length;k<6;k++)hh.push('<div class="slot lock" aria-hidden="true"></div>');
   /* 11/6: only the slots that changed are made again */
   kidsOf(handEl);const old=[...handEl.children],need=[],els=hh.map((h,k)=>kidOk(old[k],h)?old[k]:(need.push(k),null));
   if(need.length===hh.length){handEl.innerHTML=hh.join('');[...handEl.children].forEach((el,k)=>{el._h=kidKey(hh[k])})}
@@ -2391,7 +2417,7 @@ const flashCell=i=>flash(elOf(i));
 const flashSlot=i=>{if(i>=0)flash(handEl.children[i])};
 function hop(){if(REDUCED)return;[...handEl.children].forEach((s,k)=>s.animate([{transform:'none'},{transform:'translateY(-10px)'},{transform:'none'}],{duration:280,delay:k*35}))}
 function lunge(dx,dy){if(!REDUCED)hero.firstElementChild.animate([{transform:'none',easing:'ease-out'},{transform:`translate(${-dx*.22}px,${-dy*.22}px) scale(.96,1.04)`,offset:.16,easing:'cubic-bezier(.3,0,.2,1)'},{transform:`translate(${dx}px,${dy}px) scale(1.06,.95)`,offset:.4},{transform:`translate(${dx*.92}px,${dy*.92}px)`,offset:.62,easing:'ease-in-out'},{transform:'none'}],{duration:240})} // the hold at the front is the hit-stop
-function struck(el){const s=el&&(el.querySelector(':scope>svg')||el.firstElementChild);if(s&&!REDUCED)s.animate([{transform:'none'},{transform:'translateX(7%)',filter:'brightness(1.35)'},{transform:'translateX(-7%)'},{transform:'none'}],{duration:220})}
+function struck(el){const s=el&&(el.querySelector(':scope>svg')||el.firstElementChild);if(s&&!REDUCED){const K=[{transform:'none'},{transform:'translateX(7%)',filter:'brightness(1.35)'},{transform:'translateX(-7%)'},{transform:'none'}];s.animate(K,{duration:220});const x=el.querySelector(':scope>.lxw');if(x&&x!==s)x.animate(K,{duration:220})}}
 function hurt(){if(hero.classList.contains('hurt'))hero.classList.toggle('hurt2');else hero.classList.add('hurt')} /* 11/6: hurt2 (same keyframes) restarts it without a forced layout */
 
 /* ---------- effects ---------- */
@@ -4108,7 +4134,8 @@ document.body.insertAdjacentHTML('beforeend','<svg class="art-defs" width="0" he
 /* art drawn with its feet at (50,f0) stands on panel i: feet at f, k times bigger, leaning, with its shadows */
 function standArt(i,art,f0,k,f,rx,flip){
   const g=`translate(50 ${f}) skewX(${LEAN(i).toFixed(2)}) scale(${(flip?-k:k).toFixed(3)} ${k.toFixed(3)}) translate(-50 -${f0})`;
-  return `<g transform="${CASTM(f)}"><g transform="${g}">${SHAD(art)}</g></g>`+(rx?CONTACT(f,rx):'')+`<g transform="${g}">${art}</g>`;
+  const body=art.indexOf('<lx ')===0&&art.indexOf('<lx ',4)<0?art.replace('<lx ',`<lx m="${g}" `):`<g transform="${g}">${unlx(art)}</g>`; /* 11/6: a toy keeps its lean as the box's transform */
+  return `<g transform="${CASTM(f)}"><g transform="${g}">${SHAD(art)}</g></g>`+(rx?CONTACT(f,rx):'')+body;
 }
 const OB_BASE={ // drawn under the obstacle: its shadow and a little ground of its land
   grass:AO(52,86,38,7.5)+TUFT(10,90,'#7fb862')+TUFT(78,89,'#7fb862'),
@@ -4137,7 +4164,7 @@ function obArt(i,a){ // the obstacle on panel i: its land's base, then the toy t
 /* a toy standing on the field, and a toy standing on a laid block */
 const FOE_F0=t=>t==='king'?94:t==='boss'?90:88;
 const SEEN=new WeakSet(); // toys already drawn once: only a new one pops up
-const TOYG=(t,e)=>{const g=`<g class="toy t-${t}">${SPR[t]||SPR.soldier}</g>`;if(!e||SEEN.has(e))return g;SEEN.add(e);SND('pon');return REDUCED?g:`<g class="spawn">${g}</g>`};
+const TOYG=(t,e)=>{const a=SPR[t]||SPR.soldier;if(!e||SEEN.has(e))return LX('toy t-'+t,a);SEEN.add(e);SND('pon');return LX('toy t-'+t,a,'',!REDUCED)};
 const toyStand=(i,t,e)=>standArt(i,TOYG(t,e),FOE_F0(t),DEP.foe,DEP.foot,0);
 const toyOnBlock=(i,t,e)=>standArt(i,TOYG(t,e),FOE_F0(t),.86,RC+14,0);
 SPR.brick=AO(50,85,40,7.5)+'<rect x="10" y="84" width="4" height="3" rx="1" fill="#d8cdf6"/><rect x="85" y="82" width="3.5" height="3" rx="1" fill="#f7c3d4"/>'+(HAS_ART?U('brick',8,18,84,68):SPR.brick);
@@ -4737,7 +4764,7 @@ const LF=(()=>{
   const poke=(i,amp)=>{
     if(REDUCED)return;
     if(typeof MO!=='undefined'&&MO.poke){MO.poke(i,amp);return}
-    const e=elOf(i),s=e&&e.querySelector(':scope>svg');if(s)s.animate([{transform:'none'},{transform:'translateY(5%) scale(1.04,.93)'},{transform:'translateY(-3%)'},{transform:'none'}],{duration:320,easing:'ease-out'});
+    const e=elOf(i);for(const s of e?[e.querySelector(':scope>svg'),e.querySelector(':scope>.lxw')]:[])if(s)s.animate([{transform:'none'},{transform:'translateY(5%) scale(1.04,.93)'},{transform:'translateY(-3%)'},{transform:'none'}],{duration:320,easing:'ease-out'});
   };
   const ring=(el,x,y)=>{if(REDUCED)return;el.insertAdjacentHTML('beforeend',`<i class="lf-sp lf-ring" style="left:${x}%;top:${y}%"></i>`);const g=el.lastElementChild;setTimeout(()=>g.remove(),1900)};
   function peekOut(e){if(e&&!REDUCED)e.animate([{transform:'translateX(0)'},{transform:'translateX(62%)',offset:.22},{transform:'translateX(62%) rotate(-6deg)',offset:.5},{transform:'translateX(62%)',offset:.8},{transform:'translateX(0)'}],{duration:1500,easing:'ease-in-out'})}
