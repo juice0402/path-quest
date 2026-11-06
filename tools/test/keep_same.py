@@ -10,7 +10,7 @@ exec(src[:src.index('async def main')].replace('GAMES = int', 'GAMES = 1 or int'
 URL = 'file://' + os.path.abspath(os.path.join(HERE, '../../games/path-quest/index.html')) + '#fxtest'
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 12
 OUT = sys.argv[2] if len(sys.argv) > 2 else None
-STILL = "*,*::before,*::after{animation:none!important;transition:none!important}.lf-roam,.pop,.fly,.bit,.note,#notes{visibility:hidden!important}"
+STILL = "*,*::before,*::after{animation:none!important;transition:none!important}.lf-roam,.pop,.fly,.bit,.note,#notes,.say,.ln{visibility:hidden!important}"
 
 async def snap(pg, p):
     await pg.evaluate("()=>document.getAnimations().forEach(a=>a.cancel())"); await pg.wait_for_timeout(120)

@@ -1,5 +1,6 @@
 # 11/6 重さの点検：ふつうの動きで冒険を遊び、場面ごと（組み立て・歩く・戦う・ごほうび）のコマの間かくと、重い処理を集める
-# usage: python3 tools/test/perf_run.py [steps] [cpu の遅さ(倍)] [--prof]
+# usage: python3 tools/test/perf_run.py [steps] [cpu の遅さ(倍)] [--prof] [--trace] [--iphone]
+#   画面はふだん Android（412x915・2.625倍）。--iphone で 390x844・3倍。PQ_FILE=_old.html で前の版
 #   --prof  関数ごとの時間（CPU プロファイル）も出す
 import asyncio, json, random, sys, os, time, collections
 from playwright.async_api import async_playwright
@@ -26,7 +27,7 @@ REC = """()=>{window.__fr=[];window.__lt=[];
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox', '--enable-gpu-rasterization'])
-        ctx = await b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=3, is_mobile=True, has_touch=True, reduced_motion='no-preference')
+        ctx = await b.new_context(viewport={'width': 390, 'height': 844} if '--iphone' in sys.argv else {'width': 412, 'height': 915}, device_scale_factor=3 if '--iphone' in sys.argv else 2.625, is_mobile=True, has_touch=True, reduced_motion='no-preference')
         await ctx.add_init_script("{let x=12345;Math.random=()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return ((x>>>0)%1e6)/1e6}}")  # the same climb each time (old and new can be compared)
         await ctx.add_init_script("try{localStorage.clear();localStorage.setItem('pathquest.meta.v1',JSON.stringify({bank:0,best:12,far:12,seen:1,up:{hp:2,atk:2},sk:{own:['turn'],eq:['turn',null,null]}}))}catch(e){}")
         pg = await ctx.new_page(); errs = []
@@ -45,7 +46,8 @@ async def main():
         rnd = random.Random(3); steps = 0; t0 = time.time()
         while steps < NSTEP and time.time() - t0 < 600:
             st = await wait_idle(pg, 15000)
-            if st['over']: break
+            if st['over']:  # another climb (the same seed goes on)
+                await tap(pg, '#o-again'); await pg.wait_for_timeout(700); await pg.evaluate("()=>{if(PQ.run){PQ.run.maxHp=PQ.run.hp=9999}}"); continue
             if st['reward']:
                 n = await pg.evaluate("()=>document.querySelectorAll('#r-list .rrow').length")
                 await pg.wait_for_timeout(700)
