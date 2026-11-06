@@ -14,7 +14,7 @@ async def main():
         pg = await b.new_page(viewport={'width': 390, 'height': 844}, device_scale_factor=2); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await pg.goto(URL); await pg.wait_for_timeout(400)
-        await pg.evaluate("()=>{try{localStorage.clear()}catch(e){}PQ.newRun()}"); await pg.wait_for_timeout(900)
+        await pg.evaluate("()=>{try{localStorage.clear()}catch(e){}PQ.meta.far=5;PQ.meta.sk.eq[0]='turn';PQ.newRun()}"); await pg.wait_for_timeout(900)
         await pg.evaluate("()=>{const h=PQ.run.hand;h[0].m=5;h[1].m=3;h[2].m=7;h[3].m=15;PQ.meta.far=5;PQ.render()}"); await pg.wait_for_timeout(300)
         box = await pg.evaluate("()=>{const r=document.getElementById('hand').getBoundingClientRect();return {x:r.left,y:r.top-30,width:r.width,height:r.height+36}}")
         async def shot(tag):

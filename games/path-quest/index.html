@@ -219,18 +219,32 @@ button{font:inherit;color:inherit}
 .slot.dull{opacity:.45;filter:saturate(.4)}
 .slot.none{box-sizing:border-box}
 .slot.deal{animation:deal .3s ease-out backwards}
-/* 11/5: くるっと回す: only the road turns, around the top face's centre */
-.slot .rd{transform-box:view-box}
-.slot.turnable .rd{animation:rdprev 1.8s ease-in-out infinite}
-@keyframes rdprev{0%,18%{transform:rotate(0);opacity:1}52%,78%{transform:rotate(90deg);opacity:1}88%{transform:rotate(90deg);opacity:0}89%{transform:rotate(0);opacity:0}100%{transform:rotate(0);opacity:1}}
-.slot .rd.turning{animation:rdturn .5s cubic-bezier(.3,1.45,.55,1) both}
-@keyframes rdturn{from{transform:rotate(-90deg)}to{transform:rotate(0)}}
+/* 11/5: くるっと回す: only the road turns, around the top face's centre. 11/6 e: cut to the top face, the arms stretch to its
+   edges as they turn (up/down 39 <-> sideways 46), the bit down the front side stays and fades (roadTray) */
+.slot .ra{transform-box:view-box}
+.rs.rsx{display:none}
+.slot.turnable .rd{animation:rdfade 1.8s ease-in-out infinite}
+.slot.turnable .rv{animation:rvprev 1.8s ease-in-out infinite}
+.slot.turnable .rh{animation:rhprev 1.8s ease-in-out infinite}
+.slot.turnable .rsn{animation:rsnprev 1.8s linear infinite}
+.slot.turnable .rs.rsx{display:inline;animation:rsxprev 1.8s linear infinite}
+@keyframes rdfade{0%,78%{opacity:1}88%,89%{opacity:0}100%{opacity:1}}
+@keyframes rvprev{0%,18%{transform:rotate(0) scaleY(1)}52%,88%{transform:rotate(90deg) scaleY(1.18)}89%,100%{transform:rotate(0) scaleY(1)}}
+@keyframes rhprev{0%,18%{transform:rotate(0) scaleX(1)}52%,88%{transform:rotate(90deg) scaleX(.85)}89%,100%{transform:rotate(0) scaleX(1)}}
+@keyframes rsnprev{0%,18%{opacity:1}26%,88%{opacity:0}89%,100%{opacity:1}}
+@keyframes rsxprev{0%,44%{opacity:0}52%,88%{opacity:1}89%,100%{opacity:0}}
+.slot .rd.turning .rv{animation:rvturn .5s cubic-bezier(.3,1.45,.55,1) both}
+.slot .rd.turning .rh{animation:rhturn .5s cubic-bezier(.3,1.45,.55,1) both}
+.slot .rd.turning .rsn{animation:rsnturn .5s linear both}
+@keyframes rvturn{from{transform:rotate(-90deg) scaleY(1.18)}to{transform:rotate(0) scaleY(1)}}
+@keyframes rhturn{from{transform:rotate(-90deg) scaleX(.85)}to{transform:rotate(0) scaleX(1)}}
+@keyframes rsnturn{0%,40%{opacity:0}62%,100%{opacity:1}}
 .slot .turnmk{position:absolute;right:-12%;top:-14%;width:50%;height:50%;z-index:3;pointer-events:none;filter:drop-shadow(0 2px 0 rgba(58,28,8,.35));animation:tmbob 1.8s ease-in-out infinite}
 .slot .turnmk svg,.slot .turnfx svg{width:100%;height:100%;display:block;overflow:visible}
 @keyframes tmbob{0%,18%,100%{transform:rotate(0) scale(1)}52%,78%{transform:rotate(20deg) scale(1.1)}}
 .slot .turnfx{position:absolute;inset:-4%;z-index:3;pointer-events:none;opacity:0;animation:tfx .6s ease-out forwards}
 @keyframes tfx{0%{opacity:0;transform:rotate(-70deg) scale(.75)}25%{opacity:.95}100%{opacity:0;transform:rotate(25deg) scale(1.05)}}
-@media (prefers-reduced-motion:reduce){.slot.turnable .rd,.slot .turnmk{animation:none}}
+@media (prefers-reduced-motion:reduce){.slot.turnable .rd,.slot.turnable .ra,.slot.turnable .rs,.slot .turnmk{animation:none}.slot.turnable .rs.rsx{display:none}}
 .slot.deal:nth-child(2){animation-delay:.04s}.slot.deal:nth-child(3){animation-delay:.08s}.slot.deal:nth-child(4){animation-delay:.12s}.slot.deal:nth-child(5){animation-delay:.16s}.slot.deal:nth-child(6){animation-delay:.2s}
 @keyframes deal{from{transform:translateY(40%) scale(.7);opacity:0}}
 .dice{position:relative;flex:none;width:var(--slot);height:var(--slot);padding:0;border:0;border-radius:3px;background:var(--accent);box-shadow:0 4px 0 var(--accent-deep);cursor:pointer}
@@ -1647,7 +1661,7 @@ Object.assign(SPR,{ // the field toys that act from afar, and what they throw (t
 });
 SPR.chest=SPR.coin;SPR.flag='<path d="M36 24v52" stroke="#8e6a4f" stroke-width="5" stroke-linecap="round"/><path d="M38 26h30l-8 10 8 10H38z" fill="#e8607e"/>';SPR.portal=SPR.gem;SPR.door=SPR.start;SPR.box=SPR.start;
 if(HAS_ART)document.body.classList.add('art');
-const RC=HAS_ART?43:47; // the middle of a block's top face, where its roads meet // a pickup on a block; the same box shows nicely in the 22..78 icon window
+const RC=HAS_ART?43:47;/* 11/6 e: the tray road is cut to the block's top face, so a turn never pokes out; #rdside is the front side under it */{const fb=HAS_ART?82:88.5;(document.body||document.documentElement).insertAdjacentHTML('beforeend',`<svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs><clipPath id="rdtop" clipPathUnits="userSpaceOnUse"><rect x="3.5" y="3.5" width="93" height="${fb-3.5}" rx="8"/></clipPath><clipPath id="rdside" clipPathUnits="userSpaceOnUse"><rect x="0" y="${fb-1}" width="100" height="${104-fb}"/></clipPath></defs></svg>`)} // the middle of a block's top face, where its roads meet // a pickup on a block; the same box shows nicely in the 22..78 icon window
 const FA=(n,h,mw,f)=>{ // a toy's picture by its own shape: h tall, its body (data-ax) on x=50, feet at f
   const s=document.getElementById('a-'+n);if(!s)return '';const v=s.viewBox.baseVal,ax=+(s.getAttribute('data-ax')||.5),m=mw||100;
   let w=h*v.width/v.height;if(w>m){h*=m/w;w=m}f=f||88;return U(n,+(50-w*ax).toFixed(1),+(f-h).toFixed(1),+w.toFixed(1),+h.toFixed(1));
@@ -1706,7 +1720,20 @@ function roadSVG(m,sh,lo,hi,ace){ // on the field the road runs past the block i
   return `<path d="${d}" stroke="${sh}" stroke-width="36" fill="none"/><circle cx="50" cy="${RC}" r="18" fill="${sh}"/><path d="${d}" stroke="${ace?'#fff0a0':'#fffdf8'}" stroke-width="28" fill="none"/><circle cx="50" cy="${RC}" r="14" fill="${ace?'#fff0a0':'#fffdf8'}"/><path d="${d}" stroke="${ace?'#e8a520':sh}" stroke-width="3.5" stroke-dasharray="7 7" fill="none"/>`;
 }
 const tileArt=(t,inTray,at)=>{const a0=tileArt0(t,inTray,at);return !t.sp?a0:(t.sp==='ghost'?`<g opacity=".72">${unlx(a0)}</g>`:a0)+spIco(t.sp)};
-const tileArt0=(t,inTray,at)=>{const c=t.c|0,ace=t.m===15&&!t.gate;return blockSVG(c)+(inTray?`<g class="rd" style="transform-origin:50% ${RC}%">${roadSVG(t.m,BLOCKS[c][1],4,96,ace)}</g>`:roadSVG(t.m,BLOCKS[c][1],undefined,undefined,ace))+(t.kg&&!t.e&&HAS_ART?U('portal',14,-6,72,86):'')+(inTray&&t.e&&t.e.k==='foe'?`<g transform="translate(70 30) scale(.5) translate(-50 -50)"><circle cx="50" cy="58" r="34" fill="#fffaf0" stroke="#6b4a3a" stroke-width="5"/><g transform="translate(50 54) scale(.72) translate(-50 -50)">${SPR[t.e.t]||SPR.soldier}</g></g>`:evSVG(t.e,at))+(ace?LX('tw',STAR(86,12,9))+LX('tw tw2',STAR(13,82,7)):'')};
+function roadTray(m,sh,ace){ /* 11/6 e: the road in the tray. Up/down arms (.rv) and sideways arms (.rh) turn as two groups
+  and stretch to the top face's edges (it is wider than tall); all of it is cut to the top face. The bit down the front side
+  (.rs) does not turn: .rsn is this shape's, .rsx the shape after a quarter turn (shown only in the preview) */
+  const w=ace?'#fff0a0':'#fffdf8',dc=ace?'#e8a520':sh,o=`style="transform-origin:50% ${RC}%"`;
+  const seg={1:`M50 ${RC}V4`,2:`M50 ${RC}H96`,4:`M50 ${RC}V96`,8:`M50 ${RC}H4`};
+  const L=[d=>`<path d="${d}" stroke="${sh}" stroke-width="36" fill="none"/>`,d=>`<path d="${d}" stroke="${w}" stroke-width="28" fill="none"/>`,
+    d=>`<path d="${d}" stroke="${dc}" stroke-width="3.5" stroke-dasharray="7 7" fill="none"/>`];
+  const v=(m&1?seg[1]:'')+(m&4?seg[4]:''),h=(m&2?seg[2]:'')+(m&8?seg[8]:'');
+  const arms=f=>(v?`<g class="ra rv" ${o}>${f(v)}</g>`:'')+(h?`<g class="ra rh" ${o}>${f(h)}</g>`:'');
+  const side=c=>`<g class="rs ${c}" clip-path="url(#rdside)">${L[0](seg[4])}${L[1](seg[4])}${L[2](seg[4])}</g>`;
+  return `<g clip-path="url(#rdtop)">${arms(L[0])}<circle cx="50" cy="${RC}" r="18" fill="${sh}"/>${arms(L[1])}<circle cx="50" cy="${RC}" r="14" fill="${w}"/>${arms(L[2])}</g>`
+    +(m&4?side('rsn'):'')+(m&2?side('rsx'):'');
+}
+const tileArt0=(t,inTray,at)=>{const c=t.c|0,ace=t.m===15&&!t.gate;return blockSVG(c)+(inTray?`<g class="rd">${roadTray(t.m,BLOCKS[c][1],ace)}</g>`:roadSVG(t.m,BLOCKS[c][1],undefined,undefined,ace))+(t.kg&&!t.e&&HAS_ART?U('portal',14,-6,72,86):'')+(inTray&&t.e&&t.e.k==='foe'?`<g transform="translate(70 30) scale(.5) translate(-50 -50)"><circle cx="50" cy="58" r="34" fill="#fffaf0" stroke="#6b4a3a" stroke-width="5"/><g transform="translate(50 54) scale(.72) translate(-50 -50)">${SPR[t.e.t]||SPR.soldier}</g></g>`:evSVG(t.e,at))+(ace?LX('tw',STAR(86,12,9))+LX('tw tw2',STAR(13,82,7)):'')};
 const LOOT=(s,i,glow)=>{const d=`--d:-${((i|0)*7%11)/10}s`;return LX('lsh','<ellipse cx="50" cy="79" rx="15" ry="3.6" fill="rgba(60,30,46,.24)"/>',d)+(glow?LX('lglow','<circle cx="50" cy="54" r="23" fill="#fff3a8"/>',d):'')+LX('loot',s,d)+LX('tw',STAR(79,26,6))+LX('tw tw2',STAR(23,68,4.5))}; // treasure: it bobs and twinkles
 function evSVG(e,at){
   if(!e)return '';
