@@ -77,7 +77,7 @@ button{font:inherit;color:inherit}
 .cell.fit{--hl:radial-gradient(ellipse 80% 70% at 50% 44%,rgba(255,250,222,.95),rgba(255,236,160,.82))}
 .cell.fit::after{border:3px solid var(--sun-deep);animation:glow .9s ease-in-out infinite alternate}
 .cell.over{--hl:linear-gradient(rgba(255,229,138,.94),rgba(255,214,110,.94))}
-.cell.new svg{transform-origin:50% 100%;animation:thunk .34s ease-out}
+.cell.new svg{transform-origin:50% 100%;animation:thunk .34s ease-out}.lxw{position:absolute;inset:0;pointer-events:none}.lxw .lxp,.lxw .lxm{position:absolute;display:block;pointer-events:none}.lxw .lxm{left:0;top:0;width:100%;height:100%;transform-origin:0 0}.lxw svg{overflow:visible;pointer-events:none}.lxw svg>*{pointer-events:visiblePainted}.cell.new>.lxw{transform-origin:50% 100%;animation:thunk .34s ease-out}.cell.new .lxw svg{animation:none}
 @keyframes glow{from{opacity:.45}to{opacity:1}}
 @keyframes thunk{0%{transform:translateY(-30%) scale(.92,1.08)}55%{transform:translateY(0) scale(1.1,.88)}78%{transform:scale(.97,1.03)}100%{transform:none}}
 
@@ -96,7 +96,7 @@ button{font:inherit;color:inherit}
 .hero svg{transform-origin:50% 86%}
 .hero:not(.walk) svg{animation:breathe 1.7s ease-in-out infinite alternate}
 .hero.walk svg{animation:hWalk .34s linear infinite}
-.hero.hurt svg{animation:hurt .34s ease-out}
+.hero.hurt svg{animation:hurt .34s ease-out}.hero.hurt:where(.hurt2) svg{animation-name:hurt2}
 .hero.down svg{animation:topple .55s cubic-bezier(.5,0,.8,.6) .95s forwards}
 @keyframes bob{to{transform:translateY(-5%)}}
 @keyframes breathe{to{transform:scale(1.03,.97)}}
@@ -180,7 +180,7 @@ button{font:inherit;color:inherit}
 .bit{position:fixed;left:0;top:0;pointer-events:none;border-radius:2px}
 .fly{position:fixed;left:0;top:0;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(74,53,65,.25))}
 .fly svg{width:100%;height:100%;display:block}
-@keyframes hurt{0%{transform:none;animation-timing-function:cubic-bezier(.2,.8,.4,1)}22%{transform:translate(-9%,-2%) rotate(-7deg) scale(1.04,.95);filter:drop-shadow(0 0 5px var(--bad))}58%{transform:translateX(3%) rotate(2deg);filter:drop-shadow(0 0 5px var(--bad))}100%{transform:none}}
+@keyframes hurt{0%{transform:none;animation-timing-function:cubic-bezier(.2,.8,.4,1)}22%{transform:translate(-9%,-2%) rotate(-7deg) scale(1.04,.95);filter:drop-shadow(0 0 5px var(--bad))}58%{transform:translateX(3%) rotate(2deg);filter:drop-shadow(0 0 5px var(--bad))}100%{transform:none}}@keyframes hurt2{0%{transform:none;animation-timing-function:cubic-bezier(.2,.8,.4,1)}22%{transform:translate(-9%,-2%) rotate(-7deg) scale(1.04,.95);filter:drop-shadow(0 0 5px var(--bad))}58%{transform:translateX(3%) rotate(2deg);filter:drop-shadow(0 0 5px var(--bad))}100%{transform:none}}
 
 .pop{position:absolute;z-index:5;pointer-events:none;transform:translate(-50%,0);font:800 20px/1 var(--round);font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 2px 0 #fff;animation:rise .95s ease-out forwards}
 .p-deal{color:var(--deal)}.p-hurt{color:var(--foe)}.p-guard{color:var(--dim)}.p-gold{color:var(--gold)}.p-heal{color:var(--heal)}.p-gear{color:var(--gear)}
@@ -380,6 +380,7 @@ body.art #s-title .btn:not(.main){background:rgba(255,255,255,.94)}
   .board .toy,.board .eye,.hero:not(.walk) svg,.hero.down svg{animation:none}
   .weather{display:none}
   .cell.new svg,.pop,.hero.hurt svg{animation-duration:.01s}
+  .cell.new>.lxw{animation-duration:.01s}
 }
 
 /* ===== the game-style screens: pictures, numbers and one word; details on a tap. colours always mean the same:
@@ -408,8 +409,8 @@ body.art #s-title .btn:not(.main){background:rgba(255,255,255,.94)}
 /* title: the painted kingdom fills the screen, the logo drops in block by block, one big play button */
 #s-title .lead{display:none}
 #s-title .logo i{animation:drop .6s cubic-bezier(.3,1.5,.5,1) backwards}
-#s-title .logo span:first-child i:nth-child(1){animation-delay:.05s}#s-title .logo span:first-child i:nth-child(2){animation-delay:.12s}#s-title .logo span:first-child i:nth-child(3){animation-delay:.19s}#s-title .logo span:first-child i:nth-child(4){animation-delay:.26s}
-#s-title .logo span+span i:nth-child(1){animation-delay:.36s}#s-title .logo span+span i:nth-child(2){animation-delay:.43s}#s-title .logo span+span i:nth-child(3){animation-delay:.5s}#s-title .logo span+span i:nth-child(4){animation-delay:.57s}#s-title .logo span+span i:nth-child(5){animation-delay:.64s}
+#s-title .logo span i.lgd1.lgd1{animation-delay:.05s}#s-title .logo span i.lgd2.lgd2{animation-delay:.12s}#s-title .logo span i.lgd3.lgd3{animation-delay:.19s}#s-title .logo span i.lgd4.lgd4{animation-delay:.26s}
+#s-title .logo span i.lgd5.lgd5{animation-delay:.36s}#s-title .logo span i.lgd6.lgd6{animation-delay:.43s}#s-title .logo span i.lgd7.lgd7{animation-delay:.5s}#s-title .logo span i.lgd8.lgd8{animation-delay:.57s}#s-title .logo span i.lgd9.lgd9{animation-delay:.64s}
 
 .t-foot{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:auto}
 .stars{position:absolute;inset:0;pointer-events:none;overflow:hidden}
@@ -576,7 +577,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .app[data-dim="2"] .cell{--st:rgba(190,205,255,.65)}
 .app[data-dim="3"] .cell{--st:rgba(214,190,255,.75)}
 .app[data-dim="4"] .cell{--st:rgba(225,245,255,.85)}
-.app[data-dim="5"] .cell:nth-child(6n+1){--st:#f4a0a0}.app[data-dim="5"] .cell:nth-child(6n+2){--st:#f5cf6a}.app[data-dim="5"] .cell:nth-child(6n+3){--st:#9fdcc4}.app[data-dim="5"] .cell:nth-child(6n+4){--st:#a5cdec}.app[data-dim="5"] .cell:nth-child(6n+5){--st:#c4b3f0}.app[data-dim="5"] .cell:nth-child(6n){--st:#f3a8cf}
+.app[data-dim="5"] .cell.cq0{--st:#f4a0a0}.app[data-dim="5"] .cell.cq1{--st:#f5cf6a}.app[data-dim="5"] .cell.cq2{--st:#9fdcc4}.app[data-dim="5"] .cell.cq3{--st:#a5cdec}.app[data-dim="5"] .cell.cq4{--st:#c4b3f0}.app[data-dim="5"] .cell.cq5{--st:#f3a8cf}
 .app[data-dim="2"] .cell{--ps:inset 0 calc(0px - var(--th)) 0 var(--side),inset 0 calc(-1.5px - var(--th)) 0 rgba(200,215,255,.3),inset 0 1.5px 0 rgba(200,215,255,.6),inset 1.5px 0 0 rgba(200,215,255,.25),inset -1.5px 0 0 rgba(20,20,60,.12),0 1px 1px rgba(20,15,40,.3)}
 /* "can't put it there" still blinks red over the trim */
 .board .cell.bad::before{inset:0;border:0;box-shadow:none;border-radius:inherit;background:var(--bad)}
@@ -1079,7 +1080,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 /* ===== 11/4: critters roam over the field, never inside one panel ===== */
 .lf-roam{position:absolute;left:0;top:0;width:100%;height:0;pointer-events:none}
 .lf-r{position:absolute;left:0;width:0;height:0;pointer-events:none}
-.lf-r.walk{z-index:1}.lf-r.fly{z-index:4}
+.lf-r.walk{z-index:1}.lf-r.fly{z-index:4}.lf-r.fly{filter:none}.lf-r.fly .lf-c>b{filter:drop-shadow(0 2px 2px rgba(74,53,65,.25))}.lf-r.fly .lf-gold>b{filter:sepia(.9) saturate(2.4) hue-rotate(-8deg) brightness(1.1) drop-shadow(0 2px 2px rgba(74,53,65,.25))}
 .lf-rm{position:absolute;left:0;top:0;width:0;height:0}
 .lf-rm>.lf-c{left:0;top:0;translate:-50% -50%;animation:none!important}
 .lf-rm>.mv-cr>b{animation:lfAlt 1.9s ease-in-out var(--sd,0s) infinite alternate}
@@ -1358,7 +1359,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
   <div class="stars" id="t-stars" aria-hidden="true"></div>
   <button class="sq-btn snd" id="t-snd" type="button" aria-label="音" aria-pressed="true"></button>
   <div class="title">
-    <h1 class="logo" aria-label="PATH QUEST"><span><i class="c0">P</i><i class="c1">A</i><i class="c2">T</i><i class="c3">H</i></span><span><i class="c4">Q</i><i class="c0">U</i><i class="c1">E</i><i class="c2">S</i><i class="c3">T</i></span></h1>
+    <h1 class="logo" aria-label="PATH QUEST"><span><i class="c0 lgd1">P</i><i class="c1 lgd2">A</i><i class="c2 lgd3">T</i><i class="c3 lgd4">H</i></span><span><i class="c4 lgd5">Q</i><i class="c0 lgd6">U</i><i class="c1 lgd7">E</i><i class="c2 lgd8">S</i><i class="c3 lgd9">T</i></span></h1>
     <p class="lead">光るマスに積み木を置いて、<br>どこまでものぼろう</p>
     <div class="demo" id="demo"></div>
     <div class="t-foot">
@@ -1537,7 +1538,32 @@ const PM=()=>dimX(run&&run.dp||0); // the knight's dimension power: heals, magic
 const placeName=r=>(dimOf(r)?dimName(dimOf(r))+' ':'')+`${areaOf(r).n} ${stepOf(r)}段`;
 
 /* ---------- sprites (100x100) ---------- */
-const svg=s=>`<svg viewBox="0 0 100 100" aria-hidden="true">${s}</svg>`;
+const svg=s=>`<svg viewBox="0 0 100 100" aria-hidden="true">${unlx(s)}</svg>`;
+/* 11/6: moving parts (treasure, sparkles, toys) are marked <lx>; svgx() gives them boxes of their own over the picture, svg() keeps them inline */
+function LX(c,inner,st,sp){return `<lx c="${c}"${st?` s="${st}"`:''}${sp?' sp="1"':''}>${inner}</lx>`}
+function lxA(a){const o={};a.replace(/(\w+)="([^"]*)"/g,(_,k,v)=>{o[k]=v});return o}
+function lxInline(a,inner){const o=lxA(a);let g=`<g class="${o.c}"${o.s?` style="${o.s}"`:''}>${inner}</g>`;if(o.sp)g=`<g class="spawn">${g}</g>`;if(o.m)g=`<g transform="${o.m}">${g}</g>`;return g}
+function unlx(s){return typeof s==='string'&&s.indexOf('<lx ')>=0?s.replace(/<lx ([^>]*)>([\s\S]*?)<\/lx>/g,(_,a,inner)=>lxInline(a,inner)):s}
+const LXB=new Map();let lxMs=null;
+function lxBox(h){ /* the part's own bounding box (what transform-box:fill-box used), measured once per drawing */
+  if(LXB.has(h))return LXB.get(h);
+  if(!lxMs){lxMs=document.createElementNS('http://www.w3.org/2000/svg','svg');lxMs.setAttribute('width','0');lxMs.setAttribute('height','0');lxMs.setAttribute('aria-hidden','true');lxMs.style.cssText='position:absolute;left:0;top:0;visibility:hidden;pointer-events:none';lxMs.appendChild(document.createElementNS('http://www.w3.org/2000/svg','g'));document.body.appendChild(lxMs)}
+  const g=lxMs.firstChild;let r=null;try{g.innerHTML=h;const q=g.getBBox();if(q.width>0&&q.height>0)r={x:+q.x.toFixed(3),y:+q.y.toFixed(3),w:+q.width.toFixed(3),h:+q.height.toFixed(3)}}catch(e){}
+  g.innerHTML='';LXB.set(h,r);return r;
+}
+function cssT(m){return m.replace(/translate\(([-\d.e]+)[ ,]+([-\d.e]+)\)/g,'translate($1%,$2%)').replace(/(skewX|skewY|rotate)\(([-\d.e]+)\)/g,'$1($2deg)').replace(/scale\(([-\d.e]+)[ ,]+([-\d.e]+)\)/g,'scale($1,$2)')}
+function svgx(s){
+  if(typeof s!=='string'||s.indexOf('<lx ')<0)return svg(s);
+  const parts=[];
+  const main=s.replace(/<lx ([^>]*)>([\s\S]*?)<\/lx>/g,(_,a,inner)=>{
+    const o=lxA(a),b=lxBox(inner);if(!b)return lxInline(a,inner);
+    const geo=`left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%`,sv=`<svg viewBox="${b.x} ${b.y} ${b.w} ${b.h}" preserveAspectRatio="none" aria-hidden="true">${inner}</svg>`;
+    let h=o.sp?`<i class="lxp spawn" style="${geo}"><i class="lxp ${o.c}" style="left:0;top:0;width:100%;height:100%${o.s?';'+o.s:''}">${sv}</i></i>`:`<i class="lxp ${o.c}" style="${geo}${o.s?';'+o.s:''}">${sv}</i>`;
+    if(o.m)h=`<i class="lxm" style="transform:${cssT(o.m)}">${h}</i>`;
+    parts.push(h);return '';
+  });
+  return svg(main)+(parts.length?`<div class="lxw" aria-hidden="true">${parts.join('')}</div>`:'');
+}
 const ico=s=>`<svg viewBox="22 22 56 56" aria-hidden="true">${s}</svg>`;
 const nf=v=>Math.abs(v)>=1e4?(v/1e4).toFixed(Math.abs(v)>=1e5?0:1).replace(/\.0$/,'')+'万':String(v); // 12345 → 1.2万
 const BLOCKS=[['#f7c3d4','#e29ab4'],['#bfe6d6','#8fcdb6'],['#fbe2a0','#e5bf63'],['#d8cdf6','#b4a3e8'],['#c4e2f5','#93c3e4']];
@@ -1679,9 +1705,9 @@ function roadSVG(m,sh,lo,hi,ace){ // on the field the road runs past the block i
   let d='';for(const b of BITS)if(m&b)d+=seg[b];
   return `<path d="${d}" stroke="${sh}" stroke-width="36" fill="none"/><circle cx="50" cy="${RC}" r="18" fill="${sh}"/><path d="${d}" stroke="${ace?'#fff0a0':'#fffdf8'}" stroke-width="28" fill="none"/><circle cx="50" cy="${RC}" r="14" fill="${ace?'#fff0a0':'#fffdf8'}"/><path d="${d}" stroke="${ace?'#e8a520':sh}" stroke-width="3.5" stroke-dasharray="7 7" fill="none"/>`;
 }
-const tileArt=(t,inTray,at)=>{const a0=tileArt0(t,inTray,at);return !t.sp?a0:(t.sp==='ghost'?`<g opacity=".72">${a0}</g>`:a0)+spIco(t.sp)};
-const tileArt0=(t,inTray,at)=>{const c=t.c|0,ace=t.m===15&&!t.gate;return blockSVG(c)+(inTray?`<g class="rd" style="transform-origin:50% ${RC}%">${roadSVG(t.m,BLOCKS[c][1],4,96,ace)}</g>`:roadSVG(t.m,BLOCKS[c][1],undefined,undefined,ace))+(t.kg&&!t.e&&HAS_ART?U('portal',14,-6,72,86):'')+(inTray&&t.e&&t.e.k==='foe'?`<g transform="translate(70 30) scale(.5) translate(-50 -50)"><circle cx="50" cy="58" r="34" fill="#fffaf0" stroke="#6b4a3a" stroke-width="5"/><g transform="translate(50 54) scale(.72) translate(-50 -50)">${SPR[t.e.t]||SPR.soldier}</g></g>`:evSVG(t.e,at))+(ace?`<g class="tw">${STAR(86,12,9)}</g><g class="tw tw2">${STAR(13,82,7)}</g>`:'')};
-const LOOT=(s,i,glow)=>{const d=`style="--d:-${((i|0)*7%11)/10}s"`;return `<ellipse class="lsh" cx="50" cy="79" rx="15" ry="3.6" fill="rgba(60,30,46,.24)" ${d}/>`+(glow?`<circle class="lglow" cx="50" cy="54" r="23" fill="#fff3a8" ${d}/>`:'')+`<g class="loot" ${d}>${s}</g><g class="tw">${STAR(79,26,6)}</g><g class="tw tw2">${STAR(23,68,4.5)}</g>`}; // treasure: it bobs and twinkles
+const tileArt=(t,inTray,at)=>{const a0=tileArt0(t,inTray,at);return !t.sp?a0:(t.sp==='ghost'?`<g opacity=".72">${unlx(a0)}</g>`:a0)+spIco(t.sp)};
+const tileArt0=(t,inTray,at)=>{const c=t.c|0,ace=t.m===15&&!t.gate;return blockSVG(c)+(inTray?`<g class="rd" style="transform-origin:50% ${RC}%">${roadSVG(t.m,BLOCKS[c][1],4,96,ace)}</g>`:roadSVG(t.m,BLOCKS[c][1],undefined,undefined,ace))+(t.kg&&!t.e&&HAS_ART?U('portal',14,-6,72,86):'')+(inTray&&t.e&&t.e.k==='foe'?`<g transform="translate(70 30) scale(.5) translate(-50 -50)"><circle cx="50" cy="58" r="34" fill="#fffaf0" stroke="#6b4a3a" stroke-width="5"/><g transform="translate(50 54) scale(.72) translate(-50 -50)">${SPR[t.e.t]||SPR.soldier}</g></g>`:evSVG(t.e,at))+(ace?LX('tw',STAR(86,12,9))+LX('tw tw2',STAR(13,82,7)):'')};
+const LOOT=(s,i,glow)=>{const d=`--d:-${((i|0)*7%11)/10}s`;return LX('lsh','<ellipse cx="50" cy="79" rx="15" ry="3.6" fill="rgba(60,30,46,.24)"/>',d)+(glow?LX('lglow','<circle cx="50" cy="54" r="23" fill="#fff3a8"/>',d):'')+LX('loot',s,d)+LX('tw',STAR(79,26,6))+LX('tw tw2',STAR(23,68,4.5))}; // treasure: it bobs and twinkles
 function evSVG(e,at){
   if(!e)return '';
   if(e.k==='foe'&&at!=null&&HAS_ART)return toyOnBlock(at,e.t,e); // on the field the toy stands on the block
@@ -2145,7 +2171,7 @@ function setDrawer(open,auto){ // the skills are always on the shelf now: at a d
 const PIPS={1:[[50,50]],2:[[30,30],[70,70]],3:[[28,28],[50,50],[72,72]],4:[[30,30],[70,30],[30,70],[70,70]],5:[[28,28],[72,28],[50,50],[28,72],[72,72]],6:[[30,27],[70,27],[30,50],[70,50],[30,73],[70,73]]};
 function diceFace(n){ // the die shows as many pips as rerolls are left
   const p=PIPS[Math.min(6,n)]||[];
-  $('rollicon').innerHTML=svg('<rect x="7" y="12" width="86" height="82" rx="13" fill="#e9d6c4"/><rect x="7" y="6" width="86" height="82" rx="13" fill="#fff" stroke="#d8c1a6" stroke-width="2.5"/>'+p.map(([x,y])=>`<circle cx="${x}" cy="${y-3}" r="8.5" fill="#e23c56"/><circle cx="${x-2.4}" cy="${y-5.4}" r="2.6" fill="#ff9db4"/>`).join(''));
+  setH($('rollicon'),svg('<rect x="7" y="12" width="86" height="82" rx="13" fill="#e9d6c4"/><rect x="7" y="6" width="86" height="82" rx="13" fill="#fff" stroke="#d8c1a6" stroke-width="2.5"/>'+p.map(([x,y])=>`<circle cx="${x}" cy="${y-3}" r="8.5" fill="#e23c56"/><circle cx="${x-2.4}" cy="${y-5.4}" r="2.6" fill="#ff9db4"/>`).join('')));
   const b=$('rolln');b.textContent=n;b.className=n>6?'more':'';
 }
 let win={lo:0,hi:0,pitch:60}; // the rows on the board right now
@@ -2166,29 +2192,48 @@ function cellHTML(i,F){
   if(!c){}
   else if(c.start){cls+=' start';inner=svg(SPR.start)}
   else if(c.rock===2){cls+=' fence';inner=svg(SPR.fence)}
-  else if(c.foe){cls+=' rock stand'+(aim&&aim.kind==='rock'&&rowOf(i)>=rowOf(run.at)?' aim':'')+(reachOf(i,c.foe)?' threat':'');inner=svg(HAS_ART?toyStand(i,c.foe.t,c.foe):`<g class="toy">${SPR[c.foe.t]||SPR.soldier}</g>`);tab=` style="--d:-${(i*7%23)/5}s"`;
+  else if(c.foe){cls+=' rock stand'+(aim&&aim.kind==='rock'&&rowOf(i)>=rowOf(run.at)?' aim':'')+(reachOf(i,c.foe)?' threat':'');inner=svgx(HAS_ART?toyStand(i,c.foe.t,c.foe):`<g class="toy">${SPR[c.foe.t]||SPR.soldier}</g>`);tab=` style="--d:-${(i*7%23)/5}s"`;
     if(F&&F.has(i)&&!c.tile){const ok=sel>=0&&fits(run.hand[sel],i,F);cls+=' front'+(ok?' fit':'');if(ok)inner+=`<div class="gh">${svg(tileArt(run.hand[sel],false))}</div>`;tab+=' tabindex="0" role="button" aria-label="道の先（敵）"'}}
   else if(c.rock){cls+=' rock'+(aim&&aim.kind==='rock'&&c.rock!==2&&rowOf(i)>=rowOf(run.at)?' aim':'');inner=svg(c.rock===3?brickArt(i):obArt(i,a));
     if(F&&F.rock&&F.rock.has(i)&&sel>=0&&fits(run.hand[sel],i,F)){cls+=' front fit';inner+=`<div class="gh">${svg(tileArt(run.hand[sel],false))}</div>`}}
-  else if(c.tile){cls+=' laid'+(i===justPlaced?' new':'')+(c.tile.m===15&&!c.tile.gate?' ace':'')+(c.tile.sp?' sp-'+c.tile.sp:'');inner=svg(tileArt(c.tile,false,i))+badge(c.tile.e)+(c.tile.over?`<div class="gho">${svg(c.tile.over===3?brickArt(i):obArt(i,a))}</div>`:'');if(c.tile.e&&c.tile.e.k==='foe')tab=` style="--d:-${(i*7%23)/5}s"`}
+  else if(c.tile){cls+=' laid'+(i===justPlaced?' new':'')+(c.tile.m===15&&!c.tile.gate?' ace':'')+(c.tile.sp?' sp-'+c.tile.sp:'');inner=svgx(tileArt(c.tile,false,i))+badge(c.tile.e)+(c.tile.over?`<div class="gho">${svg(c.tile.over===3?brickArt(i):obArt(i,a))}</div>`:'');if(c.tile.e&&c.tile.e.k==='foe')tab=` style="--d:-${(i*7%23)/5}s"`}
   else{
-    inner=svg(deco(i)+(c.psn?SPR.psn:'')+(c.gem||c.coin?LOOT((c.gem?SPR.gem:'')+(c.coin?SPR.coin:''),i,1):''));
+    inner=svgx(deco(i)+(c.psn?SPR.psn:'')+(c.gem||c.coin?LOOT((c.gem?SPR.gem:'')+(c.coin?SPR.coin:''),i,1):''));
     if(c.psn&&aim&&aim.kind==='rock'&&rowOf(i)>=rowOf(run.at))cls+=' aim';
     if(F&&F.has(i)){const ok=sel>=0&&fits(run.hand[sel],i,F);cls+=' front'+(ok?' fit':'');if(ok)inner+=`<div class="gh">${svg(tileArt(run.hand[sel],false))}</div>`;tab=' tabindex="0" role="button" aria-label="道の先"'}
   }
+  cls+=' cq'+colOf(i); /* 11/6: the column, for the 5th dimension's colors (no :nth-child) */
   const tn=tintOf(rowOf(i));if(tn)tab=tab?tab.replace('style="','style="'+tn+';'):` style="${tn}"`;
   const fx=FXH.cell(i,c,F);cls+=fx.cls;inner=fx.pre+inner+fx.post;if(fx.sty)tab=tab.includes('style="')?tab.replace('style="','style="'+fx.sty):tab+` style="${fx.sty}"`; // the cell's own <svg> is found with :scope>svg, so pre may go before it
   return `<div class="${cls}" data-i="${i}"${tab}>${inner}</div>`;
 }
 const GAP=4; // the tray between the panels (.board gap)
+/* 11/6: keep the children that did not change (each knows the html it was made from; anything that changes inside it after that marks it dirty) */
+const KIDS=new Set(),DIRTY=new WeakSet();
+const kidMark=rs=>{for(const r of rs){let n=r.target;while(n&&n.parentNode&&!KIDS.has(n.parentNode))n=n.parentNode;if(n&&n.parentNode)DIRTY.add(n)}};
+const KIDMO=new MutationObserver(kidMark);
+const kidTpl=document.createElement('template');
+function setH(el,h){if(!el)return;kidsOf(el.parentNode);if(el._sh===h&&!DIRTY.has(el))return;el.innerHTML=h;el._sh=h;DIRTY.delete(el);KIDMO.takeRecords()} /* 11/6: only when it changes */
+function kidsOf(par){if(!KIDS.has(par)){KIDS.add(par);KIDMO.observe(par,{subtree:true,childList:true,attributes:true,characterData:true})}kidMark(KIDMO.takeRecords())}
+const kidKey=h=>h.replace(/--lfT:-?[\d.]+s;?/g,''); /* the scenery clock (--lfT) only lines new loops up with the old ones: a kept cell's loops already run on that clock */
+const kidOk=(el,h)=>!!el&&el._h===kidKey(h)&&!DIRTY.has(el);
+const NT=document.createElement('i'),normT=t=>(NT.style.transform=t,NT.style.transform); /* a transform as the browser keeps it */
+function kidsMake(list){ /* the html of the children to make: one parse for all */
+  if(!list.length)return [];kidTpl.innerHTML=list.join('');const out=[...kidTpl.content.children];out.forEach((el,k)=>{el._h=kidKey(list[k])});return out;
+}
+function kidsCalm(par,keep){ /* a kept child loses the script animations it had, as a new one would (its CSS loops go on) */
+  const CA=window.CSSAnimation,CT=window.CSSTransition;
+  for(const a of par.getAnimations({subtree:true})){if((CA&&a instanceof CA)||(CT&&a instanceof CT))continue;let t=a.effect&&a.effect.target;while(t&&t.parentNode!==par)t=t.parentNode;if(t&&keep.has(t))a.cancel()}
+}
+function kidsPlace(par,els,ref){ /* put els in order from ref on; the ones already in place are not moved */
+  for(const el of els){if(el===ref){ref=ref.nextSibling;continue}par.insertBefore(el,ref)}
+}
 function renderBoard(F){
   F=F||frontier();
   const cell=(view.clientWidth-8-GAP*(W-1))/W,pitch=cell+GAP,r=rowOf(run.at);
   const lo=Math.max(0,r-2),hi=lo+Math.ceil(view.clientHeight/pitch)+4;
   win={lo,hi,pitch};
   board.style.setProperty('--cell',cell+'px');app.style.setProperty('--cell',cell+'px');
-  let h='';for(let rr=hi;rr>=lo;rr--)for(let c=0;c<W;c++)h+=cellHTML(idOf(rr,c),F);
-  board.innerHTML=h;board.appendChild(hero);justPlaced=-1;board.classList.toggle('holding',sel>=0);
   let rl='';
   for(let rr=hi;rr>=Math.max(lo,2);rr--){
     const s=stepOf(rr),y=4+(hi-rr)*pitch+cell,big=s%5===0;
@@ -2196,7 +2241,27 @@ function renderBoard(F){
   }
   const br=(run.best|0)+1;
   if(run.best>0&&br>=lo&&br<=hi)rl+=`<i class="best" style="top:${4+(hi-br)*pitch+cell+1}px">${FLAG}</i>`;
-  board.insertAdjacentHTML('beforeend',rl);
+  /* 11/6: only the cells that changed are made again; the knight is not moved; the ticks only when they change */
+  kidsOf(board);
+  const ids=[],hs=[];for(let rr=hi;rr>=lo;rr--)for(let c=0;c<W;c++){const i=idOf(rr,c);ids.push(i);hs.push(cellHTML(i,F))}
+  const have=new Map();for(const el of board.children)if(el.classList.contains('cell')&&el.dataset.i!=null&&!have.has(+el.dataset.i))have.set(+el.dataset.i,el);
+  const keep=new Set(),need=[];
+  const els=ids.map((i,k)=>{const el=have.get(i);if(kidOk(el,hs[k])){keep.add(el);return el}need.push(k);return null});
+  const tk=rl===board._rl&&board._tk&&board._tk.every(x=>x.parentNode===board&&!DIRTY.has(x))?board._tk:null;
+  if(need.length>ids.length*.6){ /* most of it is new (a new climb, a jump): build it all at once as before */
+    board.innerHTML=hs.join('');[...board.children].forEach((el,k)=>{el._h=kidKey(hs[k])});board.appendChild(hero);
+    board.insertAdjacentHTML('beforeend',rl);
+  }else{
+    const made=kidsMake(need.map(k=>hs[k]));need.forEach((k,j)=>{els[k]=made[j]});
+    kidsCalm(board,keep);
+    for(const el of [...board.children])if(!keep.has(el)&&el!==hero&&!(tk&&tk.includes(el)))el.remove();
+    kidsPlace(board,els,board.firstChild);
+    if(hero.parentNode!==board)board.appendChild(hero); /* he stays where he is: his breathing goes on */
+    if(!tk)board.insertAdjacentHTML('beforeend',rl);
+  }
+  board._rl=rl;board._tk=[];for(let n=hero.nextElementSibling;n;n=n.nextElementSibling)board._tk.push(n);
+  KIDMO.takeRecords(); /* our own changes: not dirty */
+  justPlaced=-1;board.classList.toggle('holding',sel>=0);
   hero.classList.remove('down','kop');app.classList.remove('ko');if(HS.cur.startsWith('ko/'))heroBase('front');if(run.phase==='build'&&!busy&&HS.base==='front')hero.classList.add('idle');
   slide(false);placeHero(run.at,true);
   FXH.emit('render',{lo,hi,pitch,cell});
@@ -2204,6 +2269,7 @@ function renderBoard(F){
 function slide(smooth){ // the knight's row sits second from the bottom
   const y=(rowOf(run.at)-1-win.lo)*win.pitch;
   if(smooth&&!REDUCED){board.style.transform=`translateY(${y}px)`;return}
+  if(board.style.transform===normT(`translateY(${y}px)`))return; /* 11/6: already there (a slide that is still going finishes softly) */
   board.style.transition='none';board.style.transform=`translateY(${y}px)`;void board.offsetWidth;board.style.transition='';
 }
 function refreshMarks(){
@@ -2214,7 +2280,7 @@ function refreshMarks(){
   for(const [j] of F.rock||[]){const el=elOf(j);if(!el)continue;const ok=!!t&&fits(t,j,F);el.classList.toggle('front',ok);el.classList.toggle('fit',ok);
     const g=el.querySelector(':scope>.gh');if(g)g.remove();if(ok)el.insertAdjacentHTML('beforeend',`<div class="gh">${svg(tileArt(t,false))}</div>`)}
 }
-function updateCell(i){const el=elOf(i);if(el){el.outerHTML=cellHTML(i,null);FXH.emit('update',{i})}}
+function updateCell(i){const el=elOf(i);if(el){const h=cellHTML(i,null);el.outerHTML=h;const n=elOf(i);if(n)n._h=kidKey(h);FXH.emit('update',{i})}}
 function slotLabel(t){ // under each block, what it carries: the hp its toy will cost, the coins, the candy, the gear
   const e=t.e;let c='',h='';
   if(e&&e.k==='foe'){c=' foe';h=`${ico(SPR.heart)}-${nf(dmgFor(e))}`+(e.psn?' 毒':'')}
@@ -2229,7 +2295,12 @@ function renderHand(F){
   handEl.style.setProperty('--hs',run.hand.length);
   const can=aim&&aim.kind!=='rock'?targets(aim.kind):null;
   const tA=!!(can&&run.sk&&run.sk[aim.k]&&run.sk[aim.k].id==='turn'),tOk=(t,i)=>tA&&can.includes(i)&&rot(t.m)!==t.m; /* 11/5: くるっと回す: which ones turn, and how */
-  handEl.innerHTML=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${can?(can.includes(i)?' aim':' dull'):anyFit(t,F)?'':' dull'}${t.m===15?' ace':''}${aceNew.includes(i)?' acein':''}${tOk(t,i)?' turnable':''}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}"><span class="blk">${svg(tileArt(t,true))}${tOk(t,i)?`<i class="turnmk" aria-hidden="true">${turnArrow()}</i>`:''}</span>${slotLabel(t)}</div>`:`<div class="slot none" data-i="${i}"></div>`).join('')+'<div class="slot lock" aria-hidden="true"></div>'.repeat(Math.max(0,6-run.hand.length));
+  const hh=run.hand.map((t,i)=>t?`<div class="slot${i===sel?' sel':''}${can?(can.includes(i)?' aim':' dull'):anyFit(t,F)?'':' dull'}${t.m===15?' ace':''}${aceNew.includes(i)?' acein':''}${tOk(t,i)?' turnable':''}" data-i="${i}" tabindex="0" role="button" aria-label="${tileName(t)}"><span class="blk">${svgx(tileArt(t,true))}${tOk(t,i)?`<i class="turnmk" aria-hidden="true">${turnArrow()}</i>`:''}</span>${slotLabel(t)}</div>`:`<div class="slot none" data-i="${i}"></div>`);for(let k=run.hand.length;k<6;k++)hh.push('<div class="slot lock" aria-hidden="true"></div>');
+  /* 11/6: only the slots that changed are made again */
+  kidsOf(handEl);const old=[...handEl.children],need=[],els=hh.map((h,k)=>kidOk(old[k],h)?old[k]:(need.push(k),null));
+  if(need.length===hh.length){handEl.innerHTML=hh.join('');[...handEl.children].forEach((el,k)=>{el._h=kidKey(hh[k])})}
+  else{const made=kidsMake(need.map(k=>hh[k]));need.forEach((k,j)=>{els[k]=made[j]});const ks=new Set(els);kidsCalm(handEl,ks);for(const el of old)if(!ks.has(el))el.remove();kidsPlace(handEl,els,handEl.firstChild)}
+  KIDMO.takeRecords();
   if(aceNew.length){const a=aceNew;aceNew=[];setTimeout(()=>a.forEach(aceBurst),40)}
 }
 let preview=0; // the hp the held block would cost
@@ -2237,7 +2308,7 @@ function renderHp(){
   const hp=Math.max(0,run.hp),m=run.maxHp,after=Math.max(0,hp-preview),part=(v,k)=>Math.min(1,Math.max(0,v/m*10-k));
   let h='';
   for(let k=0;k<10;k++){const f=part(hp,k),a=part(after,k);h+=`<i><u style="width:${f*100}%"></u>${f>a?`<s style="left:${a*100}%;width:${(f-a)*100}%"></s>`:''}</i>`}
-  $('hpblocks').innerHTML=h;
+  setH($('hpblocks'),h);
   $('hptext').textContent=`${nf(hp)}/${nf(m)}`;
   $('hp').classList.toggle('dying',preview>0&&preview>=hp);
   const low=hp>0&&hp<=Math.max(2,m*.3),crit=hp>0&&hp<=Math.max(2,Math.floor(m*.2)); // the heart beats when the knight is about to fall (11/4)
@@ -2253,11 +2324,11 @@ function previewFor(hi,j){ // the toy on the block, plus the captain when this b
 function setPreview(j){const d=sel>=0&&run&&run.phase==='build'?previewFor(sel,j):0;if(d!==preview){preview=d;renderHp()}}
 function renderStats(){
   if(sel<0)preview=0;
-  app.dataset.area=areaOf(rowOf(run.at)).k;weather();
+  {const a=areaOf(rowOf(run.at)).k;if(app.dataset.area!==a)app.dataset.area=a}weather(); /* 11/6: only when it changes */
   renderHp();
-  $('i-atk').innerHTML=ico(SPR.sword)+`<b>${nf(atkNow())}</b>`;
-  $('i-def').innerHTML=ico(SPR.shield)+`<b>${nf(run.def)}</b>`;
-  $('i-gold').innerHTML=ico(SPR.coin)+`<b>${nf(run.gold)}</b>`;
+  setH($('i-atk'),ico(SPR.sword)+`<b>${nf(atkNow())}</b>`);
+  setH($('i-def'),ico(SPR.shield)+`<b>${nf(run.def)}</b>`);
+  setH($('i-gold'),ico(SPR.coin)+`<b>${nf(run.gold)}</b>`);
   diceFace(run.rolls);
   rollBtn.disabled=busy||run.phase!=='build'||run.rolls<=0;
   $('quit').disabled=busy;hero.classList.toggle('bub',(run.bub|0)>0);
@@ -2271,7 +2342,21 @@ function markStuck(F){
   if(stuck&&!drawerOpen)setDrawer(true,true); // a dead end: the drawer opens by itself, the die nudging
   else if(!stuck&&drawerAuto&&run.phase==='build'&&!busy)drawerTimer=setTimeout(()=>{if(drawerAuto)setDrawer(false)},700);
 }
-function render(){const F=frontier();renderStats();renderBoard(F);renderHand(F);markStuck(F);hintFinger(F)}
+function render(){const F=frontier();renderStats();renderBoard(F);renderHand(F);markStuck(F);hintFinger(F);offPause()}
+/* 11/6: the loops out of sight wait (the rows kept above the screen, under the tray) and come back on the same beat, a row before they show */
+const OFFP=new Map();
+function offPause(){
+  const CA=window.CSSAnimation;if(REDUCED||!run||!CA||!board.firstElementChild||!win.pitch)return;
+  const y=(rowOf(run.at)-1-win.lo)*win.pitch,pad=win.pitch,top=-board.offsetTop-y-pad,bot=top+view.clientHeight+2*pad; /* in the field's own pixels, where it is going */
+  for(const [a] of OFFP){const t=a.effect&&a.effect.target;if(!t||!t.isConnected)OFFP.delete(a)}
+  const b0=board.getBoundingClientRect().top;
+  for(const a of board.getAnimations({subtree:true})){
+    if(!(a instanceof CA)||a.effect.getTiming().iterations!==Infinity)continue;
+    const r=a.effect.target.getBoundingClientRect(),out=r.bottom-b0<top||r.top-b0>bot;
+    if(out){if(a.playState==='running'&&!OFFP.has(a)){OFFP.set(a,a.startTime);a.pause()}}
+    else if(OFFP.has(a)){const s=OFFP.get(a);OFFP.delete(a);a.play();if(s!=null)a.startTime=s}
+  }
+}
 function hintFinger(F){ /* the first climbs (until 2 steps): a finger on the block and the place that keep the way open, up first; on the die when every place would end the way */
   document.querySelectorAll('.finger,.upcue').forEach(x=>x.remove());
   if(meta.far>=2||!run||run.phase!=='build'||busy||aim)return;
@@ -2310,9 +2395,11 @@ function upCue(){ /* 11/5: the first climbs: chevrons rise over the knight's hea
 }
 function placeHero(i,instant){
   const el=elOf(i);if(!el)return;
+  const w=el.offsetWidth+'px',h=el.offsetHeight+'px',t=`translate(${el.offsetLeft}px,${el.offsetTop}px)`;
+  if(instant&&hero.style.width===w&&hero.style.height===h&&hero.style.transform===normT(t))return; /* 11/6: already there */
   if(instant)hero.style.transition='none';
-  hero.style.width=el.offsetWidth+'px';hero.style.height=el.offsetHeight+'px';
-  hero.style.transform=`translate(${el.offsetLeft}px,${el.offsetTop}px)`;
+  hero.style.width=w;hero.style.height=h;
+  hero.style.transform=t;
   if(instant){void hero.offsetWidth;hero.style.transition=''}
 }
 function pop(i,text,cls,delay){ // a number over a cell's head
@@ -2330,8 +2417,8 @@ const flashCell=i=>flash(elOf(i));
 const flashSlot=i=>{if(i>=0)flash(handEl.children[i])};
 function hop(){if(REDUCED)return;[...handEl.children].forEach((s,k)=>s.animate([{transform:'none'},{transform:'translateY(-10px)'},{transform:'none'}],{duration:280,delay:k*35}))}
 function lunge(dx,dy){if(!REDUCED)hero.firstElementChild.animate([{transform:'none',easing:'ease-out'},{transform:`translate(${-dx*.22}px,${-dy*.22}px) scale(.96,1.04)`,offset:.16,easing:'cubic-bezier(.3,0,.2,1)'},{transform:`translate(${dx}px,${dy}px) scale(1.06,.95)`,offset:.4},{transform:`translate(${dx*.92}px,${dy*.92}px)`,offset:.62,easing:'ease-in-out'},{transform:'none'}],{duration:240})} // the hold at the front is the hit-stop
-function struck(el){const s=el&&(el.querySelector(':scope>svg')||el.firstElementChild);if(s&&!REDUCED)s.animate([{transform:'none'},{transform:'translateX(7%)',filter:'brightness(1.35)'},{transform:'translateX(-7%)'},{transform:'none'}],{duration:220})}
-function hurt(){hero.classList.remove('hurt');void hero.offsetWidth;hero.classList.add('hurt')}
+function struck(el){const s=el&&(el.querySelector(':scope>svg')||el.firstElementChild);if(s&&!REDUCED){const K=[{transform:'none'},{transform:'translateX(7%)',filter:'brightness(1.35)'},{transform:'translateX(-7%)'},{transform:'none'}];s.animate(K,{duration:220});const x=el.querySelector(':scope>.lxw');if(x&&x!==s)x.animate(K,{duration:220})}}
+function hurt(){if(hero.classList.contains('hurt'))hero.classList.toggle('hurt2');else hero.classList.add('hurt')} /* 11/6: hurt2 (same keyframes) restarts it without a forced layout */
 
 /* ---------- effects ---------- */
 const WX={grass:['#ffffff','#fbd3e0','#f7c3d4'],forest:['#8fcf8a','#f2b05e','#e6a06a','#74bf70'],lake:['#fff'],snow:['#ffffff'],castle:['#f7c3d4','#bfe6d6','#fbe2a0','#d8cdf6','#c4e2f5']};
@@ -2540,7 +2627,7 @@ async function stepTo(i){
   const up=rowOf(i)>rowOf(run.at),from=run.at,jump=Math.abs(rowOf(i)-rowOf(from))+Math.abs(colOf(i)-colOf(from))>1;
   if(jump)hero.classList.add('jump');
   hero.classList.remove('idle');{const dr=rowOf(i)-rowOf(from),dc=colOf(i)-colOf(from);if(jump){heroBase(dr>0?'back':'front');heroPose('jump',Math.max(STEP,380))}else heroBase(dr>0?'back':dr<0?'front':'side',dc>0)}
-  run.at=i;placeHero(i);if(up)slide(true);
+  run.at=i;placeHero(i);if(up){offPause();slide(true)} /* 11/6: the row coming into sight moves again first */
   FXH.emit('step',{from,to:i,up});
   await sleep(jump?Math.max(STEP,380):STEP);hero.classList.remove('jump');
   tickSkills();stepMagic();stepToys();
@@ -2705,7 +2792,7 @@ function renderSkills(){
     if(!d){b.className='skill none';b.textContent='空き';b.setAttribute('aria-label','スキルの空き枠（強化のスキルでセット）');b.dataset.rest='';return}
     const rest=s.cd>0,full=Math.max(1,d.ct-qv('cdr')),was=b.dataset.rest==='1';b.dataset.rest=rest?'1':'0';
     b.className='skill'+(rest?' rest':' can')+(pick===k?' on':'')+(!rest&&was&&!REDUCED?' ready':'');
-    b.innerHTML=`<span class="sk-ic">${svg(SK_ART[d.id])}${rest?`<i class="sk-rest" style="--p:${Math.min(1,s.cd/full).toFixed(3)}"><b>${s.cd}</b></i>`:''}</span><span class="sk-n">${d.n}</span>`;
+    setH(b,`<span class="sk-ic">${svg(SK_ART[d.id])}${rest?`<i class="sk-rest" style="--p:${Math.min(1,s.cd/full).toFixed(3)}"><b>${s.cd}</b></i>`:''}</span><span class="sk-n">${d.n}</span>`);
     b.setAttribute('aria-label',`${d.n}：${d.d}`+(rest?`（あと${s.cd}マスで使える）`:''));
   });
   hero.classList.toggle('pow',FX().wind>0);hero.classList.toggle('guard',!!FX().guard);hero.classList.toggle('psn',!!(run.pz&&run.pz.n>0));
@@ -4047,7 +4134,8 @@ document.body.insertAdjacentHTML('beforeend','<svg class="art-defs" width="0" he
 /* art drawn with its feet at (50,f0) stands on panel i: feet at f, k times bigger, leaning, with its shadows */
 function standArt(i,art,f0,k,f,rx,flip){
   const g=`translate(50 ${f}) skewX(${LEAN(i).toFixed(2)}) scale(${(flip?-k:k).toFixed(3)} ${k.toFixed(3)}) translate(-50 -${f0})`;
-  return `<g transform="${CASTM(f)}"><g transform="${g}">${SHAD(art)}</g></g>`+(rx?CONTACT(f,rx):'')+`<g transform="${g}">${art}</g>`;
+  const body=art.indexOf('<lx ')===0&&art.indexOf('<lx ',4)<0?art.replace('<lx ',`<lx m="${g}" `):`<g transform="${g}">${unlx(art)}</g>`; /* 11/6: a toy keeps its lean as the box's transform */
+  return `<g transform="${CASTM(f)}"><g transform="${g}">${SHAD(art)}</g></g>`+(rx?CONTACT(f,rx):'')+body;
 }
 const OB_BASE={ // drawn under the obstacle: its shadow and a little ground of its land
   grass:AO(52,86,38,7.5)+TUFT(10,90,'#7fb862')+TUFT(78,89,'#7fb862'),
@@ -4076,7 +4164,7 @@ function obArt(i,a){ // the obstacle on panel i: its land's base, then the toy t
 /* a toy standing on the field, and a toy standing on a laid block */
 const FOE_F0=t=>t==='king'?94:t==='boss'?90:88;
 const SEEN=new WeakSet(); // toys already drawn once: only a new one pops up
-const TOYG=(t,e)=>{const g=`<g class="toy t-${t}">${SPR[t]||SPR.soldier}</g>`;if(!e||SEEN.has(e))return g;SEEN.add(e);SND('pon');return REDUCED?g:`<g class="spawn">${g}</g>`};
+const TOYG=(t,e)=>{const a=SPR[t]||SPR.soldier;if(!e||SEEN.has(e))return LX('toy t-'+t,a);SEEN.add(e);SND('pon');return LX('toy t-'+t,a,'',!REDUCED)};
 const toyStand=(i,t,e)=>standArt(i,TOYG(t,e),FOE_F0(t),DEP.foe,DEP.foot,0);
 const toyOnBlock=(i,t,e)=>standArt(i,TOYG(t,e),FOE_F0(t),.86,RC+14,0);
 SPR.brick=AO(50,85,40,7.5)+'<rect x="10" y="84" width="4" height="3" rx="1" fill="#d8cdf6"/><rect x="85" y="82" width="3.5" height="3" rx="1" fill="#f7c3d4"/>'+(HAS_ART?U('brick',8,18,84,68):SPR.brick);
@@ -4123,7 +4211,7 @@ setInterval(()=>{ // while he waits: now and then he looks around, up the road, 
 ['pointerdown','keydown'].forEach(t=>addEventListener(t,()=>{HS.idle=0},{passive:true}));
 SPR.fence='<rect x="-6" y="80" width="112" height="9" rx="4.5" fill="rgba(60,36,24,.16)"/>'+(HAS_ART?'<g transform="translate(-6 18) scale(1.4 1)">'+U('fence',0,0,80,70)+'</g>':SPR.fence);
 FXH.add('render',()=>{ // the tray and the thread follow the dimension the knight stands in
-  const r=rowOf(run.at),t=tintOf(r);app.style.setProperty('--dtint',t?t.slice(t.indexOf(':')+1):'#0000');app.dataset.dim=Math.min(5,dimOf(r));
+  const r=rowOf(run.at),t=tintOf(r),dt=t?t.slice(t.indexOf(':')+1):'#0000',dm=String(Math.min(5,dimOf(r)));if(app._dt!==dt){app._dt=dt;app.style.setProperty('--dtint',dt)}if(app.dataset.dim!==dm)app.dataset.dim=dm; /* 11/6: only when they change */
 });
 /* ===== end of fx module A ===== */
 
@@ -4676,7 +4764,7 @@ const LF=(()=>{
   const poke=(i,amp)=>{
     if(REDUCED)return;
     if(typeof MO!=='undefined'&&MO.poke){MO.poke(i,amp);return}
-    const e=elOf(i),s=e&&e.querySelector(':scope>svg');if(s)s.animate([{transform:'none'},{transform:'translateY(5%) scale(1.04,.93)'},{transform:'translateY(-3%)'},{transform:'none'}],{duration:320,easing:'ease-out'});
+    const e=elOf(i);for(const s of e?[e.querySelector(':scope>svg'),e.querySelector(':scope>.lxw')]:[])if(s)s.animate([{transform:'none'},{transform:'translateY(5%) scale(1.04,.93)'},{transform:'translateY(-3%)'},{transform:'none'}],{duration:320,easing:'ease-out'});
   };
   const ring=(el,x,y)=>{if(REDUCED)return;el.insertAdjacentHTML('beforeend',`<i class="lf-sp lf-ring" style="left:${x}%;top:${y}%"></i>`);const g=el.lastElementChild;setTimeout(()=>g.remove(),1900)};
   function peekOut(e){if(e&&!REDUCED)e.animate([{transform:'translateX(0)'},{transform:'translateX(62%)',offset:.22},{transform:'translateX(62%) rotate(-6deg)',offset:.5},{transform:'translateX(62%)',offset:.8},{transform:'translateX(0)'}],{duration:1500,easing:'ease-in-out'})}
