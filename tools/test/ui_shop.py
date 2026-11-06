@@ -33,7 +33,13 @@ async def buy_all(S, far):
         if st['bank'] < 0: issue('wrong', f'bank negative {st["bank"]}')
         # past max: button is MAX/disabled
         extra = await pg.evaluate("()=>[...document.querySelectorAll('#sh-det .dt-btn')].map(b=>b.textContent+':'+b.disabled)")
-        # undo all
+        if tab == 'up':  # 11/7: a 能力 level stays once bought (no もどす, and an undo from code does nothing)
+            if await pg.query_selector('#sh-det [data-act="undo"]'): issue('wrong', f'far={far}: 能力 paper {u["k"]} still has undo')
+            await pg.evaluate("()=>{const b=document.createElement('button');b.dataset.act='undo';document.body.appendChild(b);b.click();b.remove()}"); await pg.wait_for_timeout(280)
+            st2 = await shop_state(S)
+            if st2['up'][u['k']] != u['max'] or st2['bank'] != st['bank']: issue('wrong', f'far={far}: 能力 {u["k"]} undone -> lvl {st2["up"][u["k"]]} bank {st2["bank"]}')
+            continue
+        # undo all (積み木の箱 only)
         for _ in range(u['max'] + 1):
             ub = await pg.query_selector('#sh-det [data-act="undo"]:not([disabled])')
             if not ub: break
