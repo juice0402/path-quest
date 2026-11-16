@@ -65,3 +65,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # 11/16: base64 を index.html に直接入れる古い道具。先に build して index.html を新しくしてから当て、あとで extract する
+    print('つぎに node tools/build/extract.mjs games/path-quest/index.html（絵を assets/ に出して src/page.html を作りなおす）→ node tools/build/build.mjs')

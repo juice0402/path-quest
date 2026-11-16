@@ -5,6 +5,7 @@
 ## Projects
 
 - `games/path-quest/` — PATH QUEST（開発中）
+  - 直すのは `games/path-quest/src/page.html` と `games/path-quest/assets/`（絵）。`node tools/build/build.mjs` で遊ぶ人が開く `index.html` を作る。地図は `docs/MAP.md`
 
 ## PATH QUEST: current direction
 

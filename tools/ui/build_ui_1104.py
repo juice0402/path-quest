@@ -118,3 +118,5 @@ else:
     i = s.find('</style>'); s = s[:i] + CSS + s[i:]
 open(P, 'w', encoding='utf-8').write(s)
 print('ok band', band, 'slice', SL, 'sizes', {k: len(v) for k, v in planks.items()}, 'frame', len(frame), 'paper', len(paper), 'wall', len(wall), 'html', len(s))
+# 11/16: base64 を index.html に直接入れる古い道具。先に build して index.html を新しくしてから当て、あとで extract する
+print('つぎに node tools/build/extract.mjs games/path-quest/index.html（絵を assets/ に出して src/page.html を作りなおす）→ node tools/build/build.mjs')
