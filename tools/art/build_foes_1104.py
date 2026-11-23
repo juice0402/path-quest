@@ -56,3 +56,5 @@ for p, n in HERO.items():
     put(n, *sym(n, im, anchor(im, p == 'ko')))
 open(P, 'w', encoding='utf-8').write(s)
 print('ok', len(FOES), 'toys', len(HERO), 'poses', len(s), 'bytes')
+# 11/16: base64 を index.html に直接入れる古い道具。先に build して index.html を新しくしてから当て、あとで extract する
+print('つぎに node tools/build/extract.mjs games/path-quest/index.html（絵を assets/ に出して src/page.html を作りなおす）→ node tools/build/build.mjs')

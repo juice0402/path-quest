@@ -1,8 +1,8 @@
 # 同じセレクタのルールがあとでもう一度同じプロパティを決めているとき、前のほうの宣言を消す（何度でも走らせてよい）
 # 同じセレクタ・同じ場所（どちらも外側、または同じ @media の中）・同じプロパティ名・!important の強さが同じかあとのほうが強いときだけ消す
-# usage: python3 tools/ui/dedupe_css.py [games/path-quest/index.html] [--dry]
+# usage: python3 tools/ui/dedupe_css.py [games/path-quest/src/page.html] [--dry]
 import re, sys
-P = next((a for a in sys.argv[1:] if not a.startswith('--')), 'games/path-quest/index.html')
+P = next((a for a in sys.argv[1:] if not a.startswith('--')), 'games/path-quest/src/page.html')  # 11/16: index.html はビルドで作る
 DRY = '--dry' in sys.argv
 s = open(P, encoding='utf-8').read()
 m = re.search(r'<style>(.*?)</style>', s, re.S); css = m.group(1); cs, ce = m.span(1)
@@ -72,3 +72,4 @@ new = re.sub(r'(?m)^[^{}@/\n][^{}\n]*\{\s*\}\n?', '', new)
 print('declarations dropped', dropped, 'rules touched', len(edits), 'bytes', len(css), '->', len(new))
 if not DRY:
     open(P, 'w', encoding='utf-8').write(s[:cs] + new + s[ce:])
+if '--dry' not in sys.argv: print('つぎに node tools/build/build.mjs で index.html を作る')

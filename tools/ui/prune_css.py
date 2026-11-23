@@ -1,8 +1,8 @@
 # 使っていない CSS を消す（何度でも走らせてよい）
 # クラス名・ID が HTML にも JS にも出てこないセレクタだけを消す。動的に作るクラス（'lf-s-'+k、`k-${kd}`、' v'+n など）は残す
-# usage: python3 tools/ui/prune_css.py [games/path-quest/index.html] [--dry]
+# usage: python3 tools/ui/prune_css.py [games/path-quest/src/page.html] [--dry]
 import re, sys
-P = next((a for a in sys.argv[1:] if not a.startswith('--')), 'games/path-quest/index.html')
+P = next((a for a in sys.argv[1:] if not a.startswith('--')), 'games/path-quest/src/page.html')  # 11/16: index.html はビルドで作る
 DRY = '--dry' in sys.argv
 s = open(P, encoding='utf-8').read()
 D = re.compile(r'data:image/\w+;base64,[A-Za-z0-9+/=]+')
@@ -61,3 +61,4 @@ print('rules removed', removed, 'selectors cut from lists', cut, 'bytes', len(cs
 if not DRY:
     s = s[:cs] + new + s[ce:]
     open(P, 'w', encoding='utf-8').write(s)
+if '--dry' not in sys.argv: print('つぎに node tools/build/build.mjs で index.html を作る')
