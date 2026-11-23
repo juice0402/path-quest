@@ -10,12 +10,12 @@ async def lock_flow(S):
     await pg.evaluate("PQ.showShop('skill')"); await pg.wait_for_timeout(250)
     o = await pg.evaluate(ORDER, 'skill'); print(' far0 skill order', [(x['k'], 'L' if x['lk'] else '') for x in o])
     lk = await pg.evaluate("()=>PQ.LOCK")
-    # open before locked; within locked biggest step first
-    seen_lock = False; prev = 9999
+    # open before locked; within locked smallest step first (11/6 a)
+    seen_lock = False; prev = 0
     for x in o:
         if x['lk']:
             seen_lock = True; st = lk['sk'][x['k']]
-            if st > prev: issue('wrong', f'locked skills not biggest-first: {x["k"]} {st} after {prev}')
+            if st < prev: issue('wrong', f'locked skills not smallest-first: {x["k"]} {st} after {prev}')
             prev = st
             if x['txt'].find('？？？') < 0: issue('visual', f'locked skill label shows name: {x["txt"]}')
         elif seen_lock: issue('wrong', f'open skill {x["k"]} after locked ones')
