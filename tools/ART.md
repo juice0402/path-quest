@@ -18,6 +18,8 @@
   - p10 お守りと次元のゲート 4×3：MAHZ1c0tKjk → cx1, cc2, cm2, ct2, cp3, cr3, cx3, ca3, ck4, cs4, cf4, portal（`--lo 240 --tol 8`）
   - p11 新しい敵と毒マス・壁 3×2（1536×1024）：MAHZ1neDg18 → archer, mage, clown, mason, psn, brick（弓の内側をぬくため archer だけ `--holes`）
   - p12 悪役の敵 4×3（1440×1080）：MAHZ1owqEL4 → soldier, bugle, cannon, robot, boss, king, archer, mage, clown, mason, bat, spike（p11 の4体はこちらで上書き。bat・spike はまだ使っていない）
+  - p30 アプリのアイコン（11/24・A・Canva の AI）：MAHbxwNFa-Y。参考の絵はタイトル（MAHZ1Mmd3ns）とキャラ（MAHZ026MNNQ）。文「PATH QUEST のアプリのアイコンを新しく作る：騎士くんと積み木の道。小さくても分かる絵に（正方形・文字なし・やわらかい3Dのおもちゃ・パステル・つやなし。参考の絵の騎士くんと画風で）」。書き出し 2048px → 白いふちと角の丸みを切って 1024px → docs/kobo/icon.png
+- UI の木と紙（p17〜19・21・23）・敵と騎士くん（p25〜28）も Canva の AI で作った絵（A）。11/24 に Canva の持ち主と名前の形で確かめた（ライブラリの素材ではない）
 - 生成は 1 枚ずつ、3 分以上あける（続けると待ち時間になる）
 - 書き出しの URL（export-download.canva.com）は作業場所から curl で落とせる
 

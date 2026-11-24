@@ -4131,6 +4131,36 @@ if(/fxtest/.test(location.hash))window.PQ={get run(){return run},get busy(){retu
   jump(step,col){const r=step+1,c=col==null?colOf(run.at):col;while(run.made<r+40){run.made++;newRow(run.made)}
     const x=cellAt(idOf(r,c));x.rock=0;x.foe=null;x.tile={m:15,e:null,c:0};run.at=idOf(r,c);run.top=r;run.phase='build';grow();render();return run.at}};
 
+/* App Store screenshots (ios-kobo scripts/shots.py, 11/24): only in an automated browser (navigator.webdriver), never for people.
+   location.hash='shot=<scene>' sets one: title · climb · foe · reward · boss · shop. a player part way up (record 34 steps, 3 skills) in memory only */
+if(navigator.webdriver){
+  const later=ms=>new Promise(ok=>setTimeout(ok,ms));
+  const mid=()=>{meta.far=Math.max(meta.far,34);meta.best=Math.max(meta.best,34);meta.seen=Math.max(meta.seen|0,1);meta.bank=Math.max(meta.bank,860);
+    meta.up.hp=Math.max(meta.up.hp|0,3);meta.up.atk=Math.max(meta.up.atk|0,2);meta.sk.own=['turn','cross','clear'];meta.sk.eq=['turn','cross','clear']};
+  const best=()=>{const F=frontier();let pick=null;run.hand.forEach((t,h)=>{if(t)for(const j of F.keys())if(fits(t,j,F)&&(!pick||rowOf(j)>rowOf(pick[0])))pick=[j,h]});return pick};
+  /* a road laid straight onto the board (no walking, so no dead end): from row r0 and column c0, U = up, L/R = sideways. the knight stands at the end, the way up open */
+  const lay=(r0,c0,moves)=>{const pts=[[r0,c0]];for(const ch of moves){const [r,c]=pts[pts.length-1];pts.push(ch==='U'?[r+1,c]:ch==='L'?[r,c-1]:[r,c+1])}
+    const top=pts[pts.length-1][0];while(run.made<top+40){run.made++;newRow(run.made)}
+    const dir=(p,q)=>q[0]>p[0]?1:q[0]<p[0]?4:q[1]>p[1]?2:8;
+    pts.forEach((p,k)=>{if(p[0]<=1&&k===0)return;const x=cellAt(idOf(p[0],p[1]));if(!x)return;x.rock=0;x.foe=null;
+      let m=k?dir(p,pts[k-1]):4;m|=k<pts.length-1?dir(p,pts[k+1]):1;x.tile={m,e:null,c:k%BLOCKS.length}});
+    const [r,c]=pts[pts.length-1],up=cellAt(idOf(r+1,c));if(up){up.rock=0;up.foe=null}
+    run.at=idOf(r,c);run.top=r;run.phase='build';grow();render()};
+  const fresh=async()=>{for(let k=0;k<4&&run&&run.phase==='build'&&!best();k++){run.rolls++;reroll();await later(500)}}; /* a hand that fits somewhere (the dice it costs is given back) */
+  const start=async(r0,c0,moves)=>{hideSheets();newRun();run.maxHp=run.hp=Math.max(run.hp,60);run.atk=Math.max(run.atk,30);lay(r0,c0,moves);await later(400);await fresh();await later(300)};
+  const SCENE={
+    title:async()=>{hideSheets();showTitle()},
+    climb:async()=>start(1,2,'UUUUULLUURRRU'),
+    foe:async()=>{await start(26,2,'UUURRUULLLU');const r=run.top+1,c=colOf(run.at)+1,x=cellAt(idOf(r,c)),land=LAND_FOES[areaOf(r).k]||[]; /* one of the forest's own toys, next to the knight */
+      if(x){x.rock=0;for(let k=0;k<12&&!(x.foe&&land.includes(x.foe.t));k++)x.foe=standFoe(lvOf(r),r);render();await later(300);showFoe(idOf(r,c),x.foe)}},
+    reward:async()=>{await start(1,2,'UULUURUU');run.reward=true;openReward()},
+    boss:async()=>start(11,2,'UUUULLURRRU'),
+    shop:async()=>{hideSheets();showShop('skill')}
+  };
+  const go=()=>{const m=/shot=([a-z]+)/.exec(location.hash);if(m&&SCENE[m[1]]){mid();SCENE[m[1]]()}};
+  addEventListener('hashchange',go);setTimeout(go,300);
+}
+
 /* ===== fx module A: panels — agent A writes only between these two lines ===== */
 /* every ground panel gets its own cut of felt, tone and trim (classes v*, t*, wear, alt = the land's second material, odd = the castle checker);
    obstacles get a soft contact shadow, a little base of their land and their own pose; the tray takes the dimension's colour */
