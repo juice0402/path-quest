@@ -1282,6 +1282,11 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
 .sh-nav .go{border-image-source:var(--ui-plank-pink);--capw:18px;padding:0 2px;white-space:nowrap}
 .sh-nav .go-t{font-size:18px;gap:5px}
 .dt-btn{--capw:27px;padding:0 6px}
+/* 11/26: Game Center on the title (the app only): two small green planks under the big one */
+.t-gc{display:flex;gap:10px}
+.t-gc .dt-btn{flex:1 1 0;min-width:0;margin:0;height:48px;font-size:16px;--capw:24px;white-space:nowrap}
+.t-gc .bi svg{display:block;width:26px;height:26px}
+@media (max-width:389px){.t-gc{gap:8px}.t-gc .dt-btn{font-size:14px;letter-spacing:.02em;gap:4px;--capw:20px}.t-gc .bi svg{width:22px;height:22px}}
 .dt-btn:disabled{filter:grayscale(.8) opacity(.6)}
 .rw-go{--capw:28px}
 .rw-go:disabled{filter:grayscale(.8) opacity(.6);outline:0;color:#fff;text-shadow:0 2px 0 #3d3d3d;font:400 20px/1 var(--disp);letter-spacing:.1em}
@@ -1378,6 +1383,7 @@ body.art #s-title .lead{background:var(--paper);outline:2px solid var(--frame);o
     <div class="demo" id="demo"></div>
     <div class="t-foot">
       <button class="btn main play" id="t-new" type="button">あそぶ</button>
+      <div class="t-gc" id="t-gc" hidden><button class="dt-btn" id="t-rank" type="button"><span class="bi" id="t-rank-i"></span>ランキング</button><button class="dt-btn" id="t-ach" type="button"><span class="bi" id="t-ach-i"></span>実績</button></div>
     </div>
   </div>
 </div>
@@ -2057,7 +2063,7 @@ let meta=store.get(META)||{};
   if(k)[0,1,2].forEach(j=>{const id=k.eq&&k.eq[j];if(id&&sown.includes(id)&&!seq.includes(id))seq[j]=id});
   meta={bank:Math.max(0,meta.bank|0),best:meta.best|0,far:meta.far|0,seen:meta.seen|0,up:Object.fromEntries(UPS.map(x=>[x.k,Math.min(x.max,Math.max(0,u[x.k]|0))])),gear:{own,eq},sk:{own:sown,eq:seq},newg:(Array.isArray(meta.newg)?meta.newg:[]).filter(id=>GEAR_ID[id]),newu:(Array.isArray(meta.newu)?meta.newu:[]).filter(x=>{const [t,k]=String(x).split(':');return t==='sk'?!!SKILL_ID[k]:t==='up'&&UPS.some(v=>v.k===k)})};
 }
-const saveMeta=()=>store.set(META,meta);
+const saveMeta=()=>{store.set(META,meta);gcMeta()}; /* 11/26: Game Center — what the saved progress shows (records, skills, gear) is checked on every save */
 /* 11/5: the strong ones open as the climb goes further (meta.far = the best step ever). what is already bought stays open */
 const LOCK={
   sk:{clear:10,rain:10,cross:20,wind:20,box:40,cannon:40,treasure:50},
@@ -3380,6 +3386,7 @@ function takeReward(i){
   if(x.k==='pfirst')q.first=1;
   if(x.k==='roll')run.rolls+=2;
   if(x.k==='gold')gotG=addGold(N);
+  if(ITEMS.some(y=>y.w&&itLv(y.id)>=MAXLV))gcGot('toy_lv5');if(x.k==='evo')gcGot('evolve');
   rewardNotes(x,b0,gotG);
   run.rewards=null;if(pending())return openReward();
   run.chest=false;run.phase='build';hideSheets();render();heroRest();afterAction();
@@ -3407,6 +3414,7 @@ function gameOver(why){
   if(!run)return;
   const step=stepOf(run.top),far0=run.best|0,best=step>far0&&step>0,gold=run.gold,found=(run.found||[]).slice();
   meta.bank+=gold;meta.far=Math.max(meta.far,step);saveMeta();
+  if(gold>=200)gcGot('rich');gcScore();
   const p=(dimOf(run.top)?dimName(dimOf(run.top))+' ':'')+areaOf(rowOf(run.at)).n,home=why==='quit';
   const head={hp:`${p}で力つきた`,dead:`${p}で行き止まり`,nofit:`${p}で道がとぎれた`,quit:`${p}から帰還`};
   if(AUD)AUD.over(best?'win':home?'quit':'lose');
@@ -4125,6 +4133,38 @@ var AUD=(()=>{
 })();
 function SND(n,o){if(AUD)AUD.sfx(n,o)} /* var and function: safe even before this point has run */
 /*SND:end*/
+
+/* ---------- Game Center (11/26): the App Store app gives window.APP_SCORE · APP_ACHIEVE · APP_RANKING · APP_ACHIEVEMENTS and sets APP_GAMECENTER
+   (true once signed in, then the 'app-gamecenter' event). on the web none of them exist and nothing happens.
+   earned ids are kept in pathquest.ach.v1 and sent again on every start and on 'app-gamecenter' (a later sign-in gets them too).
+   the ids are fixed in docs/kobo/gamecenter.json: never rename one or use it again for something else ---------- */
+var GC_GOT=null; /* var: saveMeta can run before this point; until then the start-up gcSync catches it all */
+const GC_OFF=()=>!!navigator.webdriver&&/shot=/.test(location.hash); /* the App Store screenshots: a made-up player earns nothing */
+function gcSend(id){try{if(window.APP_ACHIEVE)window.APP_ACHIEVE(id)}catch(e){}}
+function gcGot(k){
+  if(!GC_GOT||GC_OFF())return;const id='path_'+k;if(GC_GOT.includes(id))return;
+  GC_GOT.push(id);try{localStorage.setItem('pathquest.ach.v1',JSON.stringify(GC_GOT))}catch(e){}gcSend(id);
+}
+function gcMeta(){ /* the ones the save itself shows, so players from before the app get theirs too */
+  if(!GC_GOT)return;const f=meta.far|0;
+  for(const [n,k] of [[10,'floor10'],[20,'captain'],[40,'floor40'],[50,'king'],[80,'castle'],[100,'night']])if(f>=n)gcGot(k); /* step 20·40… = that captain is down; 50·100 = the king; 80 = the castle land */
+  if(meta.sk.eq.filter(Boolean).length>=3)gcGot('skill3');
+  if(SKILLS.every(k=>meta.sk.own.includes(k.id)))gcGot('skill_all');
+  if(UPS.some(x=>!x.deck&&(meta.up[x.k]|0)>=x.max))gcGot('up_max');
+  if(meta.gear.own.length>=10)gcGot('gear10');
+  if(meta.gear.own.some(id=>GEAR_ID[id]&&GEAR_ID[id].r>=2))gcGot('star2');
+}
+function gcScore(){if(GC_OFF())return;try{if(window.APP_SCORE&&(meta.far|0)>0)window.APP_SCORE(meta.far|0)}catch(e){}}
+function gcSync(){if(GC_OFF()||!GC_GOT)return;const old=GC_GOT.slice();gcMeta();old.forEach(gcSend);gcScore()} /* new ones were just sent by gcGot */
+try{const a=JSON.parse(localStorage.getItem('pathquest.ach.v1')||'[]');GC_GOT=Array.isArray(a)?a.filter(x=>typeof x==='string'):[]}catch(e){GC_GOT=[]}
+{ /* the two planks on the title only while Game Center is there */
+  const box=$('t-gc'),show=()=>{box.hidden=window.APP_GAMECENTER!==true};
+  $('t-rank-i').innerHTML=ico(SPR.flag);$('t-ach-i').innerHTML=ico(SPR.chest);
+  $('t-rank').addEventListener('click',()=>{try{if(window.APP_RANKING)window.APP_RANKING()}catch(e){}});
+  $('t-ach').addEventListener('click',()=>{try{if(window.APP_ACHIEVEMENTS)window.APP_ACHIEVEMENTS()}catch(e){}});
+  window.addEventListener('app-gamecenter',()=>{show();gcSync()});show();
+}
+gcSync();
 
 /* test only: open with #fxtest to reach the internals from a test script (PQ.jump(step) puts the knight on that step) */
 if(/fxtest/.test(location.hash))window.PQ={get run(){return run},get busy(){return busy},get sel(){return sel},get meta(){return meta},frontier,fits,anyFit,place,reroll,useSkill,takeReward,newRun,gameOver,saveMeta,rescue,gateFrom,dmgFor,targets,heroPose,heroBase,toyAct,toysAct,fightRules,AUD,QK,UPS,SKILL_ID,LOCK,isLocked,opened,stepOf,lvOf,cellAtSafe:i=>cellAt(i),FXH,openReward,showShop,note,render,renderBoard,cellAt,idOf,rowOf,colOf,elOf,battle,stepTo,boom,

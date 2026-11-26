@@ -19,6 +19,8 @@
   - p11 新しい敵と毒マス・壁 3×2（1536×1024）：MAHZ1neDg18 → archer, mage, clown, mason, psn, brick（弓の内側をぬくため archer だけ `--holes`）
   - p12 悪役の敵 4×3（1440×1080）：MAHZ1owqEL4 → soldier, bugle, cannon, robot, boss, king, archer, mage, clown, mason, bat, spike（p11 の4体はこちらで上書き。bat・spike はまだ使っていない）
   - p30 アプリのアイコン（11/24・A・Canva の AI）：MAHbxwNFa-Y。参考の絵はタイトル（MAHZ1Mmd3ns）とキャラ（MAHZ026MNNQ）。文「PATH QUEST のアプリのアイコンを新しく作る：騎士くんと積み木の道。小さくても分かる絵に（正方形・文字なし・やわらかい3Dのおもちゃ・パステル・つやなし。参考の絵の騎士くんと画風で）」。書き出し 2048px → 白いふちと角の丸みを切って 1024px → docs/kobo/icon.png
+- Game Center のバッジ（11/26）：新しい生成はなし。p3・p4・p5・p8・p9・p10・p15・p16・p26・p28 をそのまま書き出し（png・pro）→ slice_art.py で切り出した絵と、p5 の地面のまん中の正方形を tools/art/badge_src/ に（A）。木のふち（assets/ui-plank*.webp を輪に曲げる）・くぎ・星・夜の色はコード（C）。作るのは tools/art/make_badges.py
+  - box←p4・boss・king←p26・cheer・lift←p28・castle←p4（紫の城）・portal←p10・turn・cross←p15・chest←p9・wand←p8・boomer・plane←p16・coin←p3・g-*←p5
 - UI の木と紙（p17〜19・21・23）・敵と騎士くん（p25〜28）も Canva の AI で作った絵（A）。11/24 に Canva の持ち主と名前の形で確かめた（ライブラリの素材ではない）
 - 生成は 1 枚ずつ、3 分以上あける（続けると待ち時間になる）
 - 書き出しの URL（export-download.canva.com）は作業場所から curl で落とせる
