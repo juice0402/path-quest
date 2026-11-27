@@ -177,9 +177,9 @@
       "hidden": false,
       "image": "achievements/path_star2.png",
       "ja": {
-        "name": "★2の装備",
-        "before": "★2の装備を見つける",
-        "after": "★2の装備を見つけた"
+        "name": "星2つの装備",
+        "before": "星2つの装備を見つける",
+        "after": "星2つの装備を見つけた"
       },
       "en-US": {
         "name": "Two-Star Gear",
