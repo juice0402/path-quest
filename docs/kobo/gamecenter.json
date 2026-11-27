@@ -1,0 +1,239 @@
+{
+  "leaderboard": {
+    "id": "path_best",
+    "name": {
+      "ja": "さいこうきろく",
+      "en-US": "Best Climb"
+    },
+    "suffix": {
+      "ja": "段",
+      "en-US": " floors"
+    }
+  },
+  "achievements": [
+    {
+      "id": "path_floor10",
+      "points": 10,
+      "hidden": false,
+      "image": "achievements/path_floor10.png",
+      "ja": {
+        "name": "はじめのおもちゃ箱",
+        "before": "10段のぼる",
+        "after": "10段のぼった"
+      },
+      "en-US": {
+        "name": "First Toy Box",
+        "before": "Climb 10 floors",
+        "after": "Climbed 10 floors"
+      }
+    },
+    {
+      "id": "path_captain",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/path_captain.png",
+      "ja": {
+        "name": "兵隊長をこえて",
+        "before": "20段の兵隊長をたおす",
+        "after": "20段の兵隊長をたおした"
+      },
+      "en-US": {
+        "name": "Past the Captain",
+        "before": "Defeat the captain on floor 20",
+        "after": "Defeated the captain on floor 20"
+      }
+    },
+    {
+      "id": "path_floor40",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/path_floor40.png",
+      "ja": {
+        "name": "ぐんぐん40段",
+        "before": "40段のぼる",
+        "after": "40段のぼった"
+      },
+      "en-US": {
+        "name": "Up and Up",
+        "before": "Climb 40 floors",
+        "after": "Climbed 40 floors"
+      }
+    },
+    {
+      "id": "path_king",
+      "points": 50,
+      "hidden": true,
+      "image": "achievements/path_king.png",
+      "ja": {
+        "name": "おもちゃの王さま",
+        "before": "50段の王さまをたおす",
+        "after": "50段の王さまをたおした"
+      },
+      "en-US": {
+        "name": "The Toy King",
+        "before": "Defeat the king on floor 50",
+        "after": "Defeated the king on floor 50"
+      }
+    },
+    {
+      "id": "path_castle",
+      "points": 50,
+      "hidden": true,
+      "image": "achievements/path_castle.png",
+      "ja": {
+        "name": "おもちゃの城",
+        "before": "おもちゃの城に着く",
+        "after": "おもちゃの城に着いた"
+      },
+      "en-US": {
+        "name": "The Toy Castle",
+        "before": "Reach the toy castle",
+        "after": "Reached the toy castle"
+      }
+    },
+    {
+      "id": "path_night",
+      "points": 100,
+      "hidden": true,
+      "image": "achievements/path_night.png",
+      "ja": {
+        "name": "夜の次元へ",
+        "before": "100段の王さまをたおす",
+        "after": "100段の王さまをたおした"
+      },
+      "en-US": {
+        "name": "Into the Night",
+        "before": "Defeat the king on floor 100",
+        "after": "Defeated the king on floor 100"
+      }
+    },
+    {
+      "id": "path_skill3",
+      "points": 10,
+      "hidden": false,
+      "image": "achievements/path_skill3.png",
+      "ja": {
+        "name": "スキル3つ",
+        "before": "スキルを3つセットする",
+        "after": "スキルを3つセットした"
+      },
+      "en-US": {
+        "name": "Three Skills",
+        "before": "Set three skills",
+        "after": "Set three skills"
+      }
+    },
+    {
+      "id": "path_skill_all",
+      "points": 50,
+      "hidden": false,
+      "image": "achievements/path_skill_all.png",
+      "ja": {
+        "name": "スキルはかせ",
+        "before": "スキルをぜんぶ覚える",
+        "after": "スキルをぜんぶ覚えた"
+      },
+      "en-US": {
+        "name": "Skill Master",
+        "before": "Learn every skill",
+        "after": "Learned every skill"
+      }
+    },
+    {
+      "id": "path_up_max",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/path_up_max.png",
+      "ja": {
+        "name": "きたえぬいた",
+        "before": "能力の強化のどれか1つを最大にする",
+        "after": "能力の強化を1つ最大にした"
+      },
+      "en-US": {
+        "name": "Fully Trained",
+        "before": "Max out one ability upgrade",
+        "after": "Maxed out an ability upgrade"
+      }
+    },
+    {
+      "id": "path_gear10",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/path_gear10.png",
+      "ja": {
+        "name": "装備あつめ",
+        "before": "装備を10こ見つける",
+        "after": "装備を10こ見つけた"
+      },
+      "en-US": {
+        "name": "Gear Collector",
+        "before": "Find 10 pieces of gear",
+        "after": "Found 10 pieces of gear"
+      }
+    },
+    {
+      "id": "path_star2",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/path_star2.png",
+      "ja": {
+        "name": "★2の装備",
+        "before": "★2の装備を見つける",
+        "after": "★2の装備を見つけた"
+      },
+      "en-US": {
+        "name": "Two-Star Gear",
+        "before": "Find a two-star piece of gear",
+        "after": "Found a two-star piece of gear"
+      }
+    },
+    {
+      "id": "path_toy_lv5",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/path_toy_lv5.png",
+      "ja": {
+        "name": "おもちゃLv5",
+        "before": "おもちゃの武器を1つLv5にする",
+        "after": "おもちゃの武器をLv5にした"
+      },
+      "en-US": {
+        "name": "Toy at Lv5",
+        "before": "Raise a toy weapon to Lv5",
+        "after": "Raised a toy weapon to Lv5"
+      }
+    },
+    {
+      "id": "path_evolve",
+      "points": 50,
+      "hidden": true,
+      "image": "achievements/path_evolve.png",
+      "ja": {
+        "name": "大進化",
+        "before": "おもちゃの武器を大進化させる",
+        "after": "おもちゃの武器を大進化させた"
+      },
+      "en-US": {
+        "name": "Big Evolution",
+        "before": "Evolve a toy weapon",
+        "after": "Evolved a toy weapon"
+      }
+    },
+    {
+      "id": "path_rich",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/path_rich.png",
+      "ja": {
+        "name": "金貨もち",
+        "before": "1回の冒険で金貨を200枚持ち帰る",
+        "after": "1回の冒険で金貨を200枚持ち帰った"
+      },
+      "en-US": {
+        "name": "Pockets Full",
+        "before": "Bring home 200 gold from one climb",
+        "after": "Brought home 200 gold from one climb"
+      }
+    }
+  ]
+}

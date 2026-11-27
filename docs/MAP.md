@@ -39,12 +39,18 @@
   - 2766 冒険中のスキル・2998 立っている敵・3056 魔法と毒・3094 おもちゃ箱（3119 TOY）・3182 おもちゃの武器・3258 ごほうび
   - 3361 冒険の終わり・3426 紙・3438 お店（shopAct・detailHTML）・3610 タップとドラッグ・3693 ボタン
   - 3768〜4100 音（自動で入る：sound.js から。ここは手で直さない）
-  - 4129 テスト用（#fxtest で window.PQ）・4134 App Store のスクショの場面（navigator.webdriver のときだけ。`location.hash='shot=title|climb|foe|reward|boss|shop'`。道は lay() で並べる。たしかめ tools/test/shot_store.py）
+  - 4137 Game Center（実績とさいこう記録・タイトルのボタン。下の「アプリ」）
+  - 4169 テスト用（#fxtest で window.PQ）・4174 App Store のスクショの場面（navigator.webdriver のときだけ。`location.hash='shot=title|climb|foe|reward|boss|shop'`。道は lay() で並べる。たしかめ tools/test/shot_store.py）
   - 4164 fx A 板・4275 fx B 動き・4524 fx C 生きもの（4536 CR 景色の生き物）
 
 ## アプリ（App Store）
 - アイコン：docs/kobo/icon.png（1024px・透明なし。Canva の AI＝A。tools/ART.md）
-- スクショの場面は上の #shot=。アプリの設定（ios-kobo の apps/path-quest/）は【ios】のチャットが作る
+- スクショの場面は上の #shot=。アプリの設定（ios-kobo の apps/path/）は【ios】のチャットが作る
+- Game Center（11/26）：ランキング path_best（さいこう記録＝meta.far 段）と実績14こ。決まりは docs/kobo/gamecenter.json（id は変えない・使い回さない）
+  - page.html：saveMeta のたびに gcMeta（記録・スキル・装備の実績）・takeReward（おもちゃLv5・大進化）・gameOver（金貨200枚・APP_SCORE）・「Game Center」の節（取った実績は pathquest.ach.v1。開いたときと app-gamecenter で全部を送りなおす。#shot= のときは取らない）
+  - タイトルの「ランキング」「実績」の緑の板は APP_GAMECENTER===true のときだけ（ウェブでは出ない）
+  - バッジ：`python3 tools/art/make_badges.py [見本.png]` → docs/kobo/achievements/<id>.png（絵と地面は tools/art/badge_src/・tools/ART.md）
+  - たしかめ：`python3 tools/test/gc_check.py [out.png]`（ウェブ・アプリ・冒険の中・スクショの場面）
 
 ## 試遊リンク（claude.ai のアーティファクト）
 - いつもの：index.html を publish。はじめて用：index.html の最初の `<script>` の直後に記録とセーブを消す1行・`<title>` を「PATH QUEST はじめて用」にしたコピー（作り方は引き継ぎ claude/path-handoff.md）
